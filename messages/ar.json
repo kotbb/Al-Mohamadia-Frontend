@@ -1,0 +1,44 @@
+{
+  "app": {
+    "name": "المحمدية",
+    "tagline": "إدارة محل الأخشاب"
+  },
+  "nav": {
+    "home": "الرئيسية",
+    "newInvoice": "فاتورة جديدة",
+    "invoices": "الفواتير",
+    "customers": "العملاء",
+    "inventory": "المخزون",
+    "suppliers": "الموردون",
+    "items": "الأصناف والأسعار",
+    "users": "المستخدمون",
+    "comingSoon": "قريباً"
+  },
+  "controls": {
+    "theme": "المظهر",
+    "themeLight": "فاتح",
+    "themeDark": "داكن",
+    "language": "اللغة",
+    "arabic": "العربية",
+    "english": "English"
+  },
+  "foundation": {
+    "title": "الأساس",
+    "subtitle": "تحقق من الاتصال بالخادم وإعدادات الواجهة",
+    "healthTitle": "حالة الخادم",
+    "healthOk": "الخادم متصل ويعمل",
+    "healthStatus": "الحالة: {status}",
+    "healthChecking": "جاري التحقق من الخادم…",
+    "healthError": "تعذر الاتصال بالخادم",
+    "retry": "إعادة المحاولة",
+    "emptyTitle": "لا توجد بيانات بعد",
+    "emptyDescription": "ستظهر ميزات المتجر هنا في المراحل القادمة.",
+    "demoEmpty": "مثال على الحالة الفارغة"
+  },
+  "shared": {
+    "loading": "جاري التحميل…",
+    "errorTitle": "حدث خطأ",
+    "emptyTitle": "لا يوجد شيء هنا",
+    "emptyDescription": "لا توجد عناصر لعرضها حالياً."
+  }
+}
