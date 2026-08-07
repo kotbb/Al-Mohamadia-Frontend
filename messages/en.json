@@ -1,0 +1,44 @@
+{
+  "app": {
+    "name": "Al-Mohamadia",
+    "tagline": "Wood store management"
+  },
+  "nav": {
+    "home": "Home",
+    "newInvoice": "New Invoice",
+    "invoices": "Invoices",
+    "customers": "Customers",
+    "inventory": "Inventory",
+    "suppliers": "Suppliers",
+    "items": "Items & Prices",
+    "users": "Users",
+    "comingSoon": "Coming soon"
+  },
+  "controls": {
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "language": "Language",
+    "arabic": "العربية",
+    "english": "English"
+  },
+  "foundation": {
+    "title": "Foundation",
+    "subtitle": "Verify API connectivity and UI setup",
+    "healthTitle": "API health",
+    "healthOk": "API is connected and healthy",
+    "healthStatus": "Status: {status}",
+    "healthChecking": "Checking API…",
+    "healthError": "Could not reach the API",
+    "retry": "Retry",
+    "emptyTitle": "Nothing here yet",
+    "emptyDescription": "Store features will appear here in later phases.",
+    "demoEmpty": "Empty state demo"
+  },
+  "shared": {
+    "loading": "Loading…",
+    "errorTitle": "Something went wrong",
+    "emptyTitle": "Nothing here",
+    "emptyDescription": "There are no items to show right now."
+  }
+}

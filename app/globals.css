@@ -1,26 +1,78 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #faf6f1;
+  --surface: #ffffff;
+  --surface-muted: #f5efe6;
+  --border: #e4d9c9;
+  --text-primary: #2b211a;
+  --text-muted: #7a6a57;
+  --primary: #8b5a2b;
+  --primary-hover: #6f4620;
+  --primary-foreground: #ffffff;
+  --accent: #c87f37;
+  --ink: #2b211a;
+  --success: #3f8f4f;
+  --danger: #c1442c;
+  --warning: #c99a2e;
+  --info: #3e7c9e;
+}
+
+.dark {
+  --background: #1a1714;
+  --surface: #24201c;
+  --surface-muted: #1f1b18;
+  --border: #3a342e;
+  --text-primary: #f0e8dc;
+  --text-muted: #a89884;
+  --primary: #c9915b;
+  --primary-hover: #dda872;
+  --primary-foreground: #1a1714;
+  --accent: #d49a55;
+  --ink: #141210;
+  --success: #5eaf6a;
+  --danger: #d66b55;
+  --warning: #d4b05a;
+  --info: #6a9fbe;
 }
 
 @theme inline {
   --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-border: var(--border);
+  --color-text-primary: var(--text-primary);
+  --color-text-muted: var(--text-muted);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-ink: var(--ink);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --font-sans: var(--font-cairo);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  font-size: 16px;
 }
 
 body {
   background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--text-primary);
+  font-family: var(--font-cairo), system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
