@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
+import { useAuth } from "@/lib/auth/auth-provider";
 
 interface NavItem {
   key:
@@ -15,6 +16,7 @@ interface NavItem {
     | "users";
   href?: string;
   enabled: boolean;
+  superAdminOnly?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -25,7 +27,7 @@ const NAV_ITEMS: NavItem[] = [
   { key: "inventory", enabled: false },
   { key: "suppliers", enabled: false },
   { key: "items", enabled: false },
-  { key: "users", enabled: false },
+  { key: "users", href: "/users", enabled: true, superAdminOnly: true },
 ];
 
 function NavIcon({ name }: { name: NavItem["key"] }) {
@@ -174,6 +176,7 @@ export function Sidebar() {
   const t = useTranslations("nav");
   const tApp = useTranslations("app");
   const pathname = usePathname();
+  const { isSuperAdmin } = useAuth();
 
   return (
     <aside className="flex w-64 shrink-0 flex-col bg-ink text-white">
@@ -186,19 +189,26 @@ export function Sidebar() {
 
       <nav className="flex flex-1 flex-col gap-1 p-3" aria-label="Main">
         {NAV_ITEMS.map((item) => {
+          const visible =
+            !item.superAdminOnly || (item.superAdminOnly && isSuperAdmin);
+          if (!visible) {
+            return null;
+          }
+
           const label = t(item.key);
+          const enabled = item.enabled && (!item.superAdminOnly || isSuperAdmin);
           const isActive =
-            item.enabled && item.href !== undefined && pathname === item.href;
+            enabled && item.href !== undefined && pathname === item.href;
 
           const className = `flex min-h-11 items-center gap-3 rounded-lg px-3 text-base transition-colors duration-150 ${
             isActive
-              ? "bg-primary text-primary-foreground"
-              : item.enabled
-                ? "text-white/90 hover:bg-white/10"
+              ? "cursor-pointer bg-primary text-primary-foreground"
+              : enabled
+                ? "cursor-pointer text-white/90 hover:bg-white/10"
                 : "cursor-not-allowed text-white/40"
           }`;
 
-          if (item.enabled && item.href) {
+          if (enabled && item.href) {
             return (
               <Link
                 key={item.key}

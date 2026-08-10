@@ -67,10 +67,86 @@ body {
   line-height: 1.5;
 }
 
+@keyframes login-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes login-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.login-brand-enter {
+  animation: login-fade 480ms ease-out both;
+}
+
+.login-form-enter {
+  animation: login-rise 420ms ease-out 80ms both;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+}
+
+.toast-enter {
+  animation: toast-in 260ms ease-out both;
+}
+
+.toast-exit {
+  animation: toast-out 240ms ease-in both;
+}
+
+.login-timber-grain {
+  background-image:
+    linear-gradient(
+      115deg,
+      color-mix(in srgb, var(--accent) 18%, transparent) 0%,
+      transparent 42%,
+      color-mix(in srgb, var(--primary) 12%, transparent) 68%,
+      transparent 100%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 11px,
+      color-mix(in srgb, white 4%, transparent) 11px,
+      color-mix(in srgb, white 4%, transparent) 12px
+    );
+}
+
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *:not([data-allow-motion]),
+  *:not([data-allow-motion])::before,
+  *:not([data-allow-motion])::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

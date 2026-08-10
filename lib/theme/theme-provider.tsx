@@ -4,7 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useState,
   type ReactNode,
 } from "react";
@@ -21,6 +21,14 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 const STORAGE_KEY = "al-mohamadia-theme";
 
+function readStoredTheme(): Theme {
+  try {
+    return window.localStorage.getItem(STORAGE_KEY) === "dark" ? "dark" : "light";
+  } catch {
+    return "light";
+  }
+}
+
 function applyThemeClass(theme: Theme) {
   const root = document.documentElement;
   if (theme === "dark") {
@@ -33,9 +41,8 @@ function applyThemeClass(theme: Theme) {
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("light");
 
-  useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    const initial: Theme = stored === "dark" ? "dark" : "light";
+  useLayoutEffect(() => {
+    const initial = readStoredTheme();
     setThemeState(initial);
     applyThemeClass(initial);
   }, []);

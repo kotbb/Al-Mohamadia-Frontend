@@ -20,7 +20,55 @@
     "themeDark": "داكن",
     "language": "اللغة",
     "arabic": "العربية",
-    "english": "English"
+    "english": "English",
+    "logout": "تسجيل الخروج",
+    "signedInAs": "مسجل كـ {username}"
+  },
+  "auth": {
+    "title": "تسجيل الدخول",
+    "subtitle": "استخدم حساب المتجر للمتابعة",
+    "username": "اسم المستخدم",
+    "password": "كلمة المرور",
+    "submit": "دخول",
+    "submitting": "جاري الدخول…"
+  },
+  "users": {
+    "title": "إدارة المستخدمين",
+    "subtitle": "إنشاء وتعطيل حسابات المشرفين",
+    "createTitle": "إنشاء مشرف",
+    "createSubtitle": "يمكن لحساب المشرف استخدام المتجر دون إدارة المستخدمين",
+    "username": "اسم المستخدم",
+    "password": "كلمة المرور",
+    "passwordHint": "ثمانية أحرف على الأقل",
+    "createSubmit": "إنشاء مشرف",
+    "creating": "جاري الإنشاء…",
+    "createSuccess": "تم إنشاء المشرف بنجاح",
+    "activateSuccess": "تم تفعيل المشرف بنجاح",
+    "deactivateSuccess": "تم تعطيل المشرف بنجاح",
+    "listTitle": "المستخدمون",
+    "listError": "تعذر تحميل المستخدمين",
+    "retry": "إعادة المحاولة",
+    "emptyTitle": "لا يوجد مستخدمون",
+    "emptyDescription": "أنشئ أول حساب مشرف من النموذج أعلاه",
+    "colUsername": "اسم المستخدم",
+    "colRole": "الدور",
+    "colStatus": "الحالة",
+    "colCreated": "أُنشئ في",
+    "colModified": "عُدّل في",
+    "colActions": "إجراءات",
+    "dateAt": "في",
+    "roleSuperAdmin": "مدير أعلى",
+    "roleAdmin": "مشرف",
+    "statusActive": "نشط",
+    "statusInactive": "معطّل",
+    "deactivate": "تعطيل",
+    "activate": "تفعيل",
+    "updating": "جاري التحديث…",
+    "noAction": "—",
+    "accessDeniedTitle": "غير مسموح",
+    "accessDeniedSubtitle": "هذه الصفحة للمدير الأعلى فقط",
+    "accessDeniedBody": "حسابك لا يملك صلاحية إدارة المستخدمين.",
+    "backHome": "العودة للرئيسية"
   },
   "foundation": {
     "title": "الأساس",
@@ -39,6 +87,7 @@
     "loading": "جاري التحميل…",
     "errorTitle": "حدث خطأ",
     "emptyTitle": "لا يوجد شيء هنا",
-    "emptyDescription": "لا توجد عناصر لعرضها حالياً."
+    "emptyDescription": "لا توجد عناصر لعرضها حالياً.",
+    "retry": "إعادة المحاولة"
   }
 }

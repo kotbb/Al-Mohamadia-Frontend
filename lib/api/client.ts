@@ -1,5 +1,12 @@
 import { getApiUrl } from "./env";
 import { ApiError, type ApiErrorBody, type ApiSuccess } from "./types";
+import {
+  clearSession,
+  getAccessToken,
+  getRefreshToken,
+  setSession,
+} from "@/lib/auth/auth-storage";
+import type { AuthTokens } from "@/lib/auth/types";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -8,8 +15,23 @@ export interface ApiRequestOptions {
   body?: unknown;
   headers?: HeadersInit;
   signal?: AbortSignal;
-  /** Reserved for Phase 1 — Bearer access token */
+  /** Explicit Bearer token; when omitted, uses stored access token unless skipAuth */
   accessToken?: string | null;
+  /** Do not attach Bearer or attempt refresh (public auth endpoints) */
+  skipAuth?: boolean;
+  /** Internal: already retried after refresh */
+  _retried?: boolean;
+}
+
+let refreshPromise: Promise<AuthTokens> | null = null;
+
+function isAuthPath(path: string): boolean {
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  return (
+    normalized === "/auth/login" ||
+    normalized === "/auth/refresh" ||
+    normalized === "/auth/logout"
+  );
 }
 
 async function parseJsonSafe(response: Response): Promise<unknown> {
@@ -41,15 +63,77 @@ function isApiErrorBody(value: unknown): value is ApiErrorBody {
   );
 }
 
+async function refreshAccessToken(): Promise<AuthTokens> {
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      const refreshToken = getRefreshToken();
+      if (!refreshToken) {
+        clearSession();
+        throw new ApiError({
+          success: false,
+          statusCode: 401,
+          message: "Missing refresh token",
+          path: "/auth/refresh",
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      const base = getApiUrl();
+      const response = await fetch(`${base}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      const payload = await parseJsonSafe(response);
+
+      if (!response.ok || !isApiSuccess<AuthTokens>(payload)) {
+        clearSession();
+        if (isApiErrorBody(payload)) {
+          throw new ApiError(payload);
+        }
+        throw new ApiError({
+          success: false,
+          statusCode: response.status,
+          message: response.statusText || "Refresh failed",
+          path: "/auth/refresh",
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      setSession(payload.data);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("al-mohamadia-auth-session", {
+          detail: payload.data,
+        }));
+      }
+      return payload.data;
+    })().finally(() => {
+      refreshPromise = null;
+    });
+  }
+
+  return refreshPromise;
+}
+
 /**
  * Shared fetch wrapper. Unwraps `{ success, data }` envelopes.
- * Auth refresh (single-flight on 401) will plug in here in Phase 1.
+ * Attaches Bearer access token and single-flight refreshes on 401.
  */
 export async function apiRequest<T>(
   path: string,
   options: ApiRequestOptions = {},
 ): Promise<T> {
-  const { method = "GET", body, headers, signal, accessToken } = options;
+  const {
+    method = "GET",
+    body,
+    headers,
+    signal,
+    accessToken,
+    skipAuth = false,
+    _retried = false,
+  } = options;
+
   const base = getApiUrl();
   const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
 
@@ -57,8 +141,17 @@ export async function apiRequest<T>(
   if (body !== undefined && !requestHeaders.has("Content-Type")) {
     requestHeaders.set("Content-Type", "application/json");
   }
-  if (accessToken) {
-    requestHeaders.set("Authorization", `Bearer ${accessToken}`);
+
+  const shouldAttachAuth = !skipAuth && !isAuthPath(path);
+  const token =
+    accessToken !== undefined && accessToken !== null
+      ? accessToken
+      : shouldAttachAuth
+        ? getAccessToken()
+        : null;
+
+  if (token) {
+    requestHeaders.set("Authorization", `Bearer ${token}`);
   }
 
   const response = await fetch(url, {
@@ -69,6 +162,33 @@ export async function apiRequest<T>(
   });
 
   const payload = await parseJsonSafe(response);
+
+  if (
+    response.status === 401 &&
+    shouldAttachAuth &&
+    !_retried &&
+    !isAuthPath(path)
+  ) {
+    try {
+      const refreshed = await refreshAccessToken();
+      return apiRequest<T>(path, {
+        ...options,
+        accessToken: refreshed.accessToken,
+        _retried: true,
+      });
+    } catch (refreshError) {
+      if (refreshError instanceof ApiError) {
+        throw refreshError;
+      }
+      throw new ApiError({
+        success: false,
+        statusCode: 401,
+        message: "Session expired",
+        path,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
 
   if (!response.ok) {
     if (isApiErrorBody(payload)) {
@@ -87,7 +207,6 @@ export async function apiRequest<T>(
     return payload.data;
   }
 
-  // Fallback if envelope is missing (should not happen with our backend)
   return payload as T;
 }
 

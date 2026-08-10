@@ -20,7 +20,55 @@
     "themeDark": "Dark",
     "language": "Language",
     "arabic": "العربية",
-    "english": "English"
+    "english": "English",
+    "logout": "Log out",
+    "signedInAs": "Signed in as {username}"
+  },
+  "auth": {
+    "title": "Sign in",
+    "subtitle": "Use your shop account to continue",
+    "username": "Username",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…"
+  },
+  "users": {
+    "title": "Manage users",
+    "subtitle": "Create and deactivate admin accounts",
+    "createTitle": "Create admin",
+    "createSubtitle": "Admins can run the shop but cannot manage users",
+    "username": "Username",
+    "password": "Password",
+    "passwordHint": "At least 8 characters",
+    "createSubmit": "Create admin",
+    "creating": "Creating…",
+    "createSuccess": "Admin created successfully",
+    "activateSuccess": "Admin activated successfully",
+    "deactivateSuccess": "Admin deactivated successfully",
+    "listTitle": "Users",
+    "listError": "Could not load users",
+    "retry": "Retry",
+    "emptyTitle": "No users yet",
+    "emptyDescription": "Create the first admin account using the form above",
+    "colUsername": "Username",
+    "colRole": "Role",
+    "colStatus": "Status",
+    "colCreated": "Created at",
+    "colModified": "Modified at",
+    "colActions": "Actions",
+    "dateAt": "at",
+    "roleSuperAdmin": "Super admin",
+    "roleAdmin": "Admin",
+    "statusActive": "Active",
+    "statusInactive": "Inactive",
+    "deactivate": "Deactivate",
+    "activate": "Activate",
+    "updating": "Updating…",
+    "noAction": "—",
+    "accessDeniedTitle": "Access denied",
+    "accessDeniedSubtitle": "This page is for super admins only",
+    "accessDeniedBody": "Your account does not have permission to manage users.",
+    "backHome": "Back to home"
   },
   "foundation": {
     "title": "Foundation",
@@ -39,6 +87,7 @@
     "loading": "Loading…",
     "errorTitle": "Something went wrong",
     "emptyTitle": "Nothing here",
-    "emptyDescription": "There are no items to show right now."
+    "emptyDescription": "There are no items to show right now.",
+    "retry": "Retry"
   }
 }

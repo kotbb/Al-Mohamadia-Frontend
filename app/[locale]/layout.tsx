@@ -9,6 +9,7 @@ import {
 } from "next-intl/server";
 import { routing, type Locale } from "@/i18n/routing";
 import { ThemeProvider } from "@/lib/theme/theme-provider";
+import { AuthProvider } from "@/lib/auth/auth-provider";
 import "../globals.css";
 
 const cairo = Cairo({
@@ -39,8 +40,6 @@ export async function generateMetadata({
   };
 }
 
-const themeInitScript = `(function(){try{var t=localStorage.getItem("al-mohamadia-theme");if(t==="dark")document.documentElement.classList.add("dark");}catch(e){}})();`;
-
 export default async function LocaleLayout({
   children,
   params,
@@ -62,13 +61,10 @@ export default async function LocaleLayout({
       suppressHydrationWarning
       className={`${cairo.variable} h-full`}
     >
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-      </head>
       <body className="min-h-full font-sans antialiased">
         <ThemeProvider>
           <NextIntlClientProvider messages={messages}>
-            {children}
+            <AuthProvider>{children}</AuthProvider>
           </NextIntlClientProvider>
         </ThemeProvider>
       </body>
