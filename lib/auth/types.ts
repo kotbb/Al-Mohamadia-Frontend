@@ -3,6 +3,8 @@ export type UserRole = "super_admin" | "admin";
 export interface AuthUser {
   id: string;
   username: string;
+  firstName?: string;
+  lastName?: string;
   role: UserRole;
   isActive: boolean;
   isDeleted: boolean;

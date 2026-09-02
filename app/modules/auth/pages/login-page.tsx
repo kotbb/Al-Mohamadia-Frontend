@@ -2,8 +2,9 @@
 
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { LoginBrandPanel } from "@/app/modules/auth/components/login-brand-panel";
+import { LoginDecorativeCircles } from "@/app/modules/auth/components/login-decorative-circles";
 import { LoginForm } from "@/app/modules/auth/components/login-form";
-import { HeaderControls } from "@/app/layout/header-controls";
 import { useAuth } from "@/lib/auth/auth-provider";
 import { useRouter } from "@/i18n/navigation";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
@@ -23,64 +24,50 @@ export function LoginPage() {
 
   if (status === "loading" || status === "authenticated") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="flex min-h-screen items-center justify-center bg-background p-5">
         <LoadingState message={tShared("loading")} />
       </div>
     );
   }
 
   return (
-    <div className="grid min-h-screen bg-background lg:grid-cols-2">
-      <section
-        aria-label={tApp("name")}
-        className="login-brand-enter login-timber-grain relative flex min-h-[34vh] items-center overflow-hidden bg-ink px-8 py-10 text-white sm:px-10 lg:min-h-screen lg:px-14"
-      >
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -start-16 top-1/4 h-72 w-72 rounded-full bg-accent/20 blur-3xl"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -end-10 bottom-0 h-64 w-64 rounded-full bg-primary/30 blur-3xl"
-        />
+    <div
+      dir="ltr"
+      className="login-form-enter grid min-h-screen bg-background lg:grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)]"
+    >
+      <div className="order-1 border-border lg:border-e">
+        <LoginBrandPanel />
+      </div>
 
-        <div className="relative max-w-lg">
-          <h1 className="text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-            {tApp("name")}
-          </h1>
+      <section className="relative order-2 flex min-h-screen flex-col overflow-hidden">
+        <LoginDecorativeCircles />
 
-          <div
-            aria-hidden
-            className="mt-5 h-1 w-20 rounded-full sm:w-28"
-            style={{
-              background:
-                "linear-gradient(to inline-end, var(--accent) 0%, color-mix(in srgb, var(--accent) 35%, transparent) 100%)",
-            }}
-          />
+        <div className="relative z-10 flex flex-1 flex-col justify-center px-6 pb-16 pt-8 sm:px-12 sm:pb-20 sm:pt-10 lg:px-16 lg:py-14 xl:px-20">
+          <div className="mx-auto w-full max-w-md">
+            <div className="mb-8 flex flex-col items-center text-center sm:mb-10">
+              <div className="mb-8 flex items-center justify-center gap-3 sm:mb-10">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/icon-mark.png"
+                  alt=""
+                  width={56}
+                  height={56}
+                  className="h-14 w-14 shrink-0 rounded-xl object-cover shadow-sm ring-1 ring-border"
+                />
+                <span className="text-xl font-semibold tracking-tight text-text-primary sm:text-2xl">
+                  {tApp("name")}
+                </span>
+              </div>
 
-          <p className="mt-5 text-base font-medium tracking-wide text-accent sm:text-lg">
-            {tApp("tagline")}
-          </p>
-        </div>
-      </section>
-
-      <section className="relative flex min-h-[66vh] flex-col bg-gradient-to-b from-background via-surface-muted/40 to-background lg:min-h-screen">
-        <header className="flex justify-end px-5 py-4 sm:px-8">
-          <HeaderControls showAuthActions={false} />
-        </header>
-
-        <div className="login-form-enter flex flex-1 items-center justify-center px-5 pb-12 sm:px-8">
-          <div className="w-full max-w-md">
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold tracking-tight text-text-primary">
+              <h1 className="text-2xl font-medium tracking-tight text-text-secondary sm:text-3xl">
                 {t("title")}
-              </h2>
-              <p className="mt-2 text-base text-text-muted">{t("subtitle")}</p>
+              </h1>
+              <p className="mt-2.5 max-w-sm text-sm leading-relaxed text-text-muted sm:text-base">
+                {t("subtitle")}
+              </p>
             </div>
 
-            <div className="rounded-2xl border border-border/80 bg-surface/90 p-6 shadow-[0_18px_40px_-28px_color-mix(in_srgb,var(--ink)_45%,transparent)] backdrop-blur-sm sm:p-8">
-              <LoginForm />
-            </div>
+            <LoginForm />
           </div>
         </div>
       </section>

@@ -2,19 +2,54 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import type { AuthUser } from "@/lib/auth/types";
-import { Button } from "@/app/modules/shared/components/button";
+import { getDisplayName } from "@/lib/user/get-initials";
+import { Badge } from "@/app/modules/shared/components/badge";
 import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
+import {
+  RowActionsMenu,
+  type RowActionItem,
+} from "@/app/modules/shared/components/row-actions-menu";
 
 interface UsersListProps {
   users: AuthUser[];
   status: "idle" | "loading" | "success" | "error";
   error: string | null;
   onRetry: () => void;
-  togglingId: string | null;
-  toggleError: string | null;
-  onToggleActive: (user: AuthUser) => Promise<void>;
+  onEdit: (user: AuthUser) => void;
+  onDeactivate: (user: AuthUser) => void;
+  onActivate: (user: AuthUser) => void;
+  onDelete: (user: AuthUser) => void;
+}
+
+function StatusIcon({ active }: { active: boolean }) {
+  if (active) {
+    return (
+      <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden>
+        <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
+        <path
+          d="M5.5 8 7 9.5 10.5 6"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M5.5 5.5 10.5 10.5M10.5 5.5 5.5 10.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
 }
 
 function formatDate(value: string | undefined, locale: string, atLabel: string): string {
@@ -38,9 +73,10 @@ export function UsersList({
   status,
   error,
   onRetry,
-  togglingId,
-  toggleError,
-  onToggleActive,
+  onEdit,
+  onDeactivate,
+  onActivate,
+  onDelete,
 }: UsersListProps) {
   const t = useTranslations("users");
   const tShared = useTranslations("shared");
@@ -68,97 +104,125 @@ export function UsersList({
     );
   }
 
-  return (
-    <div className="flex flex-col gap-3">
-      {toggleError ? (
-        <p
-          className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger"
-          role="alert"
-        >
-          {toggleError}
-        </p>
-      ) : null}
+  const cell = "px-4 py-3.5";
 
-      <div className="overflow-x-auto rounded-xl border border-border bg-surface shadow-sm">
-        <table className="w-full min-w-[56rem] border-collapse text-base">
-          <thead className="bg-surface-muted">
-            <tr className="border-b border-border">
-              <th className="w-[16%] px-4 py-3 text-start align-middle font-semibold text-text-primary">
-                {t("colUsername")}
-              </th>
-              <th className="w-[14%] px-4 py-3 text-start align-middle font-semibold text-text-primary">
-                {t("colRole")}
-              </th>
-              <th className="w-[12%] px-4 py-3 text-start align-middle font-semibold text-text-primary">
-                {t("colStatus")}
-              </th>
-              <th className="w-[20%] px-4 py-3 text-start align-middle font-semibold text-text-primary">
-                {t("colCreated")}
-              </th>
-              <th className="w-[20%] px-4 py-3 text-start align-middle font-semibold text-text-primary">
-                {t("colModified")}
-              </th>
-              <th className="w-[18%] px-4 py-3 text-center align-middle font-semibold text-text-primary">
-                {t("colActions")}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
+  return (
+    <div className="w-full overflow-x-auto rounded-xl border border-border bg-white dark:bg-surface">
+      <table className="w-full min-w-[48rem] table-fixed border-collapse text-sm lg:text-[0.9375rem]">
+        <colgroup>
+          <col className="w-[18%]" />
+          <col className="w-[15%]" />
+          <col className="w-[12%]" />
+          <col className="w-[12%]" />
+          <col className="w-[17%]" />
+          <col className="w-[17%]" />
+          <col className="w-[9%]" />
+        </colgroup>
+        <thead>
+          <tr className="border-b border-border bg-surface-muted">
+            <th className={`${cell} text-start font-medium text-text-secondary`}>
+              {t("colName")}
+            </th>
+            <th className={`${cell} text-start font-medium text-text-secondary`}>
+              {t("colUsername")}
+            </th>
+            <th className={`${cell} text-start font-medium text-text-secondary`}>
+              {t("colRole")}
+            </th>
+            <th className={`${cell} text-start font-medium text-text-secondary`}>
+              {t("colStatus")}
+            </th>
+            <th className={`${cell} text-start font-medium text-text-secondary`}>
+              {t("colCreated")}
+            </th>
+            <th className={`${cell} text-start font-medium text-text-secondary`}>
+              {t("colModified")}
+            </th>
+            <th className={`${cell} text-center font-medium text-text-secondary`}>
+              {t("colActions")}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((user) => {
+            const actions: RowActionItem[] =
+              user.role === "super_admin"
+                ? []
+                : [
+                    {
+                      id: "edit",
+                      label: t("edit"),
+                      onSelect: () => onEdit(user),
+                    },
+                    user.isActive
+                      ? {
+                          id: "deactivate",
+                          label: t("deactivate"),
+                          onSelect: () => onDeactivate(user),
+                          tone: "danger",
+                        }
+                      : {
+                          id: "activate",
+                          label: t("activate"),
+                          onSelect: () => onActivate(user),
+                        },
+                    {
+                      id: "delete",
+                      label: t("delete"),
+                      onSelect: () => onDelete(user),
+                      tone: "danger",
+                    },
+                  ];
+
+            return (
               <tr
                 key={user.id}
                 className="border-b border-border last:border-b-0"
               >
-                <td className="px-4 py-3 text-start align-middle text-text-primary">
+                <td className={`${cell} truncate font-medium text-text-primary`}>
+                  {getDisplayName(user.firstName, user.lastName, user.username)}
+                </td>
+                <td className={`${cell} truncate text-text-secondary`}>
                   {user.username}
                 </td>
-                <td className="px-4 py-3 text-start align-middle text-text-muted">
+                <td className={`${cell} text-text-secondary`}>
                   {user.role === "super_admin"
                     ? t("roleSuperAdmin")
                     : t("roleAdmin")}
                 </td>
-                <td className="px-4 py-3 text-start align-middle">
-                  <span
-                    className={`inline-flex rounded-md px-2 py-1 text-sm font-medium ${
-                      user.isActive
-                        ? "bg-success/15 text-success"
-                        : "bg-danger/15 text-danger"
-                    }`}
-                  >
-                    {user.isActive ? t("statusActive") : t("statusInactive")}
-                  </span>
+                <td className={cell}>
+                  <Badge variant={user.isActive ? "success" : "danger"}>
+                    {user.isActive ? (
+                      <>
+                        <StatusIcon active />
+                        {t("statusActive")}
+                      </>
+                    ) : (
+                      <>
+                        <StatusIcon active={false} />
+                        {t("statusInactive")}
+                      </>
+                    )}
+                  </Badge>
                 </td>
-                <td className="px-4 py-3 text-start align-middle whitespace-nowrap text-text-muted">
+                <td className={`${cell} whitespace-nowrap text-text-muted`}>
                   {formatDate(user.createdAt, locale, atLabel)}
                 </td>
-                <td className="px-4 py-3 text-start align-middle whitespace-nowrap text-text-muted">
+                <td className={`${cell} whitespace-nowrap text-text-muted`}>
                   {formatDate(user.updatedAt, locale, atLabel)}
                 </td>
-                <td className="px-4 py-3 text-center align-middle">
-                  {user.role === "super_admin" ? (
-                    <span className="inline-block text-sm text-text-muted">
-                      {t("noAction")}
-                    </span>
+                <td className={`${cell} text-center`}>
+                  {actions.length === 0 ? (
+                    <span className="text-sm text-text-muted">{t("noAction")}</span>
                   ) : (
-                    <Button
-                      variant={user.isActive ? "danger" : "success"}
-                      className="min-h-9 px-3 text-sm"
-                      disabled={togglingId === user.id}
-                      onClick={() => void onToggleActive(user)}
-                    >
-                      {togglingId === user.id
-                        ? t("updating")
-                        : user.isActive
-                          ? t("deactivate")
-                          : t("activate")}
-                    </Button>
+                    <RowActionsMenu label={t("colActions")} items={actions} />
                   )}
                 </td>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }

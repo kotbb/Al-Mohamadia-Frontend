@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/auth-provider";
+import { BrandMark } from "@/app/modules/shared/components/brand-mark";
 
 interface NavItem {
   key:
@@ -26,7 +27,7 @@ const NAV_ITEMS: NavItem[] = [
   { key: "customers", enabled: false },
   { key: "inventory", enabled: false },
   { key: "suppliers", enabled: false },
-  { key: "items", enabled: false },
+  { key: "items", href: "/items", enabled: true },
   { key: "users", href: "/users", enabled: true, superAdminOnly: true },
 ];
 
@@ -179,15 +180,25 @@ export function Sidebar() {
   const { isSuperAdmin } = useAuth();
 
   return (
-    <aside className="flex w-64 shrink-0 flex-col bg-ink text-white">
-      <div className="border-b border-white/10 px-5 py-6">
-        <p className="text-xl font-bold tracking-tight text-accent">
-          {tApp("name")}
-        </p>
-        <p className="mt-1 text-sm text-white/60">{tApp("tagline")}</p>
+    <aside className="flex h-full w-56 shrink-0 flex-col overflow-hidden rounded-shell bg-sidebar px-2.5 py-4 text-sidebar-foreground lg:w-60 lg:px-3 lg:py-5">
+      <div className="mb-5 shrink-0 px-2">
+        <div className="flex items-center gap-2.5">
+          <BrandMark size={36} />
+          <div className="min-w-0">
+            <p className="truncate text-base font-bold text-sidebar-foreground lg:text-lg">
+              {tApp("name")}
+            </p>
+            <p className="mt-0.5 truncate text-xs leading-relaxed text-sidebar-muted lg:text-sm">
+              {tApp("tagline")}
+            </p>
+          </div>
+        </div>
       </div>
 
-      <nav className="flex flex-1 flex-col gap-1 p-3" aria-label="Main">
+      <nav
+        className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto"
+        aria-label="Main"
+      >
         {NAV_ITEMS.map((item) => {
           const visible =
             !item.superAdminOnly || (item.superAdminOnly && isSuperAdmin);
@@ -198,14 +209,17 @@ export function Sidebar() {
           const label = t(item.key);
           const enabled = item.enabled && (!item.superAdminOnly || isSuperAdmin);
           const isActive =
-            enabled && item.href !== undefined && pathname === item.href;
+            enabled &&
+            item.href !== undefined &&
+            (pathname === item.href ||
+              (item.key === "items" && pathname.startsWith("/items")));
 
-          const className = `flex min-h-11 items-center gap-3 rounded-lg px-3 text-base transition-colors duration-150 ${
+          const className = `ds-focus-ring flex min-h-9 items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm transition-colors duration-150 ${
             isActive
-              ? "cursor-pointer bg-primary text-primary-foreground"
+              ? "bg-sidebar-active font-semibold text-sidebar-active-foreground"
               : enabled
-                ? "cursor-pointer text-white/90 hover:bg-white/10"
-                : "cursor-not-allowed text-white/40"
+                ? "cursor-pointer text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground"
+                : "cursor-not-allowed text-sidebar-muted/60"
           }`;
 
           if (enabled && item.href) {

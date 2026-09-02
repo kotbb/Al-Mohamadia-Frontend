@@ -2,9 +2,12 @@
 
 import { useTranslations } from "next-intl";
 import { AppShell } from "@/app/layout/app-shell";
-import { CreateAdminForm } from "@/app/modules/auth/components/create-admin-form";
+import { AdminFormModal } from "@/app/modules/auth/components/admin-form-modal";
 import { UsersList } from "@/app/modules/auth/components/users-list";
 import { useUsers } from "@/app/modules/auth/hooks/use-users";
+import { getDisplayName } from "@/lib/user/get-initials";
+import { Button } from "@/app/modules/shared/components/button";
+import { ConfirmDialog } from "@/app/modules/shared/components/row-actions-menu";
 import { Toast } from "@/app/modules/shared/components/toast";
 
 export function UsersPage() {
@@ -14,31 +17,98 @@ export function UsersPage() {
     listStatus,
     listError,
     refresh,
-    createUsername,
-    createPassword,
-    setCreateUsername,
-    setCreatePassword,
-    isCreating,
-    createError,
+    formMode,
+    isFormOpen,
+    openCreate,
+    openEdit,
+    closeForm,
+    formFirstName,
+    formLastName,
+    formUsername,
+    formPassword,
+    setFormFirstName,
+    setFormLastName,
+    setFormUsername,
+    setFormPassword,
+    isSaving,
+    formError,
+    submitForm,
     toast,
     clearToast,
-    submitCreate,
-    togglingId,
-    toggleError,
-    toggleActive,
+    confirmKind,
+    confirmUser,
+    isConfirming,
+    confirmError,
+    openDeactivateConfirm,
+    openActivateConfirm,
+    openDeleteConfirm,
+    closeConfirm,
+    submitConfirm,
   } = useUsers();
 
   const toastMessage =
     toast?.kind === "created"
       ? t("createSuccess")
-      : toast?.kind === "activated"
-        ? t("activateSuccess")
-        : toast?.kind === "deactivated"
-          ? t("deactivateSuccess")
+      : toast?.kind === "updated"
+        ? t("updateSuccess")
+        : toast?.kind === "activated"
+          ? t("activateSuccess")
+          : toast?.kind === "deactivated"
+            ? t("deactivateSuccess")
+            : toast?.kind === "deleted"
+              ? t("deleteSuccess")
+              : "";
+
+  const confirmName = confirmUser
+    ? getDisplayName(
+        confirmUser.firstName,
+        confirmUser.lastName,
+        confirmUser.username,
+      )
+    : "";
+
+  const confirmTitle =
+    confirmKind === "delete"
+      ? t("confirmDeleteTitle")
+      : confirmKind === "deactivate"
+        ? t("confirmDeactivateTitle")
+        : confirmKind === "activate"
+          ? t("confirmActivateTitle")
           : "";
 
+  const confirmDescription =
+    confirmKind === "delete"
+      ? t("confirmDeleteBody", { name: confirmName })
+      : confirmKind === "deactivate"
+        ? t("confirmDeactivateBody", { name: confirmName })
+        : confirmKind === "activate"
+          ? t("confirmActivateBody", { name: confirmName })
+          : "";
+
+  const confirmLabel =
+    confirmKind === "delete"
+      ? t("delete")
+      : confirmKind === "deactivate"
+        ? t("deactivate")
+        : t("activate");
+
   return (
-    <AppShell title={t("title")} subtitle={t("subtitle")}>
+    <AppShell
+      title={t("title")}
+      subtitle={t("subtitle")}
+      actions={
+        <Button
+          type="button"
+          variant="primary"
+          size="sm"
+          className="min-h-10 rounded-lg px-3.5 text-sm"
+          onClick={openCreate}
+        >
+          <PlusIcon />
+          {t("addAdmin")}
+        </Button>
+      }
+    >
       <Toast
         open={toast !== null}
         message={toastMessage}
@@ -46,30 +116,67 @@ export function UsersPage() {
         onClose={clearToast}
       />
 
-      <div className="mx-auto flex max-w-5xl flex-col gap-6">
-        <CreateAdminForm
-          username={createUsername}
-          password={createPassword}
-          onUsernameChange={setCreateUsername}
-          onPasswordChange={setCreatePassword}
-          isSubmitting={isCreating}
-          error={createError}
-          onSubmit={submitCreate}
-        />
+      <AdminFormModal
+        open={isFormOpen}
+        mode={formMode}
+        onClose={closeForm}
+        firstName={formFirstName}
+        lastName={formLastName}
+        username={formUsername}
+        password={formPassword}
+        onFirstNameChange={setFormFirstName}
+        onLastNameChange={setFormLastName}
+        onUsernameChange={setFormUsername}
+        onPasswordChange={setFormPassword}
+        isSubmitting={isSaving}
+        error={formError}
+        onSubmit={submitForm}
+      />
 
-        <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold text-text-primary">{t("listTitle")}</h2>
-          <UsersList
-            users={users}
-            status={listStatus}
-            error={listError}
-            onRetry={refresh}
-            togglingId={togglingId}
-            toggleError={toggleError}
-            onToggleActive={toggleActive}
-          />
-        </section>
-      </div>
+      <ConfirmDialog
+        open={confirmKind !== null}
+        title={confirmTitle}
+        description={
+          <div className="flex flex-col gap-2">
+            <p>{confirmDescription}</p>
+            {confirmError ? (
+              <p className="text-danger" role="alert">
+                {confirmError}
+              </p>
+            ) : null}
+          </div>
+        }
+        confirmLabel={confirmLabel}
+        cancelLabel={t("modalCancel")}
+        confirming={isConfirming}
+        tone={confirmKind === "activate" ? "primary" : "danger"}
+        onConfirm={() => void submitConfirm()}
+        onCancel={closeConfirm}
+      />
+
+      <UsersList
+        users={users}
+        status={listStatus}
+        error={listError}
+        onRetry={refresh}
+        onEdit={openEdit}
+        onDeactivate={openDeactivateConfirm}
+        onActivate={openActivateConfirm}
+        onDelete={openDeleteConfirm}
+      />
     </AppShell>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M8 3v10M3 8h10"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }

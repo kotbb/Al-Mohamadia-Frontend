@@ -6,6 +6,7 @@ import { useHealth } from "@/app/modules/foundation/hooks/use-health";
 import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
+import { PageSection } from "@/app/modules/shared/components/page-section";
 
 export function FoundationPage() {
   const t = useTranslations("foundation");
@@ -13,21 +14,15 @@ export function FoundationPage() {
 
   return (
     <AppShell title={t("title")} subtitle={t("subtitle")}>
-      <div className="mx-auto flex max-w-3xl flex-col gap-6">
-        <section className="rounded-xl border border-border bg-surface p-5 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-text-primary">
-            {t("healthTitle")}
-          </h2>
-
+      <div className="flex w-full flex-col gap-10">
+        <PageSection title={t("healthTitle")}>
           {status === "loading" || status === "idle" ? (
             <LoadingState message={t("healthChecking")} />
           ) : null}
 
           {status === "success" && data ? (
-            <div className="rounded-lg border border-success/30 bg-surface-muted px-4 py-5">
-              <p className="text-base font-medium text-success">
-                {t("healthOk")}
-              </p>
+            <div className="rounded-xl border border-success/30 bg-surface-muted px-5 py-6">
+              <p className="text-base font-medium text-success">{t("healthOk")}</p>
               <p className="mt-2 text-base text-text-muted">
                 {t("healthStatus", { status: data.status })}
               </p>
@@ -42,17 +37,14 @@ export function FoundationPage() {
               onRetry={refresh}
             />
           ) : null}
-        </section>
+        </PageSection>
 
-        <section>
-          <h2 className="mb-3 text-lg font-semibold text-text-primary">
-            {t("demoEmpty")}
-          </h2>
+        <PageSection title={t("demoEmpty")} bordered={false}>
           <EmptyState
             title={t("emptyTitle")}
             description={t("emptyDescription")}
           />
-        </section>
+        </PageSection>
       </div>
     </AppShell>
   );

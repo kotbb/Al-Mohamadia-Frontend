@@ -5,7 +5,7 @@ interface LoadingStateProps {
 export function LoadingState({ message }: LoadingStateProps) {
   return (
     <div
-      className="flex flex-col items-center justify-center gap-3 rounded-xl border border-border bg-surface px-6 py-12 text-center"
+      className="flex flex-col items-center justify-center gap-4 rounded-xl border border-border bg-surface-muted px-8 py-16 text-center"
       role="status"
       aria-live="polite"
     >

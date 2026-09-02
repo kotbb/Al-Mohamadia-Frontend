@@ -37,7 +37,6 @@ export function Toast({
     setDisplayVariant(variant);
     setPhase("entering");
 
-    // Wait a paint so the "hidden" styles apply before transitioning in
     const showTimer = window.setTimeout(() => {
       setPhase("shown");
     }, 40);
@@ -62,12 +61,12 @@ export function Toast({
   const isShown = phase === "shown";
   const tone =
     displayVariant === "danger"
-      ? "border-danger/40 bg-danger text-white"
-      : "border-success/40 bg-success text-white";
+      ? "border-danger/30 bg-danger/12 text-danger"
+      : "border-success/30 bg-success/12 text-success";
 
   return (
     <div
-      className={`pointer-events-none fixed top-24 end-4 z-50 min-w-[16rem] max-w-md rounded-xl border px-5 py-3.5 text-base font-medium shadow-lg ${tone}`}
+      className={`ds-elevation-1 pointer-events-none fixed top-24 end-4 z-50 min-w-[16rem] max-w-md rounded-xl border bg-surface px-5 py-3.5 text-base font-medium ${tone}`}
       data-allow-motion=""
       style={{
         opacity: isShown ? 1 : 0,

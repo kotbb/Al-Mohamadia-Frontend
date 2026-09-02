@@ -5,36 +5,59 @@ import { ApiError } from "@/lib/api/types";
 import type { AuthUser } from "@/lib/auth/types";
 import {
   createAdmin,
+  deleteUser,
   listUsers,
-  updateUserActive,
+  updateUser,
 } from "@/app/modules/auth/services/users.service";
 
 type ListStatus = "idle" | "loading" | "success" | "error";
 
-export type UsersToastKind = "created" | "activated" | "deactivated";
+export type UsersToastKind =
+  | "created"
+  | "updated"
+  | "activated"
+  | "deactivated"
+  | "deleted";
 
 export interface UsersToastState {
   kind: UsersToastKind;
   variant: "success" | "danger";
 }
 
+export type UsersConfirmKind = "deactivate" | "activate" | "delete" | null;
+
 interface UseUsersResult {
   users: AuthUser[];
   listStatus: ListStatus;
   listError: string | null;
   refresh: () => void;
-  createUsername: string;
-  createPassword: string;
-  setCreateUsername: (value: string) => void;
-  setCreatePassword: (value: string) => void;
-  isCreating: boolean;
-  createError: string | null;
+  formMode: "create" | "edit";
+  isFormOpen: boolean;
+  openCreate: () => void;
+  openEdit: (user: AuthUser) => void;
+  closeForm: () => void;
+  formFirstName: string;
+  formLastName: string;
+  formUsername: string;
+  formPassword: string;
+  setFormFirstName: (value: string) => void;
+  setFormLastName: (value: string) => void;
+  setFormUsername: (value: string) => void;
+  setFormPassword: (value: string) => void;
+  isSaving: boolean;
+  formError: string | null;
+  submitForm: () => Promise<void>;
   toast: UsersToastState | null;
   clearToast: () => void;
-  submitCreate: () => Promise<void>;
-  togglingId: string | null;
-  toggleError: string | null;
-  toggleActive: (user: AuthUser) => Promise<void>;
+  confirmKind: UsersConfirmKind;
+  confirmUser: AuthUser | null;
+  isConfirming: boolean;
+  confirmError: string | null;
+  openDeactivateConfirm: (user: AuthUser) => void;
+  openActivateConfirm: (user: AuthUser) => void;
+  openDeleteConfirm: (user: AuthUser) => void;
+  closeConfirm: () => void;
+  submitConfirm: () => Promise<void>;
 }
 
 export function useUsers(): UseUsersResult {
@@ -43,14 +66,21 @@ export function useUsers(): UseUsersResult {
   const [listError, setListError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
 
-  const [createUsername, setCreateUsername] = useState("");
-  const [createPassword, setCreatePassword] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
+  const [formMode, setFormMode] = useState<"create" | "edit">("create");
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [formFirstName, setFormFirstName] = useState("");
+  const [formLastName, setFormLastName] = useState("");
+  const [formUsername, setFormUsername] = useState("");
+  const [formPassword, setFormPassword] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const [toast, setToast] = useState<UsersToastState | null>(null);
 
-  const [togglingId, setTogglingId] = useState<string | null>(null);
-  const [toggleError, setToggleError] = useState<string | null>(null);
+  const [confirmKind, setConfirmKind] = useState<UsersConfirmKind>(null);
+  const [confirmUser, setConfirmUser] = useState<AuthUser | null>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
     setListStatus("loading");
@@ -83,22 +113,64 @@ export function useUsers(): UseUsersResult {
     return () => controller.abort();
   }, [tick]);
 
-  const clearToast = useCallback(() => {
-    setToast(null);
+  const clearToast = useCallback(() => setToast(null), []);
+
+  const resetForm = useCallback(() => {
+    setFormFirstName("");
+    setFormLastName("");
+    setFormUsername("");
+    setFormPassword("");
+    setFormError(null);
+    setEditingUserId(null);
   }, []);
 
-  const submitCreate = useCallback(async () => {
-    setIsCreating(true);
-    setCreateError(null);
+  const openCreate = useCallback(() => {
+    resetForm();
+    setFormMode("create");
+    setIsFormOpen(true);
+  }, [resetForm]);
+
+  const openEdit = useCallback((user: AuthUser) => {
+    setFormMode("edit");
+    setEditingUserId(user.id);
+    setFormFirstName(user.firstName ?? "");
+    setFormLastName(user.lastName ?? "");
+    setFormUsername(user.username);
+    setFormPassword("");
+    setFormError(null);
+    setIsFormOpen(true);
+  }, []);
+
+  const closeForm = useCallback(() => {
+    if (isSaving) return;
+    setIsFormOpen(false);
+    resetForm();
+  }, [isSaving, resetForm]);
+
+  const submitForm = useCallback(async () => {
+    setIsSaving(true);
+    setFormError(null);
     setToast(null);
     try {
-      await createAdmin({
-        username: createUsername.trim(),
-        password: createPassword,
-      });
-      setCreateUsername("");
-      setCreatePassword("");
-      setToast({ kind: "created", variant: "success" });
+      if (formMode === "create") {
+        await createAdmin({
+          firstName: formFirstName.trim(),
+          lastName: formLastName.trim(),
+          username: formUsername.trim(),
+          password: formPassword,
+        });
+        setToast({ kind: "created", variant: "success" });
+      } else if (editingUserId) {
+        await updateUser(editingUserId, {
+          firstName: formFirstName.trim(),
+          lastName: formLastName.trim(),
+          username: formUsername.trim(),
+          ...(formPassword.trim() ? { password: formPassword } : {}),
+        });
+        setToast({ kind: "updated", variant: "success" });
+      }
+      setIsFormOpen(false);
+      resetForm();
       refresh();
     } catch (error: unknown) {
       const message =
@@ -106,58 +178,114 @@ export function useUsers(): UseUsersResult {
           ? error.message
           : error instanceof Error
             ? error.message
-            : "Create failed";
-      setCreateError(message);
+            : "Save failed";
+      setFormError(message);
     } finally {
-      setIsCreating(false);
+      setIsSaving(false);
     }
-  }, [createUsername, createPassword, refresh]);
+  }, [
+    formMode,
+    editingUserId,
+    formFirstName,
+    formLastName,
+    formUsername,
+    formPassword,
+    refresh,
+    resetForm,
+  ]);
 
-  const toggleActive = useCallback(async (user: AuthUser) => {
-    const nextActive = !user.isActive;
-    setTogglingId(user.id);
-    setToggleError(null);
+  const openDeactivateConfirm = useCallback((user: AuthUser) => {
+    setConfirmError(null);
+    setConfirmUser(user);
+    setConfirmKind("deactivate");
+  }, []);
+
+  const openActivateConfirm = useCallback((user: AuthUser) => {
+    setConfirmError(null);
+    setConfirmUser(user);
+    setConfirmKind("activate");
+  }, []);
+
+  const openDeleteConfirm = useCallback((user: AuthUser) => {
+    setConfirmError(null);
+    setConfirmUser(user);
+    setConfirmKind("delete");
+  }, []);
+
+  const closeConfirm = useCallback(() => {
+    if (isConfirming) return;
+    setConfirmKind(null);
+    setConfirmUser(null);
+    setConfirmError(null);
+  }, [isConfirming]);
+
+  const submitConfirm = useCallback(async () => {
+    if (!confirmUser || !confirmKind) return;
+    setIsConfirming(true);
+    setConfirmError(null);
     try {
-      const updated = await updateUserActive(user.id, {
-        isActive: nextActive,
-      });
-      setUsers((current) =>
-        current.map((item) => (item.id === updated.id ? updated : item)),
-      );
-      setToast(
-        nextActive
-          ? { kind: "activated", variant: "success" }
-          : { kind: "deactivated", variant: "danger" },
-      );
+      if (confirmKind === "delete") {
+        await deleteUser(confirmUser.id);
+        setUsers((current) => current.filter((item) => item.id !== confirmUser.id));
+        setToast({ kind: "deleted", variant: "danger" });
+      } else {
+        const nextActive = confirmKind === "activate";
+        const updated = await updateUser(confirmUser.id, { isActive: nextActive });
+        setUsers((current) =>
+          current.map((item) => (item.id === updated.id ? updated : item)),
+        );
+        setToast(
+          nextActive
+            ? { kind: "activated", variant: "success" }
+            : { kind: "deactivated", variant: "danger" },
+        );
+      }
+      setConfirmKind(null);
+      setConfirmUser(null);
     } catch (error: unknown) {
       const message =
         error instanceof ApiError
           ? error.message
           : error instanceof Error
             ? error.message
-            : "Update failed";
-      setToggleError(message);
+            : "Action failed";
+      setConfirmError(message);
     } finally {
-      setTogglingId(null);
+      setIsConfirming(false);
     }
-  }, []);
+  }, [confirmUser, confirmKind]);
 
   return {
     users,
     listStatus,
     listError,
     refresh,
-    createUsername,
-    createPassword,
-    setCreateUsername,
-    setCreatePassword,
-    isCreating,
-    createError,
+    formMode,
+    isFormOpen,
+    openCreate,
+    openEdit,
+    closeForm,
+    formFirstName,
+    formLastName,
+    formUsername,
+    formPassword,
+    setFormFirstName,
+    setFormLastName,
+    setFormUsername,
+    setFormPassword,
+    isSaving,
+    formError,
+    submitForm,
     toast,
     clearToast,
-    submitCreate,
-    togglingId,
-    toggleError,
-    toggleActive,
+    confirmKind,
+    confirmUser,
+    isConfirming,
+    confirmError,
+    openDeactivateConfirm,
+    openActivateConfirm,
+    openDeleteConfirm,
+    closeConfirm,
+    submitConfirm,
   };
 }

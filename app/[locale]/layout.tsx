@@ -15,6 +15,7 @@ import "../globals.css";
 const cairo = Cairo({
   variable: "--font-cairo",
   subsets: ["arabic", "latin"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -37,6 +38,10 @@ export async function generateMetadata({
   return {
     title: t("name"),
     description: t("tagline"),
+    icons: {
+      icon: [{ url: "/images/icon-mark.png", type: "image/png" }],
+      apple: [{ url: "/apple-icon.png", type: "image/png" }],
+    },
   };
 }
 
@@ -59,9 +64,9 @@ export default async function LocaleLayout({
       lang={locale as Locale}
       dir={dir}
       suppressHydrationWarning
-      className={`${cairo.variable} h-full`}
+      className={`${cairo.variable} ${cairo.className} h-full`}
     >
-      <body className="min-h-full font-sans antialiased">
+      <body className={`${cairo.className} min-h-full antialiased`}>
         <ThemeProvider>
           <NextIntlClientProvider messages={messages}>
             <AuthProvider>{children}</AuthProvider>
