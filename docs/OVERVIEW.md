@@ -106,7 +106,7 @@ flowchart LR
 
 | Area | Purpose |
 |------|---------|
-| Items & pricing | Categories, items, per-piece / per-m³, cost & unit price, price history, base reference price *(Phase 2 — live)* |
+| Items & pricing | Categories, items, per-piece / per-m³, cost & unit price, price history *(Phase 2 — live; base reference price API kept for later UI)* |
 | Inventory | Stock list, low/negative stock flags, manual جرد, inventory value at cost |
 | Purchases | Restock invoices from suppliers |
 
@@ -235,11 +235,12 @@ Planned from Phase 1 (see [`PHASES.md`](./PHASES.md)):
 
 After `npm run seed:catalog` in the backend repo:
 
-1. Open **Items & Prices** — categories/items load; update base reference price.
-2. **Add item** / **Edit** via modal; change selling price or cost.
-3. Open **Price history** from the row menu — change appears in the modal.
-4. **Delete** item with confirmation; list refreshes.
-5. On **Users** (super admin): edit / deactivate / delete via row menu + confirms.
+1. Open **Categories** — list loads; create/edit via modal; delete disabled when items exist.
+2. Open **Items & Prices** — categories/items load; search and filter work.
+3. **Add item** / **Edit** via modal; change selling price or cost.
+4. Open **Price history** from the row menu — change appears in the modal.
+5. **Delete** item with confirmation; list refreshes.
+6. On **Users** (super admin): edit / deactivate / delete via row menu + confirms.
 
 API route table: [Backend PHASES.md — Phase 2](../../Al-Mohamadia-Backend/docs/PHASES.md#phase-2--categories-items--pricing).
 

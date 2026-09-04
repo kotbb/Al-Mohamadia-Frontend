@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { AppShell } from "@/app/layout/app-shell";
-import { BaseReferencePriceCard } from "@/app/modules/items/components/base-reference-price-card";
 import { CategoryItemsTable } from "@/app/modules/items/components/category-items-table";
 import { ItemFormModal } from "@/app/modules/items/components/item-form-modal";
 import { ItemsToolbar } from "@/app/modules/items/components/items-toolbar";
@@ -40,13 +39,6 @@ export function ItemsPage() {
     setSearch,
     setCategoryId,
     setIsActive,
-    basePrice,
-    basePriceStatus,
-    basePriceDraft,
-    setBasePriceDraft,
-    isSavingBasePrice,
-    saveBasePriceError,
-    saveBasePrice,
   } = useItemsPage();
 
   function openCreateModal() {
@@ -160,16 +152,6 @@ export function ItemsPage() {
       />
 
       <div className="flex min-h-0 w-full flex-col gap-5">
-        <BaseReferencePriceCard
-          basePrice={basePrice}
-          draft={basePriceDraft}
-          onDraftChange={setBasePriceDraft}
-          isSaving={isSavingBasePrice}
-          saveError={saveBasePriceError}
-          onSave={saveBasePrice}
-          status={basePriceStatus}
-        />
-
         <ItemsToolbar
           filters={filters}
           categories={categories}

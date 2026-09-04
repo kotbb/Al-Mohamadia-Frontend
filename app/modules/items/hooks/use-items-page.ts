@@ -4,15 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError } from "@/lib/api/types";
 import { listCategories } from "@/app/modules/items/services/categories.service";
 import { listItems } from "@/app/modules/items/services/items.service";
-import {
-  getBaseReferencePrice,
-  updateBaseReferencePrice,
-} from "@/app/modules/items/services/settings.service";
-import type {
-  BaseReferencePrice,
-  Category,
-  Item,
-} from "@/app/modules/items/types/items.types";
+import type { Category, Item } from "@/app/modules/items/types/items.types";
 
 type LoadStatus = "idle" | "loading" | "success" | "error";
 
@@ -33,14 +25,6 @@ export interface UseItemsPageResult {
   setSearch: (value: string) => void;
   setCategoryId: (value: string) => void;
   setIsActive: (value: ItemsPageFilters["isActive"]) => void;
-  basePrice: BaseReferencePrice | null;
-  basePriceStatus: LoadStatus;
-  basePriceError: string | null;
-  basePriceDraft: string;
-  setBasePriceDraft: (value: string) => void;
-  isSavingBasePrice: boolean;
-  saveBasePriceError: string | null;
-  saveBasePrice: () => Promise<void>;
 }
 
 export function useItemsPage(): UseItemsPageResult {
@@ -49,15 +33,6 @@ export function useItemsPage(): UseItemsPageResult {
   const [status, setStatus] = useState<LoadStatus>("loading");
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
-
-  const [basePrice, setBasePrice] = useState<BaseReferencePrice | null>(null);
-  const [basePriceStatus, setBasePriceStatus] = useState<LoadStatus>("loading");
-  const [basePriceError, setBasePriceError] = useState<string | null>(null);
-  const [basePriceDraft, setBasePriceDraft] = useState("");
-  const [isSavingBasePrice, setIsSavingBasePrice] = useState(false);
-  const [saveBasePriceError, setSaveBasePriceError] = useState<string | null>(
-    null,
-  );
 
   const [filters, setFilters] = useState<ItemsPageFilters>({
     search: "",
@@ -68,8 +43,6 @@ export function useItemsPage(): UseItemsPageResult {
   const refresh = useCallback(() => {
     setStatus("loading");
     setError(null);
-    setBasePriceStatus("loading");
-    setBasePriceError(null);
     setTick((value) => value + 1);
   }, []);
 
@@ -79,19 +52,12 @@ export function useItemsPage(): UseItemsPageResult {
     Promise.all([
       listCategories(controller.signal),
       listItems(undefined, controller.signal),
-      getBaseReferencePrice(controller.signal),
     ])
-      .then(([categoryList, itemList, baseReferencePrice]) => {
+      .then(([categoryList, itemList]) => {
         setCategories(categoryList.filter((category) => !category.isDeleted));
         setItems(itemList.filter((item) => !item.isDeleted));
         setStatus("success");
         setError(null);
-        setBasePrice(baseReferencePrice);
-        setBasePriceDraft(
-          baseReferencePrice.value !== null ? String(baseReferencePrice.value) : "",
-        );
-        setBasePriceStatus("success");
-        setBasePriceError(null);
       })
       .catch((loadError: unknown) => {
         if (controller.signal.aborted) return;
@@ -105,8 +71,6 @@ export function useItemsPage(): UseItemsPageResult {
         setItems([]);
         setStatus("error");
         setError(message);
-        setBasePriceStatus("error");
-        setBasePriceError(message);
       });
 
     return () => controller.abort();
@@ -166,32 +130,6 @@ export function useItemsPage(): UseItemsPageResult {
     setFilters((current) => ({ ...current, isActive: value }));
   }, []);
 
-  const saveBasePrice = useCallback(async () => {
-    const parsed = Number(basePriceDraft);
-    if (Number.isNaN(parsed) || parsed < 0) {
-      setSaveBasePriceError("Invalid price");
-      return;
-    }
-
-    setIsSavingBasePrice(true);
-    setSaveBasePriceError(null);
-    try {
-      const updated = await updateBaseReferencePrice({ value: parsed });
-      setBasePrice(updated);
-      setBasePriceDraft(String(updated.value ?? ""));
-    } catch (saveError: unknown) {
-      const message =
-        saveError instanceof ApiError
-          ? saveError.message
-          : saveError instanceof Error
-            ? saveError.message
-            : "Save failed";
-      setSaveBasePriceError(message);
-    } finally {
-      setIsSavingBasePrice(false);
-    }
-  }, [basePriceDraft]);
-
   return {
     categories,
     items: filteredItems,
@@ -203,13 +141,5 @@ export function useItemsPage(): UseItemsPageResult {
     setSearch,
     setCategoryId,
     setIsActive,
-    basePrice,
-    basePriceStatus,
-    basePriceError,
-    basePriceDraft,
-    setBasePriceDraft,
-    isSavingBasePrice,
-    saveBasePriceError,
-    saveBasePrice,
   };
 }

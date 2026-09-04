@@ -9,6 +9,15 @@ export interface Category {
   updatedAt?: string;
 }
 
+export interface CreateCategoryInput {
+  name: string;
+}
+
+export interface UpdateCategoryInput {
+  name?: string;
+  isActive?: boolean;
+}
+
 export interface ItemCategorySummary {
   id: string;
   name: string;

@@ -13,6 +13,7 @@ interface NavItem {
     | "customers"
     | "inventory"
     | "suppliers"
+    | "categories"
     | "items"
     | "users";
   href?: string;
@@ -27,6 +28,7 @@ const NAV_ITEMS: NavItem[] = [
   { key: "customers", enabled: false },
   { key: "inventory", enabled: false },
   { key: "suppliers", enabled: false },
+  { key: "categories", href: "/categories", enabled: true },
   { key: "items", href: "/items", enabled: true },
   { key: "users", href: "/users", enabled: true, superAdminOnly: true },
 ];
@@ -127,6 +129,17 @@ function NavIcon({ name }: { name: NavItem["key"] }) {
           <circle cx="16.5" cy="18" r="1.75" fill="currentColor" />
         </svg>
       );
+    case "categories":
+      return (
+        <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path
+            d="M4 5h7v7H4V5Zm9 0h7v7h-7V5ZM4 14h7v7H4v-7Zm9 0h7v7h-7v-7Z"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
     case "items":
       return (
         <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -212,7 +225,8 @@ export function Sidebar() {
             enabled &&
             item.href !== undefined &&
             (pathname === item.href ||
-              (item.key === "items" && pathname.startsWith("/items")));
+              (item.key === "items" && pathname.startsWith("/items")) ||
+              (item.key === "categories" && pathname.startsWith("/categories")));
 
           const className = `ds-focus-ring flex min-h-9 items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm transition-colors duration-150 ${
             isActive

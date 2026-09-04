@@ -68,7 +68,8 @@ UI or API routes.
 
 **Frontend** — *Done*
 
-- [x] Items list grouped by category, search/filters, base reference price card
+- [x] Items list grouped by category, search/filters
+- [x] Categories list page (create/edit modal, activate/deactivate/delete; delete blocked when items exist)
 - [x] Add/edit item **modal** (pricing mode toggle; auto-generated editable code)
 - [x] Price history **modal** per item
 - [x] Soft-delete item with confirmation (row actions kebab menu)
