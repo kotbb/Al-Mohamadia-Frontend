@@ -25,9 +25,9 @@ const NAV_ITEMS: NavItem[] = [
   { key: "home", href: "/", enabled: true },
   { key: "newInvoice", enabled: false },
   { key: "invoices", enabled: false },
-  { key: "customers", enabled: false },
+  { key: "customers", href: "/customers", enabled: true },
   { key: "inventory", enabled: false },
-  { key: "suppliers", enabled: false },
+  { key: "suppliers", href: "/suppliers", enabled: true },
   { key: "categories", href: "/categories", enabled: true },
   { key: "items", href: "/items", enabled: true },
   { key: "users", href: "/users", enabled: true, superAdminOnly: true },
@@ -226,7 +226,9 @@ export function Sidebar() {
             item.href !== undefined &&
             (pathname === item.href ||
               (item.key === "items" && pathname.startsWith("/items")) ||
-              (item.key === "categories" && pathname.startsWith("/categories")));
+              (item.key === "categories" && pathname.startsWith("/categories")) ||
+              (item.key === "customers" && pathname.startsWith("/customers")) ||
+              (item.key === "suppliers" && pathname.startsWith("/suppliers")));
 
           const className = `ds-focus-ring flex min-h-9 items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm transition-colors duration-150 ${
             isActive
