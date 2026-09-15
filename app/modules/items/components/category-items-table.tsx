@@ -35,9 +35,18 @@ export function CategoryItemsTable({
   const cell = "px-3.5 py-2.5";
 
   return (
-    <section className="overflow-hidden rounded-xl border border-border bg-white dark:bg-surface">
-      <div className="border-b border-border px-4 py-2.5">
-        <h2 className="text-sm font-semibold text-text-primary">{category.name}</h2>
+    <section className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
+      {/* Category Header */}
+      <div className="flex items-center justify-between border-b border-border bg-[#faf8f5] px-4 py-3 dark:bg-surface-muted/40">
+        <div className="flex items-center gap-2.5">
+          <span className="h-4 w-1 rounded-full bg-primary" aria-hidden="true" />
+          <h2 className="text-sm font-semibold text-text-primary sm:text-base">
+            {category.name}
+          </h2>
+        </div>
+        <span className="inline-flex items-center rounded-full border border-border/70 bg-surface px-2.5 py-0.5 text-xs font-medium text-text-secondary">
+          {items.length}
+        </span>
       </div>
 
       <div className="w-full overflow-x-auto">
@@ -50,25 +59,25 @@ export function CategoryItemsTable({
             <col className="w-[14%]" />
           </colgroup>
           <thead>
-            <tr className="border-b border-border bg-surface-muted">
-              <th className={`${cell} text-start font-medium text-text-secondary`}>
+            <tr className="border-b border-border bg-surface dark:bg-surface">
+              <th className={`${cell} text-start text-xs font-semibold tracking-wide text-text-secondary`}>
                 {t("colItem")}
               </th>
-              <th className={`${cell} text-start font-medium text-text-secondary`}>
+              <th className={`${cell} text-start text-xs font-semibold tracking-wide text-text-secondary`}>
                 {t("colUnit")}
               </th>
-              <th className={`${cell} text-start font-medium text-text-secondary`}>
+              <th className={`${cell} text-end pe-6 text-xs font-semibold tracking-wide text-text-secondary`}>
                 {t("colPrice")}
               </th>
-              <th className={`${cell} text-start font-medium text-text-secondary`}>
+              <th className={`${cell} text-end pe-6 text-xs font-semibold tracking-wide text-text-secondary`}>
                 {t("colCost")}
               </th>
-              <th className={`${cell} text-center font-medium text-text-secondary`}>
+              <th className={`${cell} text-center text-xs font-semibold tracking-wide text-text-secondary`}>
                 {t("colActions")}
               </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-border/60">
             {items.map((item) => {
               const actions: RowActionItem[] = [
                 {
@@ -92,19 +101,21 @@ export function CategoryItemsTable({
               return (
                 <tr
                   key={item.id}
-                  className="border-b border-border last:border-b-0"
+                  className="transition-colors hover:bg-[#faf7f2]/80 dark:hover:bg-surface-muted/40"
                 >
                   <td className={`${cell} align-middle text-text-primary`}>
-                    <div className="truncate font-medium">{item.name}</div>
-                    <div className="truncate text-xs text-text-muted">{item.code}</div>
+                    <div className="truncate font-semibold text-text-primary">{item.name}</div>
+                    <div className="mt-0.5 inline-block truncate rounded bg-surface-muted/60 px-1.5 py-0.5 font-mono text-xs text-text-muted">
+                      {item.code}
+                    </div>
                   </td>
                   <td className={`${cell} align-middle text-text-secondary`}>
                     {pricingModeLabel(item.pricingMode, t)}
                   </td>
-                  <td className={`${cell} align-middle text-text-primary`}>
+                  <td className={`${cell} align-middle text-end pe-6 font-semibold tabular-nums text-text-primary`}>
                     {formatMoney(item.unitPrice, locale)}
                   </td>
-                  <td className={`${cell} align-middle text-text-secondary`}>
+                  <td className={`${cell} align-middle text-end pe-6 tabular-nums text-text-secondary`}>
                     {formatMoney(item.cost, locale)}
                   </td>
                   <td className={`${cell} align-middle text-center`}>

@@ -66,7 +66,11 @@ export function Modal({
   if (!open) return null;
 
   const sizeClass =
-    size === "xl" ? "max-w-4xl" : size === "lg" ? "max-w-xl" : "max-w-lg";
+    size === "xl"
+      ? "max-w-4xl max-h-[min(92vh,52rem)]"
+      : size === "lg"
+        ? "max-w-xl max-h-[min(90vh,44rem)]"
+        : "max-w-lg max-h-[min(90vh,40rem)]";
 
   return (
     <div
@@ -75,7 +79,7 @@ export function Modal({
     >
       <button
         type="button"
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 cursor-default bg-black/40"
         aria-label="Close dialog"
         onClick={onClose}
       />
@@ -85,7 +89,7 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={`relative z-10 flex max-h-[min(90vh,40rem)] w-full ${sizeClass} flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-lg`}
+        className={`relative z-10 flex w-full ${sizeClass} flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-lg`}
       >
         <div className="shrink-0 border-b border-border px-5 py-3.5">
           <h2 id={titleId} className="text-lg font-semibold text-text-primary">

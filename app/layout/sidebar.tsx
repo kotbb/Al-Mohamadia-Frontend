@@ -8,7 +8,6 @@ import { BrandMark } from "@/app/modules/shared/components/brand-mark";
 interface NavItem {
   key:
     | "home"
-    | "newInvoice"
     | "invoices"
     | "customers"
     | "inventory"
@@ -23,8 +22,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { key: "home", href: "/", enabled: true },
-  { key: "newInvoice", enabled: false },
-  { key: "invoices", enabled: false },
+  { key: "invoices", href: "/invoices", enabled: true },
   { key: "customers", href: "/customers", enabled: true },
   { key: "inventory", enabled: false },
   { key: "suppliers", href: "/suppliers", enabled: true },
@@ -44,23 +42,6 @@ function NavIcon({ name }: { name: NavItem["key"] }) {
             stroke="currentColor"
             strokeWidth="1.75"
             strokeLinejoin="round"
-          />
-        </svg>
-      );
-    case "newInvoice":
-      return (
-        <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path
-            d="M8 3h6l4 4v14H8V3Z"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M14 3v4h4M12 11v6M9 14h6"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
           />
         </svg>
       );
@@ -225,6 +206,7 @@ export function Sidebar() {
             enabled &&
             item.href !== undefined &&
             (pathname === item.href ||
+              (item.key === "invoices" && pathname.startsWith("/invoices")) ||
               (item.key === "items" && pathname.startsWith("/items")) ||
               (item.key === "categories" && pathname.startsWith("/categories")) ||
               (item.key === "customers" && pathname.startsWith("/customers")) ||

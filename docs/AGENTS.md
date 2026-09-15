@@ -268,7 +268,7 @@ new visual language.
   rounded surface cards with clear section labels.
 - **Dashboard:** CTA banner ("جاهز للبيع؟" + New Invoice), KPI card row,
   debt summary strip, monthly chart + top sellers.
-- **New invoice:** customer search + cash-sale toggle; line-item row
+- **New invoice (modal):** customer search + cash-sale toggle; line-item row
   (item, qty, thickness/width/length, piece price, note); dashed "add row";
   totals row (total / remaining / paid / discount); Save + Save & Print.
 - **Lists:** search, filter chips (e.g. all / today / has debt), primary

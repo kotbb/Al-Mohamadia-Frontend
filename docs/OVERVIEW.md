@@ -87,8 +87,8 @@ flowchart LR
    read-only audit log.
 
 > **Note:** Build is phased (vertical slices). See [`PHASES.md`](./PHASES.md)
-> for what exists vs planned. **Phase 3 is complete** (backend API + Customers &
-> Suppliers UI). Phase 4 is next (Sales Invoicing).
+> for what exists vs planned. **Phase 4 is complete** (sales invoices API +
+> list / create modal / detail / cancel / PDF / WhatsApp UI). Phase 5 is next (Payments).
 
 ---
 

@@ -44,7 +44,7 @@ export function ItemsToolbar({
           <select
             value={filters.categoryId}
             onChange={(event) => onCategoryChange(event.target.value)}
-            className="ds-focus-input min-h-9 rounded-lg border border-border bg-surface px-3 text-sm text-text-primary"
+            className="ds-focus-input min-h-9 cursor-pointer rounded-lg border border-border bg-surface px-3 text-sm text-text-primary"
           >
             <option value="">{t("filterAllCategories")}</option>
             {categories.map((category) => (
@@ -64,7 +64,7 @@ export function ItemsToolbar({
             onChange={(event) =>
               onActiveChange(event.target.value as ItemsPageFilters["isActive"])
             }
-            className="ds-focus-input min-h-9 rounded-lg border border-border bg-surface px-3 text-sm text-text-primary"
+            className="ds-focus-input min-h-9 cursor-pointer rounded-lg border border-border bg-surface px-3 text-sm text-text-primary"
           >
             <option value="all">{t("filterAllStatus")}</option>
             <option value="active">{t("filterActive")}</option>

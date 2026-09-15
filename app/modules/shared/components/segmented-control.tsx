@@ -40,7 +40,7 @@ export function SegmentedControl<T extends string>({
               aria-checked={selected}
               disabled={disabled}
               onClick={() => onChange(option.value)}
-              className={`ds-focus-ring min-h-9 flex-1 rounded-lg px-4 text-sm font-medium transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50 ${
+              className={`ds-focus-ring min-h-9 flex-1 cursor-pointer rounded-lg px-4 text-sm font-medium transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50 ${
                 selected
                   ? "bg-surface text-text-primary shadow-sm"
                   : "bg-transparent text-text-secondary hover:text-text-primary"
