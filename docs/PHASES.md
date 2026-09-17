@@ -165,17 +165,39 @@ Module: `src/modules/sales-invoices`.
 
 ## Phase 5 — Payments (standalone debt payments)
 
-**Backend**
-- `Payment` module for standalone payments against a customer's balance
+**Backend** — *Done*
+
+- [x] `Payment` module for standalone payments against a customer's balance
   (distinct from the payment captured inline during invoice creation in
   Phase 4)
+- [x] Support `PaymentMethod` enum (`cash`, `instapay`, `vodafone_cash`, `bank_transfer`, `check`) + optional `notes`
+- [x] Strict balance validation: `0 < amount <= customer.balance`, blocked if `balance <= 0`
+- [x] Standalone payment cancellation (`POST /payments/:id/cancel`) restoring balance + auditing `payment_cancelled`
+- [x] Filterable listing (`GET /payments`) by `customerId`, `invoiceId`, `status`, `type`, `method`, Cairo `period` + `date`
+- [x] Update invoice creation to capture optional `paymentMethod` and `paymentNotes` when `paid > 0`
 
-**Frontend**
-- "Record payment" action from a customer's detail view
-- Payment history per customer
+**Frontend** — *Done*
+- [x] Dedicated Payments list page (`/payments`) with filters (Status, Customer search, Method, Cairo period/date), total collected summary card, and pagination
+- [x] "Record payment" modal action from customer detail view with full balance default, method selection, notes, and strict balance validation
+- [x] Payment history section on customer detail view showing all payments (standalone + on-invoice)
+- [x] Payment cancellation with confirmation dialog and customer debt restoration (disabled with tooltip for on-invoice payments)
+- [x] Sidebar updated with "Customer Invoices" / "فواتير المبيعات" rename and "Payments" / "المدفوعات" navigation item
+- [x] Full Arabic and English translations with RTL support and design token styling
 
 **Done when:** a customer with existing debt can have a partial payment
 recorded from the UI and their balance updates correctly.
+
+**Backend API** (`/api/v1`, JWT + `admin` | `super_admin`):
+
+| Resource | Endpoints |
+|----------|-----------|
+| Payments | `POST/GET /payments`, `GET /payments/:id`, `POST /payments/:id/cancel` |
+
+List query params: `customerId`, `invoiceId`, `status`, `type`, `method`, `period`, `date`, `page`, `limit`.
+Create body: `{ customerId, amount, method?, notes? }`.
+List response: `{ items, meta, summary: { totalAmount } }`.
+
+Module: `src/modules/payments`.
 
 ---
 
@@ -266,7 +288,7 @@ correctly attributed in the audit log UI.
 | 2 — Categories, Items & Pricing | Done | Done |
 | 3 — Customers & Suppliers | Done | Done |
 | 4 — Sales Invoicing | Done | Done |
-| 5 — Payments | Not started | Not started |
+| 5 — Payments | Done | Not started |
 | 6 — Purchasing & Restocking | Not started | Not started |
 | 7 — Inventory Management | Not started | Not started |
 | 8 — Dashboard | Not started | Not started |

@@ -19,6 +19,7 @@ export interface RowActionItem {
   onSelect: () => void;
   tone?: "default" | "danger";
   disabled?: boolean;
+  title?: string;
 }
 
 interface RowActionsMenuProps {
@@ -138,6 +139,7 @@ export function RowActionsMenu({ label, items }: RowActionsMenuProps) {
                   key={item.id}
                   type="button"
                   role="menuitem"
+                  title={item.title}
                   disabled={item.disabled}
                   className={`ds-focus-ring flex w-full cursor-pointer items-center px-4 py-2.5 text-start text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                     item.tone === "danger"

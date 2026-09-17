@@ -9,6 +9,7 @@ interface NavItem {
   key:
     | "home"
     | "invoices"
+    | "payments"
     | "customers"
     | "inventory"
     | "suppliers"
@@ -22,8 +23,9 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { key: "home", href: "/", enabled: true },
-  { key: "invoices", href: "/invoices", enabled: true },
   { key: "customers", href: "/customers", enabled: true },
+  { key: "invoices", href: "/invoices", enabled: true },
+  { key: "payments", href: "/payments", enabled: true },
   { key: "inventory", enabled: false },
   { key: "suppliers", href: "/suppliers", enabled: true },
   { key: "categories", href: "/categories", enabled: true },
@@ -56,6 +58,32 @@ function NavIcon({ name }: { name: NavItem["key"] }) {
           />
           <path
             d="M15 3v4h4M10 12h6M10 16h6"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+          />
+        </svg>
+      );
+    case "payments":
+      return (
+        <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden>
+          <rect
+            x="3"
+            y="6"
+            width="18"
+            height="13"
+            rx="2.5"
+            stroke="currentColor"
+            strokeWidth="1.75"
+          />
+          <path
+            d="M3 10.5h18"
+            stroke="currentColor"
+            strokeWidth="1.75"
+          />
+          <circle cx="7" cy="14.5" r="1" fill="currentColor" />
+          <path
+            d="M14 14.5h3"
             stroke="currentColor"
             strokeWidth="1.75"
             strokeLinecap="round"
@@ -207,6 +235,7 @@ export function Sidebar() {
             item.href !== undefined &&
             (pathname === item.href ||
               (item.key === "invoices" && pathname.startsWith("/invoices")) ||
+              (item.key === "payments" && pathname.startsWith("/payments")) ||
               (item.key === "items" && pathname.startsWith("/items")) ||
               (item.key === "categories" && pathname.startsWith("/categories")) ||
               (item.key === "customers" && pathname.startsWith("/customers")) ||

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { AppShell } from "@/app/layout/app-shell";
@@ -7,6 +8,10 @@ import { CustomerFormModal } from "@/app/modules/customers/components/customer-f
 import { CustomerMergeModal } from "@/app/modules/customers/components/customer-merge-modal";
 import { useCustomerDetail } from "@/app/modules/customers/hooks/use-customer-detail";
 import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { PaymentsTable } from "@/app/modules/payments/components/payments-table";
+import { RecordPaymentModal } from "@/app/modules/payments/components/record-payment-modal";
+import { useCustomerPayments } from "@/app/modules/payments/hooks/use-customer-payments";
+import { useRecordPayment } from "@/app/modules/payments/hooks/use-record-payment";
 import { Button } from "@/app/modules/shared/components/button";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
@@ -22,6 +27,11 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
   const t = useTranslations("customers");
   const tShared = useTranslations("shared");
   const locale = useLocale();
+  const [paymentToast, setPaymentToast] = useState<
+    "recorded" | "cancelled" | null
+  >(null);
+  const recordPaymentHook = useRecordPayment();
+  const customerPayments = useCustomerPayments(customerId);
   const {
     customer,
     status,
@@ -134,6 +144,22 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
           >
             {t("backToList")}
           </Link>
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            disabled={customer.balance <= 0 || !customer.isActive}
+            title={customer.balance <= 0 ? t("recordPaymentDisabled") : undefined}
+            onClick={() =>
+              recordPaymentHook.open({
+                id: customer.id,
+                name: customer.name,
+                balance: customer.balance,
+              })
+            }
+          >
+            {t("recordPayment")}
+          </Button>
           <Button type="button" variant="secondary" size="sm" onClick={openEdit}>
             {t("edit")}
           </Button>
@@ -145,6 +171,19 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
         message={toastMessage}
         variant={toast?.variant ?? "success"}
         onClose={clearToast}
+      />
+
+      <Toast
+        open={paymentToast !== null}
+        message={
+          paymentToast === "recorded"
+            ? t("paymentRecordedSuccess")
+            : paymentToast === "cancelled"
+              ? t("paymentCancelledSuccess")
+              : ""
+        }
+        variant="success"
+        onClose={() => setPaymentToast(null)}
       />
 
       <CustomerFormModal
@@ -177,6 +216,27 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
         onSubmit={submitMerge}
       />
 
+      <RecordPaymentModal
+        open={recordPaymentHook.isOpen}
+        onClose={recordPaymentHook.close}
+        customer={recordPaymentHook.customer}
+        amount={recordPaymentHook.amount}
+        onAmountChange={recordPaymentHook.setAmount}
+        method={recordPaymentHook.method}
+        onMethodChange={recordPaymentHook.setMethod}
+        notes={recordPaymentHook.notes}
+        onNotesChange={recordPaymentHook.setNotes}
+        isSubmitting={recordPaymentHook.isSubmitting}
+        error={recordPaymentHook.error}
+        onSubmit={() => {
+          void recordPaymentHook.submit(() => {
+            setPaymentToast("recorded");
+            refresh();
+            customerPayments.refresh();
+          });
+        }}
+      />
+
       <ConfirmDialog
         open={confirmKind !== null}
         title={confirmTitle}
@@ -198,7 +258,41 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
         onCancel={closeConfirm}
       />
 
-      <div className="flex flex-col gap-4">
+      <ConfirmDialog
+        open={customerPayments.confirmPayment !== null}
+        title={t("confirmCancelPaymentTitle")}
+        description={
+          <div className="flex flex-col gap-2">
+            <p>
+              {t("confirmCancelPaymentBody", {
+                amount: formatMoney(
+                  customerPayments.confirmPayment?.amount ?? 0,
+                  locale,
+                ),
+                currency: t("currency"),
+              })}
+            </p>
+            {customerPayments.cancelError ? (
+              <p className="text-danger" role="alert">
+                {customerPayments.cancelError}
+              </p>
+            ) : null}
+          </div>
+        }
+        confirmLabel={t("confirmCancelPaymentAction")}
+        cancelLabel={t("modalCancel")}
+        confirming={customerPayments.isCancelling}
+        tone="danger"
+        onConfirm={() =>
+          void customerPayments.submitCancel(() => {
+            setPaymentToast("cancelled");
+            refresh();
+          })
+        }
+        onCancel={customerPayments.closeCancelConfirm}
+      />
+
+      <div className="flex flex-col gap-6">
         <SurfaceCard padding="lg">
           <div className="grid gap-6 lg:grid-cols-2">
             <div>
@@ -224,6 +318,57 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
                 {formatMoney(customer.balance, locale)} {t("currency")}
               </p>
             </div>
+          </div>
+        </SurfaceCard>
+
+        {/* Payment History Section */}
+        <SurfaceCard padding="lg">
+          <div className="flex flex-col gap-4">
+            <h2 className="text-base font-semibold text-text-primary">
+              {t("paymentHistoryTitle")}
+            </h2>
+
+            <PaymentsTable
+              payments={customerPayments.payments}
+              showCustomer={false}
+              status={customerPayments.status}
+              error={customerPayments.error}
+              onRetry={customerPayments.refresh}
+              onCancel={customerPayments.openCancelConfirm}
+            />
+
+            {customerPayments.status === "success" &&
+            customerPayments.totalPages > 1 ? (
+              <div className="flex items-center justify-center gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={customerPayments.page <= 1}
+                  onClick={() =>
+                    customerPayments.setPage(customerPayments.page - 1)
+                  }
+                >
+                  {tShared("prevPage") || "Previous"}
+                </Button>
+                <span className="text-sm text-text-secondary">
+                  {customerPayments.page} / {customerPayments.totalPages}
+                </span>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={
+                    customerPayments.page >= customerPayments.totalPages
+                  }
+                  onClick={() =>
+                    customerPayments.setPage(customerPayments.page + 1)
+                  }
+                >
+                  {tShared("nextPage") || "Next"}
+                </Button>
+              </div>
+            ) : null}
           </div>
         </SurfaceCard>
 
