@@ -57,7 +57,7 @@ export function useInvoiceDetail(invoiceId: string) {
             const customer = await getCustomer(doc.customerId, controller.signal);
             setCustomerName(customer.name);
           } catch {
-            setCustomerName("—");
+            setCustomerName("-");
           }
         }
 

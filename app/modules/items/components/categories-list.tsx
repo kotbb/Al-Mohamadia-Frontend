@@ -10,6 +10,7 @@ import {
   RowActionsMenu,
   type RowActionItem,
 } from "@/app/modules/shared/components/row-actions-menu";
+import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
 
 interface CategoriesListProps {
   categories: CategoryListRow[];
@@ -51,20 +52,17 @@ function StatusIcon({ active }: { active: boolean }) {
   );
 }
 
-function formatDate(value: string | undefined, locale: string, atLabel: string): string {
-  if (!value) return "—";
-  try {
-    const date = new Date(value);
-    const datePart = new Intl.DateTimeFormat(locale, {
-      dateStyle: "medium",
-    }).format(date);
-    const timePart = new Intl.DateTimeFormat(locale, {
-      timeStyle: "short",
-    }).format(date);
-    return `${datePart} ${atLabel} ${timePart}`;
-  } catch {
-    return value;
-  }
+function CategoryFolderIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2Z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }
 
 export function CategoriesList({
@@ -80,7 +78,6 @@ export function CategoriesList({
   const t = useTranslations("categories");
   const tShared = useTranslations("shared");
   const locale = useLocale();
-  const atLabel = t("dateAt");
 
   if (status === "loading" || status === "idle") {
     return <LoadingState message={tShared("loading")} />;
@@ -161,10 +158,21 @@ export function CategoriesList({
             return (
               <tr
                 key={category.id}
-                className="border-b border-border last:border-b-0"
+                className="border-b border-border last:border-b-0 transition-colors hover:bg-surface-muted/50"
               >
-                <td className="px-4 py-3 font-medium text-text-primary">
-                  {category.name}
+                <td className="px-4 py-3">
+                  <button
+                    type="button"
+                    onClick={() => onEdit(category)}
+                    className="ds-focus-ring group inline-flex items-center gap-3 rounded-xl text-start transition-colors"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-all duration-150 group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-sm">
+                      <CategoryFolderIcon className="h-4 w-4" />
+                    </div>
+                    <span className="font-semibold text-text-primary transition-colors group-hover:text-primary group-hover:underline">
+                      {category.name}
+                    </span>
+                  </button>
                 </td>
                 <td className="px-4 py-3">
                   <Badge variant={category.isActive ? "success" : "danger"}>
@@ -183,10 +191,10 @@ export function CategoriesList({
                 </td>
                 <td className="px-4 py-3 text-text-secondary">{category.itemCount}</td>
                 <td className="px-4 py-3 whitespace-nowrap text-text-muted">
-                  {formatDate(category.createdAt, locale, atLabel)}
+                  {formatInvoiceDate(category.createdAt, locale)}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-text-muted">
-                  {formatDate(category.updatedAt, locale, atLabel)}
+                  {formatInvoiceDate(category.updatedAt, locale)}
                 </td>
                 <td className="px-4 py-3 text-center">
                   <RowActionsMenu label={t("colActions")} items={actions} />

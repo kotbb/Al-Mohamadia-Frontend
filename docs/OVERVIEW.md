@@ -52,7 +52,8 @@ Customer
   └── Payment (standalone debt payments)
 
 Supplier
-  └── PurchaseInvoice → PurchaseInvoiceLine
+  ├── PurchaseInvoice → PurchaseInvoiceLine (+ SupplierPayment)
+  └── SupplierPayment (standalone debt payments)
 
 AuditLog (append-only activity feed)
 ```
@@ -70,9 +71,10 @@ flowchart LR
   inv --> debt{Remaining?}
   debt -->|customer sale| bal[Customer balance up]
   debt -->|fully paid| done[Saved invoice]
-  shell --> pay[Record debt payment]
+  shell --> pay[Record customer payment]
   shell --> purch[Purchase / restock]
   purch --> supplier[Supplier amount owed]
+  shell --> spay[Record supplier payment]
   shell --> audit[Audit log]
 ```
 
@@ -82,13 +84,14 @@ flowchart LR
 2. **Sell** — Create cash or customer invoice, multi-line items (piece or
    m³), discount, paid/remaining → save / save & print → PDF / WhatsApp.
 3. **Collect** — Record standalone payments against existing customer debt.
-4. **Restock** — Purchase invoices from suppliers; stock up, amount owed up.
-5. **Control** — Manual جرد adjustments, low-stock flags, price history,
+4. **Restock** — Purchase invoices from suppliers (modal creation, view details); stock up, amount owed up.
+5. **Settle** — Record standalone debt payments to suppliers.
+6. **Control** — Manual جرد adjustments, low-stock flags, price history,
    read-only audit log.
 
 > **Note:** Build is phased (vertical slices). See [`PHASES.md`](./PHASES.md)
-> for what exists vs planned. **Phase 4 is complete** (sales invoices API +
-> list / create modal / detail / cancel / PDF / WhatsApp UI). Phase 5 is next (Payments).
+> for what exists vs planned. **Phases 0–6 are complete** (sales invoices, customer payments,
+> purchases, supplier payments, and unified 3-hub navigation). Phase 7 is next (Inventory Management).
 
 ---
 
@@ -98,8 +101,8 @@ flowchart LR
 
 | Area | Purpose |
 |------|---------|
-| Sales invoices | Cash / customer sale, lines, discount, paid/remaining, cancel, PDF / WhatsApp |
-| Payments | Standalone debt payments + payments captured on new sales |
+| Sales invoices | Cash / customer sale, lines, discount, paid/remaining, cancel, PDF / WhatsApp *(Phase 4 — live)* |
+| Customer payments | Standalone debt payments + payments captured on new sales, debtor customer picker *(Phase 5 — live)* |
 | Dashboard | Today's sales / profit / collected / invoice count, debt totals, monthly chart, top items, "فاتورة جديدة" |
 
 ### Stock & catalog
@@ -108,7 +111,8 @@ flowchart LR
 |------|---------|
 | Items & pricing | Categories, items, per-piece / per-m³, cost & unit price, price history *(Phase 2 — live; base reference price API kept for later UI)* |
 | Inventory | Stock list, low/negative stock flags, manual جرد, inventory value at cost |
-| Purchases | Restock invoices from suppliers |
+| Purchases | Restock invoices from suppliers; modal-based creation and view-only detail *(Phase 6 — live)* |
+| Supplier payments | Standalone debt payments to suppliers + payments captured on purchases, debtor supplier picker *(Phase 6 — live)* |
 
 ### People & trust
 
@@ -142,8 +146,19 @@ messages/ or locales/       → i18n dictionaries (ar / en)
 Exact locale routing is decided in Phase 0 — stay consistent once chosen.
 `dir` on `<html>` always follows locale (`ar` → `rtl`, `en` → `ltr`).
 
-Feature domains: `auth`, `dashboard`, `invoices`, `payments`, `inventory`,
-`items`, `customers`, `suppliers`, `purchases`, `audit`, `shared`.
+Feature domains: `auth`, `dashboard`, `invoices`, `payments`, `supplier-payments`,
+`inventory`, `items`, `customers`, `suppliers`, `purchases`, `audit`, `shared`.
+
+### 3-Hub Navigation Structure
+
+The admin shell organizes primary navigation into 3 domain hubs with horizontal in-page tabs (`HubTabs`):
+
+1. **Sales & Customers** (`/customers`, `/invoices`, `/payments`)
+2. **Procurement & Suppliers** (`/suppliers`, `/purchases`, `/supplier-payments`)
+3. **Inventory & Catalog** (`/items`, `/categories`)
+
+Direct top-level routes: **Home / Dashboard** (`/`), **Users** (`/users`).
+Detail views (`/customers/[id]`, `/suppliers/[id]`) accept `?from=...` to contextually route the "Back to list" action back to the user's originating list.
 
 - **HTTP:** native `fetch` via a shared client under `lib/api/` — Bearer
   access token, refresh on 401, base URL from `NEXT_PUBLIC_API_URL`.

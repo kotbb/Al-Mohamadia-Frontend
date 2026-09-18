@@ -161,11 +161,11 @@ Focus is never indicated by `primary` alone or by a border-color change alone �
 
 ## 6. Typography
 
-### Decision: **Cairo, single system-wide family**, for both Arabic and Latin/numeral content.
+### Decision: **Noto Sans Arabic paired with Noto Sans**, for both Arabic and Latin/numeral content.
 
-**Why Cairo:** Matches the approved UI mockups — a geometric Arabic sans-serif with clear hierarchy at ERP table density. It reads modern and operational without decorative personality. A single family keeps one weight system and trivial mixed-script balance.
+**Why Noto Sans Arabic:** Highly legible, ultra-clean, and neutral sans-serif designed specifically for digital displays and multi-script harmony. Combining `Noto Sans Arabic` with its Latin counterpart `Noto Sans` provides smooth, friendly letterforms with clear distinction at all sizes (from 12px table metadata to 28px dashboard KPIs), completely eliminating serif fallbacks and rendering glitches in mixed Arabic/English text and SKU codes.
 
-**Fallback stack:** `"Cairo", "Noto Sans Arabic", "Segoe UI", system-ui, sans-serif`.
+**Fallback stack:** `"Noto Sans Arabic", "Noto Sans", "Segoe UI", system-ui, sans-serif`.
 
 **Weights:** Regular (400) — body/table data. Medium (500) — labels, secondary emphasis, table headers. SemiBold (600) — headings, section titles, invoice totals. Bold (700) — reserved for the grand-total line on an invoice and critical/destructive confirmations only.
 

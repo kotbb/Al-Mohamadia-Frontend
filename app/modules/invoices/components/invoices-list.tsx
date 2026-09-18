@@ -25,6 +25,20 @@ interface InvoicesListProps {
   onCancel: (invoice: SalesInvoice) => void;
 }
 
+function InvoiceDocIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function InvoicesList({
   invoices,
   customerNames,
@@ -96,7 +110,7 @@ export function InvoicesList({
                 ? t("cashCustomer")
                 : invoice.customerId
                   ? (customerNames[invoice.customerId] ?? "…")
-                  : "—";
+                  : "-";
 
             const actions: RowActionItem[] = [
               {
@@ -122,10 +136,20 @@ export function InvoicesList({
             return (
               <tr
                 key={invoice.id}
-                className="border-b border-border last:border-b-0"
+                className="border-b border-border last:border-b-0 transition-colors hover:bg-surface-muted/50"
               >
-                <td className="px-4 py-3 font-medium text-text-primary">
-                  {invoice.invoiceNumber}
+                <td className="px-4 py-3">
+                  <Link
+                    href={`/invoices/${invoice.id}`}
+                    className="ds-focus-ring group inline-flex items-center gap-3 rounded-xl transition-colors"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-all duration-150 group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-sm">
+                      <InvoiceDocIcon className="h-4 w-4" />
+                    </div>
+                    <span className="font-semibold text-text-primary transition-colors group-hover:text-primary group-hover:underline">
+                      {invoice.invoiceNumber}
+                    </span>
+                  </Link>
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-text-secondary">
                   {formatInvoiceDate(invoice.createdAt, locale)}

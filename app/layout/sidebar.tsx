@@ -6,31 +6,45 @@ import { useAuth } from "@/lib/auth/auth-provider";
 import { BrandMark } from "@/app/modules/shared/components/brand-mark";
 
 interface NavItem {
-  key:
-    | "home"
-    | "invoices"
-    | "payments"
-    | "customers"
-    | "inventory"
-    | "suppliers"
-    | "categories"
-    | "items"
-    | "users";
-  href?: string;
+  key: "home" | "hubSales" | "hubProcurement" | "hubInventory" | "users";
+  href: string;
+  matchPrefixes: string[];
   enabled: boolean;
   superAdminOnly?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { key: "home", href: "/", enabled: true },
-  { key: "customers", href: "/customers", enabled: true },
-  { key: "invoices", href: "/invoices", enabled: true },
-  { key: "payments", href: "/payments", enabled: true },
-  { key: "inventory", enabled: false },
-  { key: "suppliers", href: "/suppliers", enabled: true },
-  { key: "categories", href: "/categories", enabled: true },
-  { key: "items", href: "/items", enabled: true },
-  { key: "users", href: "/users", enabled: true, superAdminOnly: true },
+  {
+    key: "home",
+    href: "/",
+    matchPrefixes: ["/"],
+    enabled: true,
+  },
+  {
+    key: "hubSales",
+    href: "/customers",
+    matchPrefixes: ["/customers", "/invoices", "/payments"],
+    enabled: true,
+  },
+  {
+    key: "hubProcurement",
+    href: "/suppliers",
+    matchPrefixes: ["/suppliers", "/purchases", "/supplier-payments"],
+    enabled: true,
+  },
+  {
+    key: "hubInventory",
+    href: "/items",
+    matchPrefixes: ["/items", "/categories", "/inventory"],
+    enabled: true,
+  },
+  {
+    key: "users",
+    href: "/users",
+    matchPrefixes: ["/users"],
+    enabled: true,
+    superAdminOnly: true,
+  },
 ];
 
 function NavIcon({ name }: { name: NavItem["key"] }) {
@@ -47,50 +61,7 @@ function NavIcon({ name }: { name: NavItem["key"] }) {
           />
         </svg>
       );
-    case "invoices":
-      return (
-        <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path
-            d="M7 3h8l4 4v14H7V3Z"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M15 3v4h4M10 12h6M10 16h6"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-          />
-        </svg>
-      );
-    case "payments":
-      return (
-        <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <rect
-            x="3"
-            y="6"
-            width="18"
-            height="13"
-            rx="2.5"
-            stroke="currentColor"
-            strokeWidth="1.75"
-          />
-          <path
-            d="M3 10.5h18"
-            stroke="currentColor"
-            strokeWidth="1.75"
-          />
-          <circle cx="7" cy="14.5" r="1" fill="currentColor" />
-          <path
-            d="M14 14.5h3"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-          />
-        </svg>
-      );
-    case "customers":
+    case "hubSales":
       return (
         <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden>
           <circle cx="9" cy="8" r="3" stroke="currentColor" strokeWidth="1.75" />
@@ -109,23 +80,7 @@ function NavIcon({ name }: { name: NavItem["key"] }) {
           />
         </svg>
       );
-    case "inventory":
-      return (
-        <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path
-            d="M4 8.5 12 4l8 4.5v7L12 20l-8-4.5v-7Z"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M4 8.5 12 13l8-4.5M12 13v7"
-            stroke="currentColor"
-            strokeWidth="1.75"
-          />
-        </svg>
-      );
-    case "suppliers":
+    case "hubProcurement":
       return (
         <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden>
           <path
@@ -138,28 +93,17 @@ function NavIcon({ name }: { name: NavItem["key"] }) {
           <circle cx="16.5" cy="18" r="1.75" fill="currentColor" />
         </svg>
       );
-    case "categories":
+    case "hubInventory":
       return (
         <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden>
           <path
-            d="M4 5h7v7H4V5Zm9 0h7v7h-7V5ZM4 14h7v7H4v-7Zm9 0h7v7h-7v-7Z"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinejoin="round"
-          />
-        </svg>
-      );
-    case "items":
-      return (
-        <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path
-            d="M12 3 20 7.5v9L12 21 4 16.5v-9L12 3Z"
+            d="M4 8.5 12 4l8 4.5v7L12 20l-8-4.5v-7Z"
             stroke="currentColor"
             strokeWidth="1.75"
             strokeLinejoin="round"
           />
           <path
-            d="M12 12 20 7.5M12 12 4 7.5M12 12v9"
+            d="M4 8.5 12 13l8-4.5M12 13v7"
             stroke="currentColor"
             strokeWidth="1.75"
           />
@@ -218,7 +162,7 @@ export function Sidebar() {
       </div>
 
       <nav
-        className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto"
+        className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto"
         aria-label="Main"
       >
         {NAV_ITEMS.map((item) => {
@@ -232,18 +176,15 @@ export function Sidebar() {
           const enabled = item.enabled && (!item.superAdminOnly || isSuperAdmin);
           const isActive =
             enabled &&
-            item.href !== undefined &&
-            (pathname === item.href ||
-              (item.key === "invoices" && pathname.startsWith("/invoices")) ||
-              (item.key === "payments" && pathname.startsWith("/payments")) ||
-              (item.key === "items" && pathname.startsWith("/items")) ||
-              (item.key === "categories" && pathname.startsWith("/categories")) ||
-              (item.key === "customers" && pathname.startsWith("/customers")) ||
-              (item.key === "suppliers" && pathname.startsWith("/suppliers")));
+            (item.key === "home"
+              ? pathname === "/"
+              : item.matchPrefixes.some(
+                  (p) => pathname === p || pathname.startsWith(`${p}/`),
+                ));
 
-          const className = `ds-focus-ring flex min-h-9 items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm transition-colors duration-150 ${
+          const className = `ds-focus-ring flex min-h-10 items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-all duration-150 ${
             isActive
-              ? "bg-sidebar-active font-semibold text-sidebar-active-foreground"
+              ? "bg-sidebar-active font-semibold text-sidebar-active-foreground shadow-xs"
               : enabled
                 ? "cursor-pointer text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground"
                 : "cursor-not-allowed text-sidebar-muted/60"
@@ -258,7 +199,7 @@ export function Sidebar() {
                 aria-current={isActive ? "page" : undefined}
               >
                 <NavIcon name={item.key} />
-                <span>{label}</span>
+                <span className="truncate">{label}</span>
               </Link>
             );
           }
@@ -271,7 +212,7 @@ export function Sidebar() {
               aria-disabled="true"
             >
               <NavIcon name={item.key} />
-              <span>{label}</span>
+              <span className="truncate">{label}</span>
             </span>
           );
         })}

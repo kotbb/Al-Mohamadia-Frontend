@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { AppShell } from "@/app/layout/app-shell";
 import { formatMoney } from "@/app/modules/items/utils/format-money";
 import { PaymentsFilters } from "@/app/modules/payments/components/payments-filters";
 import { PaymentsTable } from "@/app/modules/payments/components/payments-table";
+import { RecordPaymentModal } from "@/app/modules/payments/components/record-payment-modal";
 import { usePayments } from "@/app/modules/payments/hooks/use-payments";
+import { useRecordPayment } from "@/app/modules/payments/hooks/use-record-payment";
 import { Button } from "@/app/modules/shared/components/button";
 import { ConfirmDialog } from "@/app/modules/shared/components/row-actions-menu";
 import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
@@ -15,6 +18,8 @@ export function PaymentsPage() {
   const t = useTranslations("payments");
   const locale = useLocale();
   const currency = t("currency");
+  const [recordSuccessToast, setRecordSuccessToast] = useState(false);
+  const recordPaymentHook = useRecordPayment();
 
   const {
     payments,
@@ -52,7 +57,49 @@ export function PaymentsPage() {
   } = usePayments();
 
   return (
-    <AppShell title={t("title")} subtitle={t("subtitle")}>
+    <AppShell
+      title={t("title")}
+      subtitle={t("subtitle")}
+      actions={
+        <Button
+          type="button"
+          variant="primary"
+          size="sm"
+          onClick={() => recordPaymentHook.open()}
+        >
+          {t("recordTitle")}
+        </Button>
+      }
+    >
+      <Toast
+        open={recordSuccessToast}
+        message={t("recordSuccess")}
+        variant="success"
+        onClose={() => setRecordSuccessToast(false)}
+      />
+
+      <RecordPaymentModal
+        open={recordPaymentHook.isOpen}
+        onClose={recordPaymentHook.close}
+        customer={recordPaymentHook.customer}
+        onSelectCustomer={recordPaymentHook.selectCustomer}
+        onClearCustomer={recordPaymentHook.clearCustomer}
+        amount={recordPaymentHook.amount}
+        onAmountChange={recordPaymentHook.setAmount}
+        method={recordPaymentHook.method}
+        onMethodChange={recordPaymentHook.setMethod}
+        notes={recordPaymentHook.notes}
+        onNotesChange={recordPaymentHook.setNotes}
+        isSubmitting={recordPaymentHook.isSubmitting}
+        error={recordPaymentHook.error}
+        onSubmit={() =>
+          recordPaymentHook.submit(() => {
+            refresh();
+            setRecordSuccessToast(true);
+          })
+        }
+      />
+
       <Toast
         open={toast !== null}
         message={t("cancelSuccess")}

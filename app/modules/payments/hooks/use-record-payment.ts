@@ -4,10 +4,11 @@ import { useCallback, useState } from "react";
 import { recordPayment } from "@/app/modules/payments/services/payments.service";
 import type { Payment, PaymentMethod } from "@/app/modules/payments/types/payments.types";
 
-interface CustomerTarget {
+export interface CustomerTarget {
   id: string;
   name: string;
   balance: number;
+  phone?: string;
 }
 
 export function useRecordPayment() {
@@ -19,13 +20,30 @@ export function useRecordPayment() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const open = useCallback((target: CustomerTarget) => {
-    setCustomer(target);
-    setAmount(target.balance > 0 ? String(target.balance) : "");
+  const open = useCallback((target?: CustomerTarget) => {
+    if (target) {
+      setCustomer(target);
+      setAmount(target.balance > 0 ? String(target.balance) : "");
+    } else {
+      setCustomer(null);
+      setAmount("");
+    }
     setMethod("cash");
     setNotes("");
     setError(null);
     setIsOpen(true);
+  }, []);
+
+  const selectCustomer = useCallback((target: CustomerTarget) => {
+    setCustomer(target);
+    setAmount(target.balance > 0 ? String(target.balance) : "");
+    setError(null);
+  }, []);
+
+  const clearCustomer = useCallback(() => {
+    setCustomer(null);
+    setAmount("");
+    setError(null);
   }, []);
 
   const close = useCallback(() => {
@@ -91,6 +109,8 @@ export function useRecordPayment() {
     setError,
     open,
     close,
+    selectCustomer,
+    clearCustomer,
     submit,
   };
 }

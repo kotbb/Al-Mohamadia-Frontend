@@ -104,7 +104,7 @@ export function usePayments() {
 
     listPayments(
       {
-        type: "standalone",
+        type: "all",
         customerId: selectedCustomer ? selectedCustomer.id : undefined,
         status: statusFilter,
         method: methodFilter === "all" ? undefined : methodFilter,
@@ -164,7 +164,7 @@ export function usePayments() {
           const customer = await getCustomer(id, controller.signal);
           return [id, customer.name] as const;
         } catch {
-          return [id, "—"] as const;
+          return [id, "-"] as const;
         }
       }),
     ).then((entries) => {

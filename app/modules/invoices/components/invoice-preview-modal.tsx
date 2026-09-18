@@ -130,9 +130,9 @@ export function InvoicePreviewModal({
   }
 
   function formatDateYMD(value: string | undefined): string {
-    if (!value) return "—";
+    if (!value) return "-";
     const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return "—";
+    if (Number.isNaN(d.getTime())) return "-";
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, "0");
     const day = String(d.getDate()).padStart(2, "0");
@@ -244,7 +244,10 @@ export function InvoicePreviewModal({
               id="printable-invoice-sheet"
               className="mx-auto w-full max-w-[210mm] min-h-[297mm] rounded-sm bg-white p-[16mm] shadow-xl text-[#1a1a1a] print:m-0 print:w-full print:max-w-none print:min-h-0 print:border-none print:p-[16mm] print:shadow-none"
               dir="rtl"
-              style={{ fontFamily: "var(--font-cairo), Cairo, sans-serif" }}
+              style={{
+                fontFamily:
+                  "var(--font-noto-sans-arabic), var(--font-noto-sans), 'Noto Sans Arabic', 'Noto Sans', sans-serif",
+              }}
             >
               {/* Header: Invoice # & Date (right in RTL), Brand Mark & Name (left in RTL) */}
               <div className="flex items-center justify-between gap-4 mb-5">
@@ -350,13 +353,13 @@ export function InvoicePreviewModal({
                         {hasDimensions && (
                           <>
                             <td className="py-2.5 px-1.5 text-center align-top text-[#1a1a1a]">
-                              {line.thickness != null ? line.thickness : "—"}
+                              {line.thickness != null ? line.thickness : "-"}
                             </td>
                             <td className="py-2.5 px-1.5 text-center align-top text-[#1a1a1a]">
-                              {line.width != null ? line.width : "—"}
+                              {line.width != null ? line.width : "-"}
                             </td>
                             <td className="py-2.5 px-1.5 text-center align-top text-[#1a1a1a]">
-                              {line.length != null ? line.length : "—"}
+                              {line.length != null ? line.length : "-"}
                             </td>
                           </>
                         )}

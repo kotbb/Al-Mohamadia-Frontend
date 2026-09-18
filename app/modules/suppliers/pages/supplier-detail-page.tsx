@@ -1,8 +1,12 @@
 "use client";
 
+import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { AppShell } from "@/app/layout/app-shell";
+import { RecordSupplierPaymentModal } from "@/app/modules/supplier-payments/components/record-supplier-payment-modal";
+import { useRecordSupplierPayment } from "@/app/modules/supplier-payments/hooks/use-record-supplier-payment";
 import { SupplierFormModal } from "@/app/modules/suppliers/components/supplier-form-modal";
 import { SupplierMergeModal } from "@/app/modules/suppliers/components/supplier-merge-modal";
 import { useSupplierDetail } from "@/app/modules/suppliers/hooks/use-supplier-detail";
@@ -13,6 +17,10 @@ import { LoadingState } from "@/app/modules/shared/components/loading-state";
 import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
 import { ConfirmDialog } from "@/app/modules/shared/components/row-actions-menu";
 import { Toast } from "@/app/modules/shared/components/toast";
+import { PurchasesTable } from "@/app/modules/purchases/components/purchases-table";
+import { usePurchases } from "@/app/modules/purchases/hooks/use-purchases";
+import { SupplierPaymentsTable } from "@/app/modules/supplier-payments/components/supplier-payments-table";
+import { useSupplierAccountPayments } from "@/app/modules/supplier-payments/hooks/use-supplier-account-payments";
 
 interface SupplierDetailPageProps {
   supplierId: string;
@@ -22,6 +30,15 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
   const t = useTranslations("suppliers");
   const tShared = useTranslations("shared");
   const locale = useLocale();
+  const searchParams = useSearchParams();
+  const fromParam = searchParams.get("from");
+  const backHref = fromParam && fromParam.startsWith("/") ? fromParam : "/suppliers";
+  const supplierPurchases = usePurchases({ supplierId, pageSize: 10 });
+  const supplierPayments = useSupplierAccountPayments(supplierId);
+  const recordPaymentHook = useRecordSupplierPayment();
+  const [paymentToast, setPaymentToast] = useState<
+    "recorded" | "cancelled" | null
+  >(null);
   const {
     supplier,
     status,
@@ -125,14 +142,36 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
   return (
     <AppShell
       title={supplier.name}
-      subtitle={supplier.phone ?? "—"}
+      subtitle={supplier.phone ?? "-"}
       actions={
         <div className="flex flex-wrap items-center gap-2">
           <Link
-            href="/suppliers"
+            href={backHref}
             className="ds-focus-ring inline-flex min-h-10 items-center rounded-lg border border-border bg-surface px-3.5 text-sm font-medium text-text-secondary hover:bg-surface-muted"
           >
             {t("backToList")}
+          </Link>
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            disabled={supplier.amountOwed <= 0 || !supplier.isActive}
+            title={supplier.amountOwed <= 0 ? t("recordPaymentDisabled") : undefined}
+            onClick={() =>
+              recordPaymentHook.open({
+                id: supplier.id,
+                name: supplier.name,
+                amountOwed: supplier.amountOwed,
+              })
+            }
+          >
+            {t("recordPayment")}
+          </Button>
+          <Link
+            href={`/purchases?new=1&supplierId=${supplier.id}`}
+            className="ds-focus-ring inline-flex min-h-10 items-center rounded-lg border border-border bg-surface px-3.5 text-sm font-medium text-text-secondary hover:bg-surface-muted"
+          >
+            {t("newPurchase")}
           </Link>
           <Button type="button" variant="secondary" size="sm" onClick={openEdit}>
             {t("edit")}
@@ -198,6 +237,69 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
         onCancel={closeConfirm}
       />
 
+      <ConfirmDialog
+        open={supplierPurchases.confirmPurchase !== null}
+        title={t("confirmCancelPurchaseTitle")}
+        description={
+          <div className="flex flex-col gap-2">
+            <p>
+              {t("confirmCancelPurchaseBody", {
+                number: supplierPurchases.confirmPurchase?.invoiceNumber ?? "",
+              })}
+            </p>
+            {supplierPurchases.confirmError ? (
+              <p className="text-danger" role="alert">
+                {supplierPurchases.confirmError}
+              </p>
+            ) : null}
+          </div>
+        }
+        confirmLabel={t("confirmCancelPurchaseAction")}
+        cancelLabel={t("modalCancel")}
+        confirming={supplierPurchases.isConfirming}
+        tone="danger"
+        onConfirm={() =>
+          void supplierPurchases.submitCancel(() => {
+            refresh();
+          })
+        }
+        onCancel={supplierPurchases.closeCancelConfirm}
+      />
+
+      <ConfirmDialog
+        open={supplierPayments.confirmPayment !== null}
+        title={t("confirmCancelPaymentTitle")}
+        description={
+          <div className="flex flex-col gap-2">
+            <p>
+              {t("confirmCancelPaymentBody", {
+                amount: formatMoney(
+                  supplierPayments.confirmPayment?.amount ?? 0,
+                  locale,
+                ),
+                currency: t("currency"),
+              })}
+            </p>
+            {supplierPayments.cancelError ? (
+              <p className="text-danger" role="alert">
+                {supplierPayments.cancelError}
+              </p>
+            ) : null}
+          </div>
+        }
+        confirmLabel={t("confirmCancelPaymentAction")}
+        cancelLabel={t("modalCancel")}
+        confirming={supplierPayments.isCancelling}
+        tone="danger"
+        onConfirm={() =>
+          void supplierPayments.submitCancel(() => {
+            setPaymentToast("cancelled");
+            refresh();
+          })
+        }
+        onCancel={supplierPayments.closeCancelConfirm}
+      />
+
       <div className="flex flex-col gap-4">
         <SurfaceCard padding="lg">
           <div className="grid gap-6 lg:grid-cols-2">
@@ -209,13 +311,13 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
                 <div>
                   <dt className="text-text-muted">{t("fieldPhone")}</dt>
                   <dd className="font-medium text-text-primary">
-                    {supplier.phone ?? "—"}
+                    {supplier.phone ?? "-"}
                   </dd>
                 </div>
                 <div>
                   <dt className="text-text-muted">{t("fieldAddress")}</dt>
                   <dd className="font-medium text-text-primary">
-                    {supplier.address?.trim() ? supplier.address : "—"}
+                    {supplier.address?.trim() ? supplier.address : "-"}
                   </dd>
                 </div>
               </dl>
@@ -226,6 +328,113 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
                 {formatMoney(supplier.amountOwed, locale)} {t("currency")}
               </p>
             </div>
+          </div>
+        </SurfaceCard>
+
+        {/* Purchases History Section */}
+        <SurfaceCard padding="lg">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-base font-semibold text-text-primary">
+                {t("purchaseHistoryTitle")}
+              </h2>
+              <Link
+                href={`/purchases?new=1&supplierId=${supplier.id}`}
+                className="ds-focus-ring inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+              >
+                + {t("newPurchase")}
+              </Link>
+            </div>
+
+            <PurchasesTable
+              purchases={supplierPurchases.purchases}
+              showSupplier={false}
+              status={supplierPurchases.listStatus}
+              error={supplierPurchases.listError}
+              onRetry={supplierPurchases.refresh}
+              onCancel={supplierPurchases.openCancelConfirm}
+            />
+
+            {supplierPurchases.listStatus === "success" &&
+            supplierPurchases.totalPages > 1 ? (
+              <div className="flex items-center justify-center gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={supplierPurchases.page <= 1}
+                  onClick={() =>
+                    supplierPurchases.setPage(supplierPurchases.page - 1)
+                  }
+                >
+                  {tShared("prevPage") || "Previous"}
+                </Button>
+                <span className="text-sm text-text-secondary">
+                  {supplierPurchases.page} / {supplierPurchases.totalPages}
+                </span>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={
+                    supplierPurchases.page >= supplierPurchases.totalPages
+                  }
+                  onClick={() =>
+                    supplierPurchases.setPage(supplierPurchases.page + 1)
+                  }
+                >
+                  {tShared("nextPage") || "Next"}
+                </Button>
+              </div>
+            ) : null}
+          </div>
+        </SurfaceCard>
+
+        {/* Payment History */}
+        <SurfaceCard padding="lg">
+          <div className="flex flex-col gap-4">
+            <h2 className="text-base font-semibold text-text-primary">
+              {t("paymentHistoryTitle")}
+            </h2>
+            <SupplierPaymentsTable
+              payments={supplierPayments.payments}
+              status={supplierPayments.status}
+              error={supplierPayments.error}
+              onRetry={supplierPayments.refresh}
+              onCancel={supplierPayments.openCancelConfirm}
+            />
+            {supplierPayments.status === "success" &&
+            supplierPayments.totalPages > 1 ? (
+              <div className="flex items-center justify-center gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={supplierPayments.page <= 1}
+                  onClick={() =>
+                    supplierPayments.setPage(supplierPayments.page - 1)
+                  }
+                >
+                  {tShared("prevPage") || "Previous"}
+                </Button>
+                <span className="text-sm text-text-secondary">
+                  {supplierPayments.page} / {supplierPayments.totalPages}
+                </span>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={
+                    supplierPayments.page >= supplierPayments.totalPages
+                  }
+                  onClick={() =>
+                    supplierPayments.setPage(supplierPayments.page + 1)
+                  }
+                >
+                  {tShared("nextPage") || "Next"}
+                </Button>
+              </div>
+            ) : null}
           </div>
         </SurfaceCard>
 
@@ -268,6 +477,40 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
           </Button>
         </div>
       </div>
+
+      <RecordSupplierPaymentModal
+        open={recordPaymentHook.isOpen}
+        onClose={recordPaymentHook.close}
+        supplier={recordPaymentHook.supplier}
+        amount={recordPaymentHook.amount}
+        onAmountChange={recordPaymentHook.setAmount}
+        method={recordPaymentHook.method}
+        onMethodChange={recordPaymentHook.setMethod}
+        notes={recordPaymentHook.notes}
+        onNotesChange={recordPaymentHook.setNotes}
+        isSubmitting={recordPaymentHook.isSubmitting}
+        error={recordPaymentHook.error}
+        onSubmit={() => {
+          void recordPaymentHook.submit(() => {
+            setPaymentToast("recorded");
+            refresh();
+            supplierPayments.refresh();
+          });
+        }}
+      />
+
+      <Toast
+        open={paymentToast !== null}
+        message={
+          paymentToast === "recorded"
+            ? t("paymentRecordedSuccess")
+            : paymentToast === "cancelled"
+              ? t("paymentCancelledSuccess")
+              : ""
+        }
+        variant="success"
+        onClose={() => setPaymentToast(null)}
+      />
     </AppShell>
   );
 }

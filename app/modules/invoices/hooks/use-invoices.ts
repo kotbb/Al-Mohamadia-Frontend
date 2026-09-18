@@ -122,7 +122,7 @@ export function useInvoices() {
           const customer = await getCustomer(id, controller.signal);
           return [id, customer.name] as const;
         } catch {
-          return [id, "—"] as const;
+          return [id, "-"] as const;
         }
       }),
     ).then((entries) => {

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { GlobalHeader } from "./global-header";
+import { HubNavigation } from "./hub-navigation";
 import { Sidebar } from "./sidebar";
 
 interface AppShellProps {
@@ -7,6 +8,7 @@ interface AppShellProps {
   title: string;
   subtitle?: string;
   actions?: ReactNode;
+  hubTabs?: ReactNode | false;
   contentWidth?: "dashboard" | "comfortable";
 }
 
@@ -15,6 +17,7 @@ export function AppShell({
   title,
   subtitle,
   actions,
+  hubTabs,
   contentWidth = "dashboard",
 }: AppShellProps) {
   const contentClass =
@@ -33,6 +36,14 @@ export function AppShell({
           </div>
 
           <div className={`${contentClass} pb-8 pt-8`}>
+            {hubTabs === false ? null : hubTabs !== undefined ? (
+              <div className="mb-6">{hubTabs}</div>
+            ) : (
+              <div className="mb-6">
+                <HubNavigation />
+              </div>
+            )}
+
             <header className="mb-5 flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
                 <h1 className="text-xl font-bold leading-tight tracking-tight text-text-primary">

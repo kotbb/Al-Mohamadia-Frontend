@@ -77,7 +77,7 @@ export function SupplierMergeModal({
             {options.map((supplier) => (
               <option key={supplier.id} value={supplier.id}>
                 {supplier.name}
-                {supplier.phone ? ` — ${supplier.phone}` : ""}
+                {supplier.phone ? ` - ${supplier.phone}` : ""}
               </option>
             ))}
           </select>
@@ -109,7 +109,7 @@ export function SupplierMergeModal({
                         {supplier.name}
                       </span>
                       <span className="block text-sm text-text-muted">
-                        {supplier.phone ?? "—"}
+                        {supplier.phone ?? "-"}
                       </span>
                     </span>
                   </label>

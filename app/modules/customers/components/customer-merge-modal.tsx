@@ -76,7 +76,7 @@ export function CustomerMergeModal({
             <option value="">{t("mergeTargetPlaceholder")}</option>
             {options.map((customer) => (
               <option key={customer.id} value={customer.id}>
-                {customer.name} — {customer.phone}
+                {customer.name} - {customer.phone}
               </option>
             ))}
           </select>

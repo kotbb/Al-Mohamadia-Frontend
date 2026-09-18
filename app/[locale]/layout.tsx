@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
-import { Cairo } from "next/font/google";
+import { Noto_Sans, Noto_Sans_Arabic } from "next/font/google";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import {
   getMessages,
@@ -12,9 +12,16 @@ import { ThemeProvider } from "@/lib/theme/theme-provider";
 import { AuthProvider } from "@/lib/auth/auth-provider";
 import "../globals.css";
 
-const cairo = Cairo({
-  variable: "--font-cairo",
-  subsets: ["arabic", "latin"],
+const notoSansArabic = Noto_Sans_Arabic({
+  variable: "--font-noto-sans-arabic",
+  subsets: ["arabic"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+const notoSans = Noto_Sans({
+  variable: "--font-noto-sans",
+  subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
 });
@@ -64,9 +71,9 @@ export default async function LocaleLayout({
       lang={locale as Locale}
       dir={dir}
       suppressHydrationWarning
-      className={`${cairo.variable} ${cairo.className} h-full`}
+      className={`${notoSansArabic.variable} ${notoSans.variable} font-sans h-full`}
     >
-      <body className={`${cairo.className} min-h-full antialiased`}>
+      <body className="font-sans min-h-full antialiased">
         <ThemeProvider>
           <NextIntlClientProvider messages={messages}>
             <AuthProvider>{children}</AuthProvider>

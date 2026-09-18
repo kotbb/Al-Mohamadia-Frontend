@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { AppShell } from "@/app/layout/app-shell";
@@ -27,6 +28,9 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
   const t = useTranslations("customers");
   const tShared = useTranslations("shared");
   const locale = useLocale();
+  const searchParams = useSearchParams();
+  const fromParam = searchParams.get("from");
+  const backHref = fromParam && fromParam.startsWith("/") ? fromParam : "/customers";
   const [paymentToast, setPaymentToast] = useState<
     "recorded" | "cancelled" | null
   >(null);
@@ -139,7 +143,7 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
       actions={
         <div className="flex flex-wrap items-center gap-2">
           <Link
-            href="/customers"
+            href={backHref}
             className="ds-focus-ring inline-flex min-h-10 items-center rounded-lg border border-border bg-surface px-3.5 text-sm font-medium text-text-secondary hover:bg-surface-muted"
           >
             {t("backToList")}
@@ -307,7 +311,7 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
                 <div>
                   <dt className="text-text-muted">{t("fieldAddress")}</dt>
                   <dd className="font-medium text-text-primary">
-                    {customer.address?.trim() ? customer.address : "—"}
+                    {customer.address?.trim() ? customer.address : "-"}
                   </dd>
                 </div>
               </dl>

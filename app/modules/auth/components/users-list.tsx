@@ -11,6 +11,7 @@ import {
   RowActionsMenu,
   type RowActionItem,
 } from "@/app/modules/shared/components/row-actions-menu";
+import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
 
 interface UsersListProps {
   users: AuthUser[];
@@ -52,22 +53,6 @@ function StatusIcon({ active }: { active: boolean }) {
   );
 }
 
-function formatDate(value: string | undefined, locale: string, atLabel: string): string {
-  if (!value) return "—";
-  try {
-    const date = new Date(value);
-    const datePart = new Intl.DateTimeFormat(locale, {
-      dateStyle: "medium",
-    }).format(date);
-    const timePart = new Intl.DateTimeFormat(locale, {
-      timeStyle: "short",
-    }).format(date);
-    return `${datePart} ${atLabel} ${timePart}`;
-  } catch {
-    return value;
-  }
-}
-
 export function UsersList({
   users,
   status,
@@ -81,7 +66,6 @@ export function UsersList({
   const t = useTranslations("users");
   const tShared = useTranslations("shared");
   const locale = useLocale();
-  const atLabel = t("dateAt");
 
   if (status === "loading" || status === "idle") {
     return <LoadingState message={tShared("loading")} />;
@@ -110,13 +94,13 @@ export function UsersList({
     <div className="w-full overflow-x-auto rounded-xl border border-border bg-white dark:bg-surface">
       <table className="w-full min-w-[48rem] table-fixed border-collapse text-sm lg:text-[0.9375rem]">
         <colgroup>
-          <col className="w-[18%]" />
-          <col className="w-[15%]" />
-          <col className="w-[12%]" />
-          <col className="w-[12%]" />
+          <col className="w-[22%]" />
+          <col className="w-[14%]" />
+          <col className="w-[11%]" />
+          <col className="w-[11%]" />
           <col className="w-[17%]" />
           <col className="w-[17%]" />
-          <col className="w-[9%]" />
+          <col className="w-[8%]" />
         </colgroup>
         <thead>
           <tr className="border-b border-border bg-surface-muted">
@@ -174,13 +158,40 @@ export function UsersList({
                     },
                   ];
 
+            const displayName = getDisplayName(
+              user.firstName,
+              user.lastName,
+              user.username,
+            );
+            const initial = (user.firstName || user.username)
+              .trim()
+              .charAt(0)
+              .toUpperCase();
+
             return (
               <tr
                 key={user.id}
-                className="border-b border-border last:border-b-0"
+                className="border-b border-border last:border-b-0 transition-colors hover:bg-surface-muted/50"
               >
-                <td className={`${cell} truncate font-medium text-text-primary`}>
-                  {getDisplayName(user.firstName, user.lastName, user.username)}
+                <td className={cell}>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xs font-bold text-primary transition-all duration-150 group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-sm">
+                      {initial}
+                    </div>
+                    {user.role !== "super_admin" ? (
+                      <button
+                        type="button"
+                        onClick={() => onEdit(user)}
+                        className="ds-focus-ring truncate rounded text-start font-semibold text-text-primary transition-colors hover:text-primary hover:underline"
+                      >
+                        {displayName}
+                      </button>
+                    ) : (
+                      <span className="truncate font-semibold text-text-primary">
+                        {displayName}
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td className={`${cell} truncate text-text-secondary`}>
                   {user.username}
@@ -206,10 +217,10 @@ export function UsersList({
                   </Badge>
                 </td>
                 <td className={`${cell} whitespace-nowrap text-text-muted`}>
-                  {formatDate(user.createdAt, locale, atLabel)}
+                  {formatInvoiceDate(user.createdAt, locale)}
                 </td>
                 <td className={`${cell} whitespace-nowrap text-text-muted`}>
-                  {formatDate(user.updatedAt, locale, atLabel)}
+                  {formatInvoiceDate(user.updatedAt, locale)}
                 </td>
                 <td className={`${cell} text-center`}>
                   {actions.length === 0 ? (

@@ -97,29 +97,18 @@ export function PaymentsTable({
           {payments.map((payment) => {
             const customerName = payment.customerId
               ? (customerNames[payment.customerId] ?? "…")
-              : "—";
+              : t("cashCustomer");
 
             const actions: RowActionItem[] = [];
 
-            if (!payment.isReversed) {
-              if (!payment.invoiceId) {
-                // Standalone payment: cancelable
-                actions.push({
-                  id: "cancel",
-                  label: t("cancel"),
-                  onSelect: () => onCancel(payment),
-                  tone: "danger",
-                });
-              } else {
-                // On-invoice payment: disabled with explanation tooltip
-                actions.push({
-                  id: "cancel",
-                  label: t("cancel"),
-                  disabled: true,
-                  title: t("cancelInvoiceTooltip"),
-                  onSelect: () => {},
-                });
-              }
+            if (!payment.isReversed && !payment.invoiceId) {
+              // Only standalone active payments can be cancelled directly
+              actions.push({
+                id: "cancel",
+                label: t("cancel"),
+                onSelect: () => onCancel(payment),
+                tone: "danger",
+              });
             }
 
             return (
@@ -134,13 +123,13 @@ export function PaymentsTable({
                   <td className="px-4 py-3 text-text-primary">
                     {payment.customerId ? (
                       <Link
-                        href={`/customers/${payment.customerId}`}
+                        href={`/customers/${payment.customerId}?from=/payments`}
                         className="ds-focus-ring rounded font-medium text-primary hover:underline"
                       >
                         {customerName}
                       </Link>
                     ) : (
-                      "‌—"
+                      <span className="text-text-secondary">{t("cashCustomer")}</span>
                     )}
                   </td>
                 ) : null}
@@ -151,7 +140,7 @@ export function PaymentsTable({
                   <PaymentMethodBadge method={payment.method} />
                 </td>
                 <td className="max-w-[14rem] truncate px-4 py-3 text-text-secondary" title={payment.notes ?? ""}>
-                  {payment.notes?.trim() ? payment.notes : "—"}
+                  {payment.notes?.trim() ? payment.notes : "-"}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
                   <Badge variant={payment.isReversed ? "danger" : "success"}>
@@ -164,7 +153,7 @@ export function PaymentsTable({
                       <RowActionsMenu label={t("colActions")} items={actions} />
                     </div>
                   ) : (
-                    <span className="text-text-muted">—</span>
+                    <span className="text-text-muted">-</span>
                   )}
                 </td>
               </tr>

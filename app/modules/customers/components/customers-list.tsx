@@ -144,10 +144,20 @@ export function CustomersList({
             return (
               <tr
                 key={customer.id}
-                className="border-b border-border last:border-b-0"
+                className="border-b border-border last:border-b-0 transition-colors hover:bg-surface-muted/50"
               >
-                <td className="px-4 py-3 font-medium text-text-primary">
-                  {customer.name}
+                <td className="px-4 py-3">
+                  <Link
+                    href={`/customers/${customer.id}`}
+                    className="ds-focus-ring group inline-flex items-center gap-3 rounded-xl transition-colors"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xs font-bold text-primary transition-all duration-150 group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-sm">
+                      {customer.name.trim().charAt(0).toUpperCase()}
+                    </div>
+                    <span className="font-semibold text-text-primary transition-colors group-hover:text-primary group-hover:underline">
+                      {customer.name}
+                    </span>
+                  </Link>
                 </td>
                 <td className="px-4 py-3 text-text-secondary">{customer.phone}</td>
                 <td className="px-4 py-3 whitespace-nowrap text-text-primary">

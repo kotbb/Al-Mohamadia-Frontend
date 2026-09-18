@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import type { PriceHistoryEntry } from "@/app/modules/items/types/items.types";
 import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
 
 interface PriceHistoryTableProps {
   history: PriceHistoryEntry[];
@@ -23,7 +24,7 @@ function formatValue(
   value: unknown,
   locale: string,
 ): string {
-  if (value === null || value === undefined) return "—";
+  if (value === null || value === undefined) return "-";
   if (field === "unitPrice" || field === "cost") {
     const numeric = typeof value === "number" ? value : Number(value);
     if (!Number.isNaN(numeric)) return formatMoney(numeric, locale);
@@ -77,12 +78,7 @@ export function PriceHistoryTable({
                 {entry.changedBy}
               </td>
               <td className={`${cell} whitespace-nowrap text-text-muted`}>
-                {entry.createdAt
-                  ? new Intl.DateTimeFormat(locale, {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    }).format(new Date(entry.createdAt))
-                  : "—"}
+                {formatInvoiceDate(entry.createdAt, locale)}
               </td>
             </tr>
           ))}
