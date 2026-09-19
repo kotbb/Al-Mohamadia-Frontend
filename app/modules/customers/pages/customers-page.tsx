@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { AppShell } from "@/app/layout/app-shell";
 import { CustomersList } from "@/app/modules/customers/components/customers-list";
@@ -17,6 +18,10 @@ import { Toast } from "@/app/modules/shared/components/toast";
 export function CustomersPage() {
   const t = useTranslations("customers");
   const locale = useLocale();
+  const searchParams = useSearchParams();
+  const hasDebtParam = searchParams.get("hasDebt");
+  const initialDebtFilter =
+    hasDebtParam === "1" || hasDebtParam === "true" ? "hasDebt" : "all";
   const {
     customers,
     totalDebt,
@@ -69,7 +74,7 @@ export function CustomersPage() {
     openDeleteConfirm,
     closeConfirm,
     submitConfirm,
-  } = useCustomers();
+  } = useCustomers({ initialDebtFilter });
 
   const toastMessage =
     toast?.kind === "created"

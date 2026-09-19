@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { AppShell } from "@/app/layout/app-shell";
 import { InvoiceFilters } from "@/app/modules/invoices/components/invoice-filters";
@@ -12,12 +12,15 @@ import { InvoicesList } from "@/app/modules/invoices/components/invoices-list";
 import { useInvoiceForm } from "@/app/modules/invoices/hooks/use-invoice-form";
 import { useInvoices } from "@/app/modules/invoices/hooks/use-invoices";
 import type { SalesInvoice } from "@/app/modules/invoices/types/invoices.types";
+import { formatMoney } from "@/app/modules/items/utils/format-money";
 import { Button } from "@/app/modules/shared/components/button";
 import { ConfirmDialog } from "@/app/modules/shared/components/row-actions-menu";
+import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
 import { Toast } from "@/app/modules/shared/components/toast";
 
 export function InvoicesPage() {
   const t = useTranslations("invoices");
+  const locale = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -27,6 +30,7 @@ export function InvoicesPage() {
   const {
     invoices,
     customerNames,
+    summaryTotalAmount,
     page,
     totalPages,
     setPage,
@@ -168,6 +172,21 @@ export function InvoicesPage() {
       />
 
       <div className="flex flex-col gap-4">
+        {listStatus === "success" ? (
+          <SurfaceCard padding="sm">
+            <div className="flex flex-wrap items-center justify-between gap-4 px-2 py-1">
+              <div>
+                <p className="text-xs font-medium text-text-secondary">
+                  {t("summarySalesTotal")}
+                </p>
+                <p className="mt-1 text-2xl font-bold text-text-primary">
+                  {formatMoney(summaryTotalAmount, locale)} {t("currency")}
+                </p>
+              </div>
+            </div>
+          </SurfaceCard>
+        ) : null}
+
         <InvoiceFilters
           searchInput={searchInput}
           onSearchChange={setSearchInput}

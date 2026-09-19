@@ -36,9 +36,14 @@ export interface SalesInvoiceListMeta {
   total: number;
 }
 
+export interface SalesInvoiceListSummary {
+  totalAmount: number;
+}
+
 export interface SalesInvoiceListResponse {
   items: SalesInvoice[];
   meta: SalesInvoiceListMeta;
+  summary: SalesInvoiceListSummary;
 }
 
 export interface ListSalesInvoicesFilters {

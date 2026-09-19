@@ -96,12 +96,12 @@ export function InventoryKpiCards({
             <span className="text-xs font-medium text-text-secondary">
               {t("kpiPotentialProfit")}
             </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-success/12 text-success">
               <PercentIcon className="h-3.5 w-3.5" />
             </div>
           </div>
           <div className="mt-1.5 flex items-baseline gap-1">
-            <span className="text-xl font-bold tracking-tight tabular-nums text-emerald-600 dark:text-emerald-400">
+            <span className="text-xl font-bold tracking-tight tabular-nums text-success">
               {formatMoney(potentialProfit, locale)}
             </span>
             <span className="text-[11px] font-medium text-text-muted">
@@ -126,10 +126,10 @@ export function InventoryKpiCards({
             <div
               className={`flex h-7 w-7 items-center justify-center rounded-md ${
                 summary.negativeStockCount > 0
-                  ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                  ? "bg-danger/12 text-danger"
                   : attentionCount > 0
                     ? "bg-warning/12 text-warning"
-                    : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    : "bg-success/12 text-success"
               }`}
             >
               {attentionCount > 0 ? (
@@ -143,7 +143,7 @@ export function InventoryKpiCards({
             <span
               className={`text-xl font-bold tracking-tight tabular-nums ${
                 summary.negativeStockCount > 0
-                  ? "text-red-600 dark:text-red-400"
+                  ? "text-danger"
                   : attentionCount > 0
                     ? "text-warning"
                     : "text-text-primary"
@@ -171,9 +171,9 @@ export function InventoryKpiCards({
             <button
               type="button"
               onClick={() => onSelectStatusFilter?.("out_of_stock")}
-              className="cursor-pointer inline-flex items-center gap-1 rounded bg-orange-500/12 border border-orange-500/20 px-1.5 py-0.5 text-[11px] font-medium text-orange-700 dark:text-orange-300 hover:bg-orange-500/20 transition-colors"
+              className="cursor-pointer inline-flex items-center gap-1 rounded bg-danger/12 border border-danger/20 px-1.5 py-0.5 text-[11px] font-medium text-danger hover:bg-danger/20 transition-colors"
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
+              <span className="h-1.5 w-1.5 rounded-full bg-danger" />
               <span>{summary.outOfStockCount} {t("badgeOutOfStock")}</span>
             </button>
           )}
@@ -181,15 +181,15 @@ export function InventoryKpiCards({
             <button
               type="button"
               onClick={() => onSelectStatusFilter?.("negative_stock")}
-              className="cursor-pointer inline-flex items-center gap-1 rounded bg-red-500/15 border border-red-500/30 px-1.5 py-0.5 text-[11px] font-semibold text-red-700 dark:text-red-300 hover:bg-red-500/25 transition-colors"
+              className="cursor-pointer inline-flex items-center gap-1 rounded bg-danger/12 border border-danger/20 px-1.5 py-0.5 text-[11px] font-semibold text-danger hover:bg-danger/20 transition-colors"
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-red-600" />
+              <span className="h-1.5 w-1.5 rounded-full bg-danger" />
               <span>{summary.negativeStockCount} {t("badgeNegativeStock")}</span>
             </button>
           )}
           {attentionCount === 0 && (
-            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-success">
+              <span className="h-1.5 w-1.5 rounded-full bg-success" />
               {locale === "ar" ? "المخزون بمستويات آمنة" : "All levels healthy"}
             </span>
           )}

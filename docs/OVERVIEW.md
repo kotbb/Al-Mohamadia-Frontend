@@ -90,8 +90,8 @@ flowchart LR
    read-only audit log.
 
 > **Note:** Build is phased (vertical slices). See [`PHASES.md`](./PHASES.md)
-> for what exists vs planned. **Phases 0–7 are complete** (sales invoices, customer payments,
-> purchases, supplier payments, 3-hub navigation, and inventory management / valuation). Phase 8 is next (Dashboard).
+> for what exists vs planned. **Phases 0–8 are complete** on both apps.
+> Frontend Phase 9 (Audit Log UI) is next.
 
 ---
 
@@ -103,7 +103,7 @@ flowchart LR
 |------|---------|
 | Sales invoices | Cash / customer sale, lines, discount, paid/remaining, cancel, PDF / WhatsApp *(Phase 4 — live)* |
 | Customer payments | Standalone debt payments + payments captured on new sales, debtor customer picker *(Phase 5 — live)* |
-| Dashboard | Today's sales / profit / collected / invoice count, debt totals, monthly chart, top items, "فاتورة جديدة" |
+| Dashboard | Today's sales / profit / collected / invoice count, debt totals, period chart, top items, "فاتورة جديدة" *(Phase 8 — live)* |
 
 ### Stock & catalog
 
@@ -258,6 +258,18 @@ After `npm run seed:catalog` in the backend repo:
 6. On **Users** (super admin): edit / deactivate / delete via row menu + confirms.
 
 API route table: [Backend PHASES.md — Phase 2](../../Al-Mohamadia-Backend/docs/PHASES.md#phase-2--categories-items--pricing).
+
+### Manual verification (Phase 8 — Dashboard)
+
+1. Log in → Home `/` shows the dashboard (not the old Foundation health page).
+2. Today KPIs and debt strip match invoices/payments/customer balances for Cairo today.
+3. Change period (day/week/month/year) and date → chart buckets and top sellers update; today/debt stay the same.
+4. **New Invoice** (page header) opens the create modal via `/invoices?new=1`.
+5. Debt strip **View debtors** opens Customers with the Has debt filter selected (`?hasDebt=1`).
+6. Top seller rows go to `/items`; an empty period shows EmptyState for the list (flat chart is OK).
+7. Check `en` / `ar` and light / dark.
+
+API: [Backend PHASES.md — Phase 8](../../Al-Mohamadia-Backend/docs/PHASES.md#phase-8--dashboard).
 
 ---
 

@@ -266,7 +266,7 @@ new visual language.
   leading-edge bar.
 - **Main area:** light workspace; page title + short subtitle; content in
   rounded surface cards with clear section labels.
-- **Dashboard:** CTA banner ("جاهز للبيع؟" + New Invoice), KPI card row,
+- **Dashboard:** page-header "New Invoice" CTA, KPI card row,
   debt summary strip, monthly chart + top sellers.
 - **New invoice (modal):** customer search + cash-sale toggle; line-item row
   (item, qty, thickness/width/length, piece price, note); dashed "add row";

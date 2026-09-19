@@ -32,13 +32,15 @@ export type CustomersConfirmKind = "deactivate" | "activate" | "delete" | null;
 const PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 300;
 
-export function useCustomers() {
+export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [totalDebt, setTotalDebt] = useState(0);
   const [debtorCount, setDebtorCount] = useState(0);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const [debtFilter, setDebtFilter] = useState<DebtFilter>("all");
+  const [debtFilter, setDebtFilter] = useState<DebtFilter>(
+    options?.initialDebtFilter ?? "all",
+  );
   const [searchInput, setSearchInput] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
   const [listStatus, setListStatus] = useState<ListStatus>("loading");

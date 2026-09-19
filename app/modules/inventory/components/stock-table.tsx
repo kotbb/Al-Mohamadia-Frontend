@@ -124,11 +124,9 @@ export function StockTable({
                     <td className="px-3 py-3.5 text-center tabular-nums">
                       <div
                         className={`font-bold ${
-                          item.isNegativeStock
+                          item.isNegativeStock || item.isOutOfStock
                             ? "text-danger"
-                            : item.isOutOfStock
-                              ? "text-orange-600 dark:text-orange-400"
-                              : "text-text-primary"
+                            : "text-text-primary"
                         }`}
                       >
                         {formatQuantity(item.stockQuantity, isCubic)}
@@ -141,16 +139,13 @@ export function StockTable({
                     {/* Status using Badge with differentiated severity */}
                     <td className="px-3 py-3.5 text-center">
                       {item.isNegativeStock ? (
-                        <Badge
-                          variant="danger"
-                          className="bg-red-500/15 text-red-700 dark:text-red-300 border border-red-500/30 font-semibold"
-                        >
+                        <Badge variant="danger" className="font-semibold">
                           {t("badgeNegativeStock")}
                         </Badge>
                       ) : item.isOutOfStock ? (
-                        <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-medium bg-orange-500/12 text-orange-700 dark:text-orange-300 border border-orange-500/20">
+                        <Badge variant="danger">
                           {t("badgeOutOfStock")}
-                        </span>
+                        </Badge>
                       ) : item.isLowStock ? (
                         <Badge variant="warning">{t("badgeLowStock")}</Badge>
                       ) : (

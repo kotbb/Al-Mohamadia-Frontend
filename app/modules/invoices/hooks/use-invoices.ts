@@ -35,6 +35,7 @@ export function useInvoices() {
   const [invoices, setInvoices] = useState<SalesInvoice[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [summaryTotalAmount, setSummaryTotalAmount] = useState(0);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("off");
   const [periodDate, setPeriodDate] = useState(todayIsoDate());
@@ -86,6 +87,7 @@ export function useInvoices() {
       .then((result) => {
         setInvoices(result.items);
         setTotal(result.meta.total);
+        setSummaryTotalAmount(result.summary?.totalAmount ?? 0);
         setListStatus("success");
         setListError(null);
       })
@@ -211,6 +213,7 @@ export function useInvoices() {
   return {
     invoices,
     customerNames,
+    summaryTotalAmount,
     page,
     totalPages,
     setPage,

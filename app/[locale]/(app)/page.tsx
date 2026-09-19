@@ -1,5 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
-import { FoundationPage } from "@/app/modules/foundation/pages/foundation-page";
+import { DashboardPage } from "@/app/modules/dashboard/pages/dashboard-page";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -8,5 +8,5 @@ interface PageProps {
 export default async function LocaleHomePage({ params }: PageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
-  return <FoundationPage />;
+  return <DashboardPage />;
 }
