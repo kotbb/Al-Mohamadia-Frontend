@@ -138,7 +138,7 @@ export function InvoicesList({
                 key={invoice.id}
                 className="border-b border-border last:border-b-0 transition-colors hover:bg-surface-muted/50"
               >
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 whitespace-nowrap">
                   <Link
                     href={`/invoices/${invoice.id}`}
                     className="ds-focus-ring group inline-flex items-center gap-3 rounded-xl transition-colors"
@@ -146,7 +146,7 @@ export function InvoicesList({
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-all duration-150 group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-sm">
                       <InvoiceDocIcon className="h-4 w-4" />
                     </div>
-                    <span className="font-semibold text-text-primary transition-colors group-hover:text-primary group-hover:underline">
+                    <span className="font-semibold whitespace-nowrap text-text-primary transition-colors group-hover:text-primary group-hover:underline">
                       {invoice.invoiceNumber}
                     </span>
                   </Link>
@@ -154,7 +154,7 @@ export function InvoicesList({
                 <td className="px-4 py-3 whitespace-nowrap text-text-secondary">
                   {formatInvoiceDate(invoice.createdAt, locale)}
                 </td>
-                <td className="px-4 py-3 text-text-primary">{customerLabel}</td>
+                <td className="px-4 py-3 whitespace-nowrap text-text-primary">{customerLabel}</td>
                 <td className="px-4 py-3 whitespace-nowrap text-text-primary">
                   {formatMoney(invoice.total, locale)} {currency}
                 </td>

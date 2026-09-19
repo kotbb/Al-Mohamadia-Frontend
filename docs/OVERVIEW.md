@@ -90,8 +90,8 @@ flowchart LR
    read-only audit log.
 
 > **Note:** Build is phased (vertical slices). See [`PHASES.md`](./PHASES.md)
-> for what exists vs planned. **Phases 0–6 are complete** (sales invoices, customer payments,
-> purchases, supplier payments, and unified 3-hub navigation). Phase 7 is next (Inventory Management).
+> for what exists vs planned. **Phases 0–7 are complete** (sales invoices, customer payments,
+> purchases, supplier payments, 3-hub navigation, and inventory management / valuation). Phase 8 is next (Dashboard).
 
 ---
 
@@ -110,7 +110,7 @@ flowchart LR
 | Area | Purpose |
 |------|---------|
 | Items & pricing | Categories, items, per-piece / per-m³, cost & unit price, price history *(Phase 2 — live; base reference price API kept for later UI)* |
-| Inventory | Stock list, low/negative stock flags, manual جرد, inventory value at cost |
+| Inventory | Stock list, low/negative stock flags, manual جرد, inventory valuation at cost & selling *(Phase 7 — live)* |
 | Purchases | Restock invoices from suppliers; modal-based creation and view-only detail *(Phase 6 — live)* |
 | Supplier payments | Standalone debt payments to suppliers + payments captured on purchases, debtor supplier picker *(Phase 6 — live)* |
 
@@ -155,7 +155,7 @@ The admin shell organizes primary navigation into 3 domain hubs with horizontal 
 
 1. **Sales & Customers** (`/customers`, `/invoices`, `/payments`)
 2. **Procurement & Suppliers** (`/suppliers`, `/purchases`, `/supplier-payments`)
-3. **Inventory & Catalog** (`/items`, `/categories`)
+3. **Inventory & Catalog** (`/inventory`, `/items`, `/categories`)
 
 Direct top-level routes: **Home / Dashboard** (`/`), **Users** (`/users`).
 Detail views (`/customers/[id]`, `/suppliers/[id]`) accept `?from=...` to contextually route the "Back to list" action back to the user's originating list.

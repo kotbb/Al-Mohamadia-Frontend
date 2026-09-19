@@ -47,6 +47,7 @@ export function HubNavigation() {
 
   if (isInventoryHub) {
     const tabs: HubTabItem[] = [
+      { key: "inventory", label: t("inventory"), href: "/inventory" },
       { key: "items", label: t("items"), href: "/items" },
       { key: "categories", label: t("categories"), href: "/categories" },
     ];

@@ -116,7 +116,11 @@ export function PaymentsFilters({
             autoComplete="off"
           />
 
-          {selectedCustomer ? (
+          {isSearchingCustomers && !selectedCustomer ? (
+            <div className="absolute end-3 top-9 flex items-center">
+              <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            </div>
+          ) : selectedCustomer ? (
             <button
               type="button"
               onClick={onClearCustomer}

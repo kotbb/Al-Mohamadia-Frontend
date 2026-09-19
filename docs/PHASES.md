@@ -1,5 +1,9 @@
 # Implementation Phases
 
+> This file is duplicated identically in `Al-Mohamadia-Backend/docs/` and
+> `Al-Mohamadia-Frontend/docs/` so each project has full system context
+> without needing to open the other repo. Keep both copies in sync.
+
 This project is built as a series of **vertical slices**: each phase
 delivers a complete, end-to-end feature (DB schema → NestJS module → Next.js
 pages), validated by actually driving the real frontend against the real
@@ -25,7 +29,7 @@ No business feature yet; this unblocks every later phase.
 
 **Frontend**
 - Tailwind theme tokens wired from `docs/Design-System.md` (light/dark CSS variables)
-- i18n setup: `en` (default, RTL) / `ar` (RTL) routing + dictionaries
+- i18n setup: `ar` (default, RTL) / `en` (LTR) routing + dictionaries
 - Root layout with `dir` + theme toggle + language toggle
 - Shared API client wrapper (base URL from `NEXT_PUBLIC_API_URL`)
 - Shared app shell (sidebar/nav placeholder, empty/loading/error states)
@@ -58,13 +62,13 @@ UI or API routes.
 
 ## Phase 2 — Categories, Items & Pricing
 
-**Backend** — *Done* (see [Al-Mohamadia-Backend PHASES.md](../../Al-Mohamadia-Backend/docs/PHASES.md) for API table)
+**Backend** — *Done*
 
 - [x] `Category`, `Item`, `ItemPriceHistory`, `Setting` schemas/modules
-- [x] CRUD for categories and items (soft delete)
-- [x] Price/cost update + `ItemPriceHistory` + audit
-- [x] Base reference price (سعر متر الخشب البلدي)
-- [x] Dev seed: `npm run seed:catalog` (backend repo)
+- [x] CRUD for categories and items (soft delete; category delete blocked when live items exist)
+- [x] Price/cost update endpoint that appends to `ItemPriceHistory` + audit `price_changed`
+- [x] Base reference price setting (سعر متر الخشب البلدي) via `settings`
+- [x] Dev seed script: `npm run seed:catalog`
 
 **Frontend** — *Done*
 
@@ -77,6 +81,16 @@ UI or API routes.
 
 **Done when:** you can create categories/items from the UI, edit a price,
 and see it recorded in that item's price history.
+
+**Backend API** (`/api/v1`, JWT + `admin` | `super_admin`):
+
+| Resource | Endpoints |
+|----------|-----------|
+| Categories | `POST/GET/PATCH/DELETE /categories`, `GET /categories/:id` |
+| Items | `POST/GET/PATCH/DELETE /items`, `GET /items?categoryId&isActive`, `PATCH /items/:id/pricing`, `GET /items/:id/price-history` |
+| Settings | `GET/PUT /settings/base-reference-price` |
+
+Modules: `src/modules/categories`, `items`, `settings`.
 
 ---
 
@@ -103,7 +117,7 @@ and see it recorded in that item's price history.
 **Done when:** you can add customers/suppliers, search them, and merge multiple
 duplicate customers into one from the UI.
 
-**Backend API** (`/api/v1`, JWT + `admin` \| `super_admin`):
+**Backend API** (`/api/v1`, JWT + `admin` | `super_admin`):
 
 | Resource | Endpoints |
 |----------|-----------|
@@ -136,7 +150,8 @@ Modules: `src/modules/customers`, `suppliers`.
   (`GET /public/sales-invoices/:token/pdf`) + WhatsApp share payload
   (`GET .../share`)
 
-**Frontend**
+**Frontend** — *Done*
+
 - [x] New-invoice modal dialog: customer search-or-cash toggle, multi-line item entry
   with dimension fields shown conditionally for `per_cubic_meter`, live
   totals, discount, paid/remaining
@@ -146,18 +161,17 @@ Modules: `src/modules/customers`, `suppliers`.
 
 **Done when:** you can create a real invoice end-to-end, see stock and (if
 applicable) customer debt update correctly, and cancel it with correct
-reversal.
+reversals.
 
-**Backend API** (`/api/v1`, JWT + `admin` \| `super_admin`):
+**Backend API** (`/api/v1`, JWT + `admin` | `super_admin`):
 
 | Resource | Endpoints |
 |----------|-----------|
-| Sales invoices | `POST/GET /sales-invoices`, `GET /sales-invoices/:id`, `POST /sales-invoices/:id/cancel`, `GET /sales-invoices/:id/pdf`, `GET /sales-invoices/:id/share` |
-| Public PDF | `GET /public/sales-invoices/:token/pdf` (no JWT; token = `pdfShareToken`) |
+| Sales Invoices | `POST/GET /sales-invoices`, `GET /sales-invoices/:id`, `POST /sales-invoices/:id/cancel` |
+| Share & PDF | `GET /sales-invoices/:id/pdf`, `GET /public/sales-invoices/:token/pdf`, `GET /sales-invoices/:id/share` |
 
-List query params: `q`, `status`, `period`, `date`, `page`, `limit`.
-Create body: `{ type, customerId?, lines[], discount?, paid }`.
-Share response: `{ pdfUrl, whatsappUrl, message }`.
+List query params: `status`, `period`, `date`, `q`, `page`, `limit`.
+Create body: `{ customerId?, type, lines: [{ itemId, quantity, piecePrice?, width?, length?, thickness?, note? }], discount?, paid?, paymentMethod?, paymentNotes? }`.
 
 Module: `src/modules/sales-invoices`.
 
@@ -167,16 +181,20 @@ Module: `src/modules/sales-invoices`.
 
 **Backend** — *Done*
 
-- [x] `Payment` module for standalone payments against a customer's balance
-  (distinct from the payment captured inline during invoice creation in
-  Phase 4)
-- [x] Support `PaymentMethod` enum (`cash`, `instapay`, `vodafone_cash`, `bank_transfer`, `check`) + optional `notes`
-- [x] Strict balance validation: `0 < amount <= customer.balance`, blocked if `balance <= 0`
-- [x] Standalone payment cancellation (`POST /payments/:id/cancel`) restoring balance + auditing `payment_cancelled`
-- [x] Filterable listing (`GET /payments`) by `customerId`, `invoiceId`, `status`, `type`, `method`, Cairo `period` + `date`
+- [x] Standalone payment endpoint (`POST /payments`) with strict validation:
+  `customerId` required, `0 < amount <= customer.balance`, reduces
+  `customer.balance` by `amount`, audit `payment_recorded`
+- [x] Payment cancellation endpoint (`POST /payments/:id/cancel`):
+  only standalone payments (`invoiceId == null`), restores
+  `customer.balance`, sets `reversedAt` / `reversedBy`, audit `payment_cancelled`
+- [x] List payments endpoint (`GET /payments`): filter by `customerId`, `invoiceId`,
+  `status` (`active` | `reversed`), `type` (`standalone` | `on_invoice`),
+  `method`, Cairo `period` + `date`, pagination, summary `totalAmount`
+- [x] Customer merge re-points standalone `Payment` rows to target in same transaction
 - [x] Update invoice creation to capture optional `paymentMethod` and `paymentNotes` when `paid > 0`
 
 **Frontend** — *Done*
+
 - [x] Dedicated Payments list page (`/payments`) with filters (Status, Customer search, Method, Cairo period/date), total collected summary card, and pagination
 - [x] "Record payment" modal action from customer detail view with full balance default, method selection, notes, and strict balance validation
 - [x] Payment history section on customer detail view showing all payments (standalone + on-invoice)
@@ -204,6 +222,7 @@ Module: `src/modules/payments`.
 ## Phase 6 — Purchasing & Restocking (including Supplier Payments)
 
 **Backend** — *Done*
+
 - [x] `PurchaseInvoice`, `PurchaseInvoiceLine` schemas/module
 - [x] Create purchase (transactional: pricing-mode-aware stock increment + supplier `amountOwed += remaining`, on-purchase `SupplierPayment` when `paid > 0`, audit `purchase_created`)
 - [x] Sequential purchase numbering `PUR-NNNN` via `InvoiceCounter`
@@ -217,6 +236,7 @@ Module: `src/modules/payments`.
 - [x] Unit test suites covering critical paths, role guards, validation, cancel, and merge re-pointing
 
 **Frontend** — *Done*
+
 - [x] Dedicated Purchase Invoices list page (`/purchases`) with status/period/search filters, total purchases summary card, and pagination
 - [x] Modal-based new purchase invoice dialog matching customer invoice creation, with supplier picker, item selector with cubic-meter dimension calculation, live totals, and on-purchase payment
 - [x] View-only purchase invoice detail dialog/view with line items and transactional cancellation
@@ -250,19 +270,45 @@ Modules: `src/modules/purchases`, `src/modules/supplier-payments`.
 
 ## Phase 7 — Inventory Management
 
-**Backend**
-- Stock list endpoint with computed low/negative stock flags (from
-  `reorderThreshold`)
-- `StockAdjustment` module (manual جرد correction with reason)
-- Inventory valuation (at cost) + distinct item count aggregation
+**Backend** — *Done*
 
-**Frontend**
-- Stock list page with low-stock badges/warning icons
-- Inline manual stock adjustment with required reason
-- Inventory value + item count summary
+- [x] `StockAdjustment` schema & module for manual inventory audit (جرد) with reason
+- [x] Transactional stock adjustment updating `Item.stockQuantity` and writing `AuditLog` (`stock_adjusted`, `refCollection: 'StockAdjustment'`)
+- [x] Stock list endpoint (`GET /inventory/stock`) with computed low/out-of/negative stock flags, category/search filters, pagination, and KPI summary count badges
+- [x] Inventory valuation endpoint (`GET /inventory/valuation`) with total value at cost, at selling price, potential profit, and category breakdowns
+- [x] Adjustment history endpoints (`GET /inventory/adjustments`, `GET /inventory/adjustments/:id`)
+- [x] Unit test suite covering stock adjustments, listing flags, filters, and valuations
+
+**Frontend** — *Done*
+
+- [x] Dedicated Inventory Management page (`/inventory`) with segmented view toggle between "Current Stock" (مستويات المخزون) and "Adjustment Log" (سجل التسويات والجرد)
+- [x] Top 4 KPI Cards with professional SVG line icons: Valuation at Cost, Expected Revenue at Selling Price, Potential Profit & Margin %, and Stock Alerts (clickable alert count badges filtering the stock table)
+- [x] "Category Breakdown" modal (`CategoryValuationModal`) displaying cost valuation, selling value, and potential profit per category
+- [x] Current stock table with SKU code badges, wood pricing units (`قطعة` / `م³` with 3 decimal precision), stock vs. threshold levels, dynamic status badges (Normal, Low Stock, Out of Stock, Negative), prices, and line valuations
+- [x] Stock Adjustment modal (`StockAdjustmentModal`) with wood store common reason presets (`عجز جرد`, `زيادة جرد`, `تالف / كسر`, `تلف رطوبة وتخزين`, `تصحيح خطأ إدخال`), custom notes, live difference badge (+X / -X), and input validation
+- [x] Quick Reorder Threshold modal (`ReorderThresholdModal`) to update minimum stock warning levels on the fly
+- [x] Adjustment Log table with Cairo-aware timestamps, item code/name, difference badges, old vs. new quantity, adjustment reason, and adjuster username
+- [x] Item-specific Adjustment Log history modal (`ItemAdjustmentHistoryModal`) accessible directly from stock row actions
+- [x] Cairo Period & Date picker integration for adjustments log (`day`, `week`, `month`, `year`) plus item filter dropdown
+- [x] Navigation: Hub 3 (Inventory & Catalog) leads with `/inventory` in sidebar and horizontal `HubTabs` (`/inventory`, `/items`, `/categories`)
+- [x] Full bilingual support with comprehensive Arabic & English dictionaries and responsive styling
 
 **Done when:** you can flag/adjust stock manually from the UI and see
 low-stock warnings reflect real thresholds.
+
+**Backend API** (`/api/v1`, JWT + `admin` | `super_admin`):
+
+| Resource | Endpoints |
+|----------|-----------|
+| Stock List | `GET /inventory/stock` |
+| Inventory Valuation | `GET /inventory/valuation` |
+| Stock Adjustments | `POST /inventory/adjustments`, `GET /inventory/adjustments`, `GET /inventory/adjustments/:id` |
+
+List query params (Stock): `categoryId`, `stockStatus`, `q`, `page`, `limit`.
+List query params (Adjustments): `itemId`, `period`, `date`, `page`, `limit`.
+Adjust body: `{ itemId, newQuantity, reason }`.
+
+Module: `src/modules/inventory`.
 
 ---
 
@@ -321,7 +367,7 @@ correctly attributed in the audit log UI.
 | 4 — Sales Invoicing | Done | Done |
 | 5 — Payments | Done | Done |
 | 6 — Purchasing & Restocking | Done | Done |
-| 7 — Inventory Management | Not started | Not started |
+| 7 — Inventory Management | Done | Done |
 | 8 — Dashboard | Not started | Not started |
 | 9 — Audit Log UI | Not started | Not started |
 | 10 — Polish & Hardening | Not started | Not started |

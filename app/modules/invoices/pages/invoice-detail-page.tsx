@@ -38,7 +38,6 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
     submitCancel,
     isCancelling,
     cancelError,
-    printInvoice,
     shareInvoice,
     actionError,
     clearActionError,

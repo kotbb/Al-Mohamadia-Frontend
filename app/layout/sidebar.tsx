@@ -34,8 +34,8 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     key: "hubInventory",
-    href: "/items",
-    matchPrefixes: ["/items", "/categories", "/inventory"],
+    href: "/inventory",
+    matchPrefixes: ["/inventory", "/items", "/categories"],
     enabled: true,
   },
   {

@@ -50,7 +50,6 @@ export function InvoicesPage() {
     submitCancel,
     isConfirming,
     confirmError,
-    printInvoice,
     shareInvoice,
     actionError,
     clearActionError,

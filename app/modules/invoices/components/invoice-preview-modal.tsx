@@ -2,9 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { useLocale, useTranslations } from "next-intl";
-import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { useTranslations } from "next-intl";
 import { getItem } from "@/app/modules/items/services/items.service";
 import type { Item } from "@/app/modules/items/types/items.types";
 import {
@@ -34,7 +32,6 @@ export function InvoicePreviewModal({
 }: InvoicePreviewModalProps) {
   const t = useTranslations("invoices");
   const tShared = useTranslations("shared");
-  const locale = useLocale();
 
   const [invoice, setInvoice] = useState<SalesInvoice | null>(
     initialInvoice ?? null,

@@ -146,7 +146,7 @@ export function PurchasesTable({
                 className="border-b border-border last:border-b-0 hover:bg-surface-muted/60 transition-colors"
               >
                 {/* Invoice Number */}
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 whitespace-nowrap">
                   <Link
                     href={`/purchases/${purchase.id}`}
                     className="ds-focus-ring group inline-flex items-center gap-3 rounded-xl transition-colors"
@@ -154,7 +154,7 @@ export function PurchasesTable({
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-all duration-150 group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-sm">
                       <PurchaseBagIcon className="h-4 w-4" />
                     </div>
-                    <span className="font-semibold text-text-primary transition-colors group-hover:text-primary group-hover:underline">
+                    <span className="font-semibold whitespace-nowrap text-text-primary transition-colors group-hover:text-primary group-hover:underline">
                       {purchase.invoiceNumber}
                     </span>
                   </Link>
@@ -167,10 +167,10 @@ export function PurchasesTable({
 
                 {/* Supplier */}
                 {showSupplier ? (
-                  <td className="px-4 py-3 text-text-primary">
+                  <td className="px-4 py-3 whitespace-nowrap text-text-primary">
                     <Link
                       href={`/suppliers/${purchase.supplierId}?from=/purchases`}
-                      className="hover:underline font-medium"
+                      className="hover:underline font-medium whitespace-nowrap"
                     >
                       {supplierName}
                     </Link>

@@ -11,6 +11,7 @@ interface SegmentedControlProps<T extends string> {
   options: SegmentedOption<T>[];
   onChange: (value: T) => void;
   disabled?: boolean;
+  className?: string;
 }
 
 export function SegmentedControl<T extends string>({
@@ -19,9 +20,10 @@ export function SegmentedControl<T extends string>({
   options,
   onChange,
   disabled = false,
+  className = "",
 }: SegmentedControlProps<T>) {
   return (
-    <div className="flex w-full flex-col gap-1.5">
+    <div className={`flex flex-col gap-1.5 ${className}`}>
       {label ? (
         <span className="text-base font-medium text-text-secondary">{label}</span>
       ) : null}
@@ -40,7 +42,7 @@ export function SegmentedControl<T extends string>({
               aria-checked={selected}
               disabled={disabled}
               onClick={() => onChange(option.value)}
-              className={`ds-focus-ring min-h-9 flex-1 cursor-pointer rounded-lg px-4 text-sm font-medium transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50 ${
+              className={`ds-focus-ring min-h-9 flex-1 cursor-pointer rounded-lg px-3.5 sm:px-4 text-sm font-medium whitespace-nowrap transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50 ${
                 selected
                   ? "bg-surface text-text-primary shadow-sm"
                   : "bg-transparent text-text-secondary hover:text-text-primary"
