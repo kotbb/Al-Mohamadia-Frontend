@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { AppShell } from "@/app/layout/app-shell";
+import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
 import { formatMoney } from "@/app/modules/items/utils/format-money";
 import { usePurchaseDetail } from "@/app/modules/purchases/hooks/use-purchase-detail";
@@ -20,9 +21,11 @@ interface PurchaseDetailPageProps {
 
 export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
   const t = useTranslations("purchases");
+  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
   const currency = t("currency");
+  const history = useAuditHistory({ entityType: "PurchaseInvoice" });
 
   const {
     purchase,
@@ -65,9 +68,23 @@ export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
           >
             {t("backToList")}
           </Link>
+          {purchase ? (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="min-h-10 rounded-lg px-3.5 text-sm"
+              onClick={() =>
+                history.openRecord(purchase.id, purchase.invoiceNumber)
+              }
+            >
+              {tAudit("viewHistory")}
+            </Button>
+          ) : null}
         </div>
       }
     >
+      {history.modal}
       <Toast
         open={toast !== null}
         message={t("cancelSuccess")}

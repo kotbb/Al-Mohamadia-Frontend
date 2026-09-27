@@ -19,7 +19,7 @@ import type { Category } from "@/app/modules/items/types/items.types";
 
 type AsyncStatus = "idle" | "loading" | "success" | "error";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
 
 export function useInventory() {

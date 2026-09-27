@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { AppShell } from "@/app/layout/app-shell";
+import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { CustomerFormModal } from "@/app/modules/customers/components/customer-form-modal";
 import { CustomerMergeModal } from "@/app/modules/customers/components/customer-merge-modal";
 import { useCustomerDetail } from "@/app/modules/customers/hooks/use-customer-detail";
@@ -26,11 +27,14 @@ interface CustomerDetailPageProps {
 
 export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
   const t = useTranslations("customers");
+  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
   const searchParams = useSearchParams();
   const fromParam = searchParams.get("from");
   const backHref = fromParam && fromParam.startsWith("/") ? fromParam : "/customers";
+  const customerHistory = useAuditHistory({ entityType: "Customer" });
+  const paymentHistory = useAuditHistory({ entityType: "Payment" });
   const [paymentToast, setPaymentToast] = useState<
     "recorded" | "cancelled" | null
   >(null);
@@ -150,6 +154,15 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
           </Link>
           <Button
             type="button"
+            variant="secondary"
+            size="sm"
+            className="min-h-10 rounded-lg px-3.5 text-sm"
+            onClick={() => customerHistory.openRecord(customer.id, customer.name)}
+          >
+            {tAudit("viewHistory")}
+          </Button>
+          <Button
+            type="button"
             variant="primary"
             size="sm"
             disabled={customer.balance <= 0 || !customer.isActive}
@@ -170,6 +183,8 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
         </div>
       }
     >
+      {customerHistory.modal}
+      {paymentHistory.modal}
       <Toast
         open={toast !== null}
         message={toastMessage}
@@ -339,6 +354,12 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
               error={customerPayments.error}
               onRetry={customerPayments.refresh}
               onCancel={customerPayments.openCancelConfirm}
+              onViewHistory={(payment) =>
+                paymentHistory.openRecord(
+                  payment.id,
+                  formatMoney(payment.amount, locale),
+                )
+              }
             />
 
             {customerPayments.status === "success" &&

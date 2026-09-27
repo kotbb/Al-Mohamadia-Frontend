@@ -14,7 +14,7 @@ export type AdjustmentPeriodFilter = "off" | "day" | "week" | "month" | "year";
 
 type AsyncStatus = "idle" | "loading" | "success" | "error";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 interface UseStockAdjustmentsOptions {
   itemId?: string;

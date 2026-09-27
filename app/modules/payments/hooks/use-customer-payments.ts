@@ -7,7 +7,7 @@ import type { Payment } from "@/app/modules/payments/types/payments.types";
 
 type ListStatus = "idle" | "loading" | "success" | "error";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 export function useCustomerPayments(customerId: string) {
   const [payments, setPayments] = useState<Payment[]>([]);

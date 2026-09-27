@@ -15,7 +15,7 @@ interface ModalProps {
   children: ReactNode;
   footer?: ReactNode;
   /** Tailwind max-width class; default max-w-lg */
-  size?: "md" | "lg" | "xl";
+  size?: "md" | "lg" | "xl" | "wide";
 }
 
 export function Modal({
@@ -66,11 +66,13 @@ export function Modal({
   if (!open) return null;
 
   const sizeClass =
-    size === "xl"
-      ? "max-w-4xl max-h-[min(92vh,52rem)]"
-      : size === "lg"
-        ? "max-w-xl max-h-[min(90vh,44rem)]"
-        : "max-w-lg max-h-[min(90vh,40rem)]";
+    size === "wide"
+      ? "max-w-6xl max-h-[min(92vh,52rem)]"
+      : size === "xl"
+        ? "max-w-4xl max-h-[min(92vh,52rem)]"
+        : size === "lg"
+          ? "max-w-xl max-h-[min(90vh,44rem)]"
+          : "max-w-lg max-h-[min(90vh,40rem)]";
 
   return (
     <div

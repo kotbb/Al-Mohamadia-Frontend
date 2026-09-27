@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { AppShell } from "@/app/layout/app-shell";
+import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { CategoryItemsTable } from "@/app/modules/items/components/category-items-table";
 import { ItemFormModal } from "@/app/modules/items/components/item-form-modal";
 import { ItemsToolbar } from "@/app/modules/items/components/items-toolbar";
@@ -21,6 +22,7 @@ import { Toast } from "@/app/modules/shared/components/toast";
 export function ItemsPage() {
   const t = useTranslations("items");
   const tShared = useTranslations("shared");
+  const history = useAuditHistory({ entityType: "Item" });
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [historyItemId, setHistoryItemId] = useState<string | null>(null);
@@ -88,18 +90,22 @@ export function ItemsPage() {
       title={t("title")}
       subtitle={t("subtitle")}
       actions={
-        <Button
-          type="button"
-          variant="primary"
-          size="sm"
-          className="min-h-10 rounded-lg px-3.5 text-sm"
-          onClick={openCreateModal}
-        >
-          <PlusIcon />
-          {t("addItem")}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {history.button}
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            className="min-h-10 rounded-lg px-3.5 text-sm"
+            onClick={openCreateModal}
+          >
+            <PlusIcon />
+            {t("addItem")}
+          </Button>
+        </div>
       }
     >
+      {history.modal}
       <Toast
         open={toastOpen}
         message={t("deleteSuccess")}

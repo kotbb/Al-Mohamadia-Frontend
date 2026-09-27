@@ -2,6 +2,7 @@
 
 import { useTranslations, useLocale } from "next-intl";
 import { AppShell } from "@/app/layout/app-shell";
+import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { SuppliersList } from "@/app/modules/suppliers/components/suppliers-list";
 import { SupplierFormModal } from "@/app/modules/suppliers/components/supplier-form-modal";
 import { SupplierMergeModal } from "@/app/modules/suppliers/components/supplier-merge-modal";
@@ -17,6 +18,7 @@ import { Toast } from "@/app/modules/shared/components/toast";
 export function SuppliersPage() {
   const t = useTranslations("suppliers");
   const locale = useLocale();
+  const history = useAuditHistory({ entityType: "Supplier" });
   const {
     suppliers,
     totalOwed,
@@ -115,6 +117,7 @@ export function SuppliersPage() {
       subtitle={t("subtitle")}
       actions={
         <div className="flex flex-wrap items-center gap-2">
+          {history.button}
           <Button
             type="button"
             variant="secondary"
@@ -137,6 +140,7 @@ export function SuppliersPage() {
         </div>
       }
     >
+      {history.modal}
       <Toast
         open={toast !== null}
         message={toastMessage}

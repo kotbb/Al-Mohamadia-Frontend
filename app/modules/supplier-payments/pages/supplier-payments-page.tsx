@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { AppShell } from "@/app/layout/app-shell";
+import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { formatMoney } from "@/app/modules/items/utils/format-money";
 import { RecordSupplierPaymentModal } from "@/app/modules/supplier-payments/components/record-supplier-payment-modal";
 import { SupplierPaymentsFilters } from "@/app/modules/supplier-payments/components/supplier-payments-filters";
@@ -18,6 +19,7 @@ export function SupplierPaymentsPage() {
   const t = useTranslations("supplierPayments");
   const locale = useLocale();
   const currency = t("currency");
+  const history = useAuditHistory({ entityType: "SupplierPayment" });
   const [recordSuccessToast, setRecordSuccessToast] = useState(false);
   const recordPaymentHook = useRecordSupplierPayment();
 
@@ -61,16 +63,20 @@ export function SupplierPaymentsPage() {
       title={t("title")}
       subtitle={t("subtitle")}
       actions={
-        <Button
-          type="button"
-          variant="primary"
-          size="sm"
-          onClick={() => recordPaymentHook.open()}
-        >
-          {t("recordTitle")}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {history.button}
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            onClick={() => recordPaymentHook.open()}
+          >
+            {t("recordTitle")}
+          </Button>
+        </div>
       }
     >
+      {history.modal}
       <Toast
         open={recordSuccessToast}
         message={t("recordSuccess")}
@@ -177,6 +183,12 @@ export function SupplierPaymentsPage() {
           error={listError}
           onRetry={refresh}
           onCancel={openCancelConfirm}
+          onViewHistory={(payment) =>
+            history.openRecord(
+              payment.id,
+              formatMoney(payment.amount, locale),
+            )
+          }
         />
 
         {/* Pagination */}

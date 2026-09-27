@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth/auth-provider";
 import { BrandMark } from "@/app/modules/shared/components/brand-mark";
 
 interface NavItem {
-  key: "home" | "hubSales" | "hubProcurement" | "hubInventory" | "users";
+  key: "home" | "hubSales" | "hubProcurement" | "hubInventory" | "audit" | "users";
   href: string;
   matchPrefixes: string[];
   enabled: boolean;
@@ -36,6 +36,12 @@ const NAV_ITEMS: NavItem[] = [
     key: "hubInventory",
     href: "/inventory",
     matchPrefixes: ["/inventory", "/items", "/categories"],
+    enabled: true,
+  },
+  {
+    key: "audit",
+    href: "/audit",
+    matchPrefixes: ["/audit"],
     enabled: true,
   },
   {
@@ -106,6 +112,23 @@ function NavIcon({ name }: { name: NavItem["key"] }) {
             d="M4 8.5 12 13l8-4.5M12 13v7"
             stroke="currentColor"
             strokeWidth="1.75"
+          />
+        </svg>
+      );
+    case "audit":
+      return (
+        <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path
+            d="M8 4h8a2 2 0 0 1 2 2v14l-6-3-6 3V6a2 2 0 0 1 2-2Z"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M9 9h6M9 12.5h4"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
           />
         </svg>
       );

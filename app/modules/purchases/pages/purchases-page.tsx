@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { AppShell } from "@/app/layout/app-shell";
+import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { PurchaseFilters } from "@/app/modules/purchases/components/purchase-filters";
 import { PurchaseFormModal } from "@/app/modules/purchases/components/purchase-form-modal";
 import { PurchasesTable } from "@/app/modules/purchases/components/purchases-table";
@@ -20,6 +21,7 @@ export function PurchasesPage() {
   const t = useTranslations("purchases");
   const tShared = useTranslations("shared");
   const locale = useLocale();
+  const history = useAuditHistory({ entityType: "PurchaseInvoice" });
   const router = useRouter();
   const searchParams = useSearchParams();
   const isNewFromUrl = searchParams.get("new") === "1";
@@ -94,18 +96,22 @@ export function PurchasesPage() {
       title={t("title")}
       subtitle={t("subtitle")}
       actions={
-        <Button
-          type="button"
-          variant="primary"
-          size="sm"
-          className="min-h-10 rounded-lg px-3.5 text-sm"
-          onClick={openCreate}
-        >
-          <PlusIcon />
-          <span>{t("newPurchaseButton")}</span>
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {history.button}
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            className="min-h-10 rounded-lg px-3.5 text-sm"
+            onClick={openCreate}
+          >
+            <PlusIcon />
+            <span>{t("newPurchaseButton")}</span>
+          </Button>
+        </div>
       }
     >
+      {history.modal}
       <PurchaseFormModal
         open={isCreateOpen}
         onClose={closeCreate}

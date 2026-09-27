@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { AppShell } from "@/app/layout/app-shell";
+import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { AdminFormModal } from "@/app/modules/auth/components/admin-form-modal";
 import { UsersList } from "@/app/modules/auth/components/users-list";
 import { useUsers } from "@/app/modules/auth/hooks/use-users";
@@ -12,6 +13,7 @@ import { Toast } from "@/app/modules/shared/components/toast";
 
 export function UsersPage() {
   const t = useTranslations("users");
+  const history = useAuditHistory({ entityType: "User" });
   const {
     users,
     listStatus,
@@ -97,18 +99,22 @@ export function UsersPage() {
       title={t("title")}
       subtitle={t("subtitle")}
       actions={
-        <Button
-          type="button"
-          variant="primary"
-          size="sm"
-          className="min-h-10 rounded-lg px-3.5 text-sm"
-          onClick={openCreate}
-        >
-          <PlusIcon />
-          {t("addAdmin")}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {history.button}
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            className="min-h-10 rounded-lg px-3.5 text-sm"
+            onClick={openCreate}
+          >
+            <PlusIcon />
+            {t("addAdmin")}
+          </Button>
+        </div>
       }
     >
+      {history.modal}
       <Toast
         open={toast !== null}
         message={toastMessage}
@@ -163,6 +169,12 @@ export function UsersPage() {
         onDeactivate={openDeactivateConfirm}
         onActivate={openActivateConfirm}
         onDelete={openDeleteConfirm}
+        onViewHistory={(user) =>
+          history.openRecord(
+            user.id,
+            getDisplayName(user.firstName, user.lastName, user.username),
+          )
+        }
       />
     </AppShell>
   );

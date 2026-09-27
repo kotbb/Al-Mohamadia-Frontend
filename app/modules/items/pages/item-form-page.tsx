@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { AppShell } from "@/app/layout/app-shell";
+import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { ItemForm } from "@/app/modules/items/components/item-form";
 import { useItemForm } from "@/app/modules/items/hooks/use-item-form";
 import { Button } from "@/app/modules/shared/components/button";
@@ -16,9 +17,11 @@ interface ItemFormPageProps {
 
 export function ItemFormPage({ itemId }: ItemFormPageProps) {
   const t = useTranslations("items");
+  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const router = useRouter();
   const isEdit = Boolean(itemId);
+  const history = useAuditHistory({ entityType: "Item" });
 
   const {
     categories,
@@ -47,7 +50,30 @@ export function ItemFormPage({ itemId }: ItemFormPageProps) {
   const subtitle = isEdit ? t("editSubtitle") : t("addSubtitle");
 
   return (
-    <AppShell title={title} subtitle={subtitle}>
+    <AppShell
+      title={title}
+      subtitle={subtitle}
+      actions={
+        isEdit && itemId ? (
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="min-h-10 rounded-lg px-3.5 text-sm"
+            disabled={isLoading || !(values.name.trim() || values.code.trim())}
+            onClick={() =>
+              history.openRecord(
+                itemId,
+                values.name.trim() || values.code.trim(),
+              )
+            }
+          >
+            {tAudit("viewHistory")}
+          </Button>
+        ) : undefined
+      }
+    >
+      {history.modal}
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
         <Link
           href="/items"

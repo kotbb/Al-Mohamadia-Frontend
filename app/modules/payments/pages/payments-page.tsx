@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { AppShell } from "@/app/layout/app-shell";
+import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { formatMoney } from "@/app/modules/items/utils/format-money";
 import { PaymentsFilters } from "@/app/modules/payments/components/payments-filters";
 import { PaymentsTable } from "@/app/modules/payments/components/payments-table";
@@ -18,6 +19,7 @@ export function PaymentsPage() {
   const t = useTranslations("payments");
   const locale = useLocale();
   const currency = t("currency");
+  const history = useAuditHistory({ entityType: "Payment" });
   const [recordSuccessToast, setRecordSuccessToast] = useState(false);
   const recordPaymentHook = useRecordPayment();
 
@@ -61,16 +63,20 @@ export function PaymentsPage() {
       title={t("title")}
       subtitle={t("subtitle")}
       actions={
-        <Button
-          type="button"
-          variant="primary"
-          size="sm"
-          onClick={() => recordPaymentHook.open()}
-        >
-          {t("recordTitle")}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {history.button}
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            onClick={() => recordPaymentHook.open()}
+          >
+            {t("recordTitle")}
+          </Button>
+        </div>
       }
     >
+      {history.modal}
       <Toast
         open={recordSuccessToast}
         message={t("recordSuccess")}
@@ -177,6 +183,12 @@ export function PaymentsPage() {
           error={listError}
           onRetry={refresh}
           onCancel={openCancelConfirm}
+          onViewHistory={(payment) =>
+            history.openRecord(
+              payment.id,
+              formatMoney(payment.amount, locale),
+            )
+          }
         />
 
         {/* Pagination */}

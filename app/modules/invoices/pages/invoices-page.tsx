@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { AppShell } from "@/app/layout/app-shell";
+import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { InvoiceFilters } from "@/app/modules/invoices/components/invoice-filters";
 import { InvoiceFormModal } from "@/app/modules/invoices/components/invoice-form-modal";
 import { InvoicePreviewModal } from "@/app/modules/invoices/components/invoice-preview-modal";
@@ -22,6 +23,7 @@ export function InvoicesPage() {
   const t = useTranslations("invoices");
   const locale = useLocale();
   const router = useRouter();
+  const history = useAuditHistory({ entityType: "SalesInvoice" });
   const searchParams = useSearchParams();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [previewInvoice, setPreviewInvoice] = useState<SalesInvoice | null>(null);
@@ -103,18 +105,22 @@ export function InvoicesPage() {
       title={t("title")}
       subtitle={t("subtitle")}
       actions={
-        <Button
-          type="button"
-          variant="primary"
-          size="sm"
-          className="min-h-10 rounded-lg px-3.5 text-sm"
-          onClick={openCreate}
-        >
-          <PlusIcon />
-          {t("addInvoice")}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {history.button}
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            className="min-h-10 rounded-lg px-3.5 text-sm"
+            onClick={openCreate}
+          >
+            <PlusIcon />
+            {t("addInvoice")}
+          </Button>
+        </div>
       }
     >
+      {history.modal}
       <InvoiceFormModal
         open={isCreateOpen}
         onClose={closeCreate}

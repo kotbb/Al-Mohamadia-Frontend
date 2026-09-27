@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { AppShell } from "@/app/layout/app-shell";
+import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { CustomersList } from "@/app/modules/customers/components/customers-list";
 import { CustomerFormModal } from "@/app/modules/customers/components/customer-form-modal";
 import { CustomerMergeModal } from "@/app/modules/customers/components/customer-merge-modal";
@@ -114,6 +115,7 @@ export function CustomersPage() {
       : confirmKind === "deactivate"
         ? t("deactivate")
         : t("activate");
+  const history = useAuditHistory({ entityType: "Customer" });
 
   return (
     <AppShell
@@ -121,6 +123,7 @@ export function CustomersPage() {
       subtitle={t("subtitle")}
       actions={
         <div className="flex flex-wrap items-center gap-2">
+          {history.button}
           <Button
             type="button"
             variant="secondary"
@@ -143,6 +146,7 @@ export function CustomersPage() {
         </div>
       }
     >
+      {history.modal}
       <Toast
         open={toast !== null}
         message={toastMessage}

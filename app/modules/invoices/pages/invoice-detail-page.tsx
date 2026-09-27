@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { AppShell } from "@/app/layout/app-shell";
+import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { CancelInvoiceDialog } from "@/app/modules/invoices/components/cancel-invoice-dialog";
 import { InvoicePreviewModal } from "@/app/modules/invoices/components/invoice-preview-modal";
 import { useInvoiceDetail } from "@/app/modules/invoices/hooks/use-invoice-detail";
@@ -22,9 +23,11 @@ interface InvoiceDetailPageProps {
 
 export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
   const t = useTranslations("invoices");
+  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const history = useAuditHistory({ entityType: "SalesInvoice" });
   const {
     invoice,
     status,
@@ -71,9 +74,23 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
           >
             {t("backToList")}
           </Link>
+          {invoice ? (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="min-h-10 rounded-lg px-3.5 text-sm"
+              onClick={() =>
+                history.openRecord(invoice.id, invoice.invoiceNumber)
+              }
+            >
+              {tAudit("viewHistory")}
+            </Button>
+          ) : null}
         </div>
       }
     >
+      {history.modal}
       <Toast
         open={toastKind === "cancelled"}
         message={t("cancelSuccess")}

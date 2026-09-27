@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { AppShell } from "@/app/layout/app-shell";
+import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { useInventory } from "@/app/modules/inventory/hooks/use-inventory";
 import { useStockAdjustments } from "@/app/modules/inventory/hooks/use-stock-adjustments";
 import { InventoryKpiCards } from "@/app/modules/inventory/components/inventory-kpi-cards";
@@ -23,6 +24,10 @@ type ViewMode = "stock" | "adjustments";
 
 export function InventoryPage() {
   const t = useTranslations("inventory");
+  const history = useAuditHistory({
+    entityType: "Item",
+    defaultAction: "stock_adjusted",
+  });
 
   const [viewMode, setViewMode] = useState<ViewMode>("stock");
 
@@ -98,19 +103,23 @@ export function InventoryPage() {
       title={t("title")}
       subtitle={t("subtitle")}
       actions={
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          className="min-h-10 rounded-lg px-3.5 text-sm inline-flex items-center gap-2"
-          onClick={() => setIsCategoryValuationOpen(true)}
-        >
-          <LayersIcon className="h-4 w-4 shrink-0 text-text-secondary" />
-          <span>{t("viewCategoryBreakdown")}</span>
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {history.button}
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="min-h-10 rounded-lg px-3.5 text-sm inline-flex items-center gap-2"
+            onClick={() => setIsCategoryValuationOpen(true)}
+          >
+            <LayersIcon className="h-4 w-4 shrink-0 text-text-secondary" />
+            <span>{t("viewCategoryBreakdown")}</span>
+          </Button>
+        </div>
       }
     >
       <div className="flex flex-col gap-5">
+        {history.modal}
         {/* KPI Summary Cards */}
         <InventoryKpiCards
           valuation={valuation}
@@ -156,6 +165,7 @@ export function InventoryPage() {
               onAdjustStock={(item) => setSelectedAdjustItem(item)}
               onUpdateThreshold={(item) => setSelectedThresholdItem(item)}
               onViewAdjustmentsForItem={handleViewAdjustmentsForItem}
+              onViewHistory={(item) => history.openRecord(item.id, item.name)}
             />
           </div>
         )}

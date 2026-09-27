@@ -28,7 +28,7 @@ export interface InvoicesToastState {
   variant: "success" | "danger";
 }
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
 
 export function useInvoices() {

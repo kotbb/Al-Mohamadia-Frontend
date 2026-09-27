@@ -16,6 +16,7 @@ interface StockTableProps {
   onAdjustStock: (item: StockItem) => void;
   onUpdateThreshold: (item: StockItem) => void;
   onViewAdjustmentsForItem: (item: StockItem) => void;
+  onViewHistory: (item: StockItem) => void;
 }
 
 export function StockTable({
@@ -27,8 +28,10 @@ export function StockTable({
   onAdjustStock,
   onUpdateThreshold,
   onViewAdjustmentsForItem,
+  onViewHistory,
 }: StockTableProps) {
   const t = useTranslations("inventory");
+  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
 
@@ -182,6 +185,11 @@ export function StockTable({
                         <RowActionsMenu
                           label={t("colActions")}
                           items={[
+                            {
+                              id: "history",
+                              label: tAudit("viewHistory"),
+                              onSelect: () => onViewHistory(item),
+                            },
                             {
                               id: "threshold",
                               label: t("actionUpdateThreshold"),

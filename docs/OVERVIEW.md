@@ -90,8 +90,8 @@ flowchart LR
    read-only audit log.
 
 > **Note:** Build is phased (vertical slices). See [`PHASES.md`](./PHASES.md)
-> for what exists vs planned. **Phases 0–8 are complete** on both apps.
-> Frontend Phase 9 (Audit Log UI) is next.
+> for what exists vs planned. **Phases 0–9 are complete** on both apps.
+> Phase 10 (Polish & Hardening) is next.
 
 ---
 

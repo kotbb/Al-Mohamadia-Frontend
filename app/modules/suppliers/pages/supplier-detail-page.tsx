@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { AppShell } from "@/app/layout/app-shell";
+import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { RecordSupplierPaymentModal } from "@/app/modules/supplier-payments/components/record-supplier-payment-modal";
 import { useRecordSupplierPayment } from "@/app/modules/supplier-payments/hooks/use-record-supplier-payment";
 import { SupplierFormModal } from "@/app/modules/suppliers/components/supplier-form-modal";
@@ -28,11 +29,14 @@ interface SupplierDetailPageProps {
 
 export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
   const t = useTranslations("suppliers");
+  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
   const searchParams = useSearchParams();
   const fromParam = searchParams.get("from");
   const backHref = fromParam && fromParam.startsWith("/") ? fromParam : "/suppliers";
+  const supplierHistory = useAuditHistory({ entityType: "Supplier" });
+  const paymentHistory = useAuditHistory({ entityType: "SupplierPayment" });
   const supplierPurchases = usePurchases({ supplierId, pageSize: 10 });
   const supplierPayments = useSupplierAccountPayments(supplierId);
   const recordPaymentHook = useRecordSupplierPayment();
@@ -153,6 +157,15 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
           </Link>
           <Button
             type="button"
+            variant="secondary"
+            size="sm"
+            className="min-h-10 rounded-lg px-3.5 text-sm"
+            onClick={() => supplierHistory.openRecord(supplier.id, supplier.name)}
+          >
+            {tAudit("viewHistory")}
+          </Button>
+          <Button
+            type="button"
             variant="primary"
             size="sm"
             disabled={supplier.amountOwed <= 0 || !supplier.isActive}
@@ -179,6 +192,8 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
         </div>
       }
     >
+      {supplierHistory.modal}
+      {paymentHistory.modal}
       <Toast
         open={toast !== null}
         message={toastMessage}
@@ -402,6 +417,12 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
               error={supplierPayments.error}
               onRetry={supplierPayments.refresh}
               onCancel={supplierPayments.openCancelConfirm}
+              onViewHistory={(payment) =>
+                paymentHistory.openRecord(
+                  payment.id,
+                  formatMoney(payment.amount, locale),
+                )
+              }
             />
             {supplierPayments.status === "success" &&
             supplierPayments.totalPages > 1 ? (

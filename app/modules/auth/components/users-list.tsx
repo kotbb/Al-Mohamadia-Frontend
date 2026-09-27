@@ -22,6 +22,7 @@ interface UsersListProps {
   onDeactivate: (user: AuthUser) => void;
   onActivate: (user: AuthUser) => void;
   onDelete: (user: AuthUser) => void;
+  onViewHistory: (user: AuthUser) => void;
 }
 
 function StatusIcon({ active }: { active: boolean }) {
@@ -62,8 +63,10 @@ export function UsersList({
   onDeactivate,
   onActivate,
   onDelete,
+  onViewHistory,
 }: UsersListProps) {
   const t = useTranslations("users");
+  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
 
@@ -129,34 +132,40 @@ export function UsersList({
         </thead>
         <tbody>
           {users.map((user) => {
-            const actions: RowActionItem[] =
-              user.role === "super_admin"
-                ? []
-                : [
-                    {
-                      id: "edit",
-                      label: t("edit"),
-                      onSelect: () => onEdit(user),
-                    },
-                    user.isActive
-                      ? {
-                          id: "deactivate",
-                          label: t("deactivate"),
-                          onSelect: () => onDeactivate(user),
-                          tone: "danger",
-                        }
-                      : {
-                          id: "activate",
-                          label: t("activate"),
-                          onSelect: () => onActivate(user),
-                        },
-                    {
-                      id: "delete",
-                      label: t("delete"),
-                      onSelect: () => onDelete(user),
+            const actions: RowActionItem[] = [
+              {
+                id: "history",
+                label: tAudit("viewHistory"),
+                onSelect: () => onViewHistory(user),
+              },
+            ];
+            if (user.role !== "super_admin") {
+              actions.push(
+                {
+                  id: "edit",
+                  label: t("edit"),
+                  onSelect: () => onEdit(user),
+                },
+                user.isActive
+                  ? {
+                      id: "deactivate",
+                      label: t("deactivate"),
+                      onSelect: () => onDeactivate(user),
                       tone: "danger",
+                    }
+                  : {
+                      id: "activate",
+                      label: t("activate"),
+                      onSelect: () => onActivate(user),
                     },
-                  ];
+                {
+                  id: "delete",
+                  label: t("delete"),
+                  onSelect: () => onDelete(user),
+                  tone: "danger",
+                },
+              );
+            }
 
             const displayName = getDisplayName(
               user.firstName,
