@@ -6,9 +6,7 @@ import { getCustomer } from "@/app/modules/customers/services/customers.service"
 import {
   cancelSalesInvoice,
   getSalesInvoice,
-  getSalesInvoicePdfBlob,
   getSalesInvoiceShare,
-  openPdfBlob,
 } from "@/app/modules/invoices/services/invoices.service";
 import type { SalesInvoice } from "@/app/modules/invoices/types/invoices.types";
 import { getItem, listItems } from "@/app/modules/items/services/items.service";
@@ -29,13 +27,20 @@ export function useInvoiceDetail(invoiceId: string) {
   const [isCancelling, setIsCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [toastKind, setToastKind] = useState<"cancelled" | null>(null);
+  const [toastKind, setToastKind] = useState<"cancelled" | "updated" | null>(
+    null,
+  );
 
   const refresh = useCallback(() => {
     setStatus("loading");
     setError(null);
     setTick((value) => value + 1);
   }, []);
+
+  const notifyUpdated = useCallback(() => {
+    setToastKind("updated");
+    refresh();
+  }, [refresh]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -121,19 +126,6 @@ export function useInvoiceDetail(invoiceId: string) {
     }
   }
 
-  async function printInvoice() {
-    if (!invoice) return;
-    setActionError(null);
-    try {
-      const blob = await getSalesInvoicePdfBlob(invoice.id);
-      openPdfBlob(blob);
-    } catch (err: unknown) {
-      setActionError(
-        describeError(err, "Print failed"),
-      );
-    }
-  }
-
   async function shareInvoice() {
     if (!invoice) return;
     setActionError(null);
@@ -160,11 +152,11 @@ export function useInvoiceDetail(invoiceId: string) {
     submitCancel,
     isCancelling,
     cancelError,
-    printInvoice,
     shareInvoice,
     actionError,
     clearActionError: () => setActionError(null),
     toastKind,
     clearToast: () => setToastKind(null),
+    notifyUpdated,
   };
 }

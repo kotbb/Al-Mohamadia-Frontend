@@ -5,10 +5,8 @@ import { useCallback, useEffect, useState } from "react";
 import { getCustomer } from "@/app/modules/customers/services/customers.service";
 import {
   cancelSalesInvoice,
-  getSalesInvoicePdfBlob,
   getSalesInvoiceShare,
   listSalesInvoices,
-  openPdfBlob,
 } from "@/app/modules/invoices/services/invoices.service";
 import type {
   SalesInvoice,
@@ -20,8 +18,7 @@ import { todayIsoDate } from "@/app/modules/invoices/utils/format-invoice-date";
 type ListStatus = "idle" | "loading" | "success" | "error";
 export type StatusFilter = "all" | SalesInvoiceStatus;
 export type PeriodFilter = "off" | SalesInvoicePeriod;
-
-export type InvoicesToastKind = "cancelled" | "created";
+export type InvoicesToastKind = "cancelled" | "created" | "updated";
 
 export interface InvoicesToastState {
   kind: InvoicesToastKind;
@@ -171,18 +168,6 @@ export function useInvoices() {
     }
   }
 
-  async function printInvoice(invoice: SalesInvoice) {
-    setActionError(null);
-    try {
-      const blob = await getSalesInvoicePdfBlob(invoice.id);
-      openPdfBlob(blob);
-    } catch (error: unknown) {
-      const message =
-        describeError(error, "Print failed");
-      setActionError(message);
-    }
-  }
-
   async function shareInvoice(invoice: SalesInvoice) {
     setActionError(null);
     try {
@@ -231,7 +216,6 @@ export function useInvoices() {
     submitCancel,
     isConfirming,
     confirmError,
-    printInvoice,
     shareInvoice,
     actionError,
     clearActionError: () => setActionError(null),

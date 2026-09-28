@@ -57,6 +57,7 @@ lib/
 
 ### Sales invoices (`/invoices`)
 
+- Create and update invoices with real-time stock and customer debt reconciliation
 - Cash or customer sale, with piece or cubic-meter lines
 - Discount, paid, and remaining
 - Preview, Arabic PDF, and WhatsApp share

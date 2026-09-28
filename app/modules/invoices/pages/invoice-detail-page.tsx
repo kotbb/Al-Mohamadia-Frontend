@@ -5,8 +5,10 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { AppShell } from "@/app/layout/app-shell";
 import { CancelInvoiceDialog } from "@/app/modules/invoices/components/cancel-invoice-dialog";
+import { InvoiceFormModal } from "@/app/modules/invoices/components/invoice-form-modal";
 import { InvoicePreviewModal } from "@/app/modules/invoices/components/invoice-preview-modal";
 import { useInvoiceDetail } from "@/app/modules/invoices/hooks/use-invoice-detail";
+import { useInvoiceForm } from "@/app/modules/invoices/hooks/use-invoice-form";
 import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
 import { formatMoney } from "@/app/modules/items/utils/format-money";
 import { Badge } from "@/app/modules/shared/components/badge";
@@ -25,6 +27,8 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
   const tShared = useTranslations("shared");
   const locale = useLocale();
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const form = useInvoiceForm();
   const {
     invoice,
     status,
@@ -43,7 +47,23 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
     clearActionError,
     toastKind,
     clearToast,
+    notifyUpdated,
   } = useInvoiceDetail(invoiceId);
+
+  function openEdit() {
+    if (!invoice) return;
+    form.initializeForEdit(invoice);
+    setIsEditOpen(true);
+  }
+
+  function handleEditSuccess(id: string, printed: boolean) {
+    setIsEditOpen(false);
+    form.resetForm();
+    notifyUpdated();
+    if (printed) {
+      setIsPreviewOpen(true);
+    }
+  }
 
   const currency = t("currency");
   const title = invoice
@@ -65,6 +85,18 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
       subtitle={subtitleParts.join(" · ") || undefined}
       actions={
         <div className="flex flex-wrap items-center gap-2">
+          {invoice && invoice.status === "saved" ? (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="min-h-10 rounded-lg px-3.5 text-sm"
+              onClick={openEdit}
+            >
+              <EditIcon />
+              {t("editInvoice")}
+            </Button>
+          ) : null}
           <Link
             href="/invoices"
             className="ds-focus-ring inline-flex min-h-10 items-center rounded-lg border border-border bg-surface px-3.5 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-muted"
@@ -77,6 +109,12 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
       <Toast
         open={toastKind === "cancelled"}
         message={t("cancelSuccess")}
+        variant="success"
+        onClose={clearToast}
+      />
+      <Toast
+        open={toastKind === "updated"}
+        message={t("updateSuccess")}
         variant="success"
         onClose={clearToast}
       />
@@ -270,6 +308,16 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
               ) : null}
             </div>
 
+            <InvoiceFormModal
+              open={isEditOpen}
+              onClose={() => {
+                setIsEditOpen(false);
+                form.resetForm();
+              }}
+              form={form}
+              onSuccess={handleEditSuccess}
+            />
+
             <InvoicePreviewModal
               open={isPreviewOpen}
               onClose={() => setIsPreviewOpen(false)}
@@ -345,6 +393,25 @@ function CancelIcon() {
         stroke="currentColor"
         strokeWidth="1.75"
         strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function EditIcon() {
+  return (
+    <svg
+      className="h-4 w-4 shrink-0"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden
+    >
+      <path
+        d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );

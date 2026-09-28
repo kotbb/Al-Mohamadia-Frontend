@@ -23,11 +23,7 @@ export function LoginPage() {
   }, [status, router]);
 
   if (status === "loading" || status === "authenticated") {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-5">
-        <LoadingState message={tShared("loading")} />
-      </div>
-    );
+    return <LoadingState fullScreen message={tShared("loading")} />;
   }
 
   return (

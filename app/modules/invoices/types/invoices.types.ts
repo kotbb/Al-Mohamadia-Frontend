@@ -71,10 +71,39 @@ export interface CreateSalesInvoiceInput {
   lines: CreateSalesInvoiceLineInput[];
   discount?: number;
   paid: number;
+  paymentMethod?: string;
+  paymentNotes?: string;
 }
+
+export type UpdateSalesInvoiceInput = CreateSalesInvoiceInput;
 
 export interface SalesInvoiceSharePayload {
   pdfUrl: string;
   whatsappUrl: string;
   message: string;
 }
+
+export interface PublicInvoiceLine {
+  itemLabel: string;
+  quantity: number;
+  width: number | null;
+  length: number | null;
+  thickness: number | null;
+  piecePrice: number;
+  lineTotal: number;
+  note: string | null;
+}
+
+export interface PublicInvoice {
+  invoiceNumber: string;
+  createdAt: string;
+  status: string;
+  type: string;
+  customerName: string | null;
+  lines: PublicInvoiceLine[];
+  total: number;
+  discount: number;
+  paid: number;
+  remaining: number;
+}
+

@@ -1,10 +1,13 @@
 import { apiClient } from "@/lib/api/client";
+import { getApiUrl } from "@/lib/api/env";
 import type {
   CreateSalesInvoiceInput,
   ListSalesInvoicesFilters,
+  PublicInvoice,
   SalesInvoice,
   SalesInvoiceListResponse,
   SalesInvoiceSharePayload,
+  UpdateSalesInvoiceInput,
 } from "@/app/modules/invoices/types/invoices.types";
 
 function buildListQuery(filters?: ListSalesInvoicesFilters): string {
@@ -44,15 +47,15 @@ export async function createSalesInvoice(
   return apiClient.post<SalesInvoice>("/sales-invoices", input);
 }
 
-export async function cancelSalesInvoice(id: string): Promise<SalesInvoice> {
-  return apiClient.post<SalesInvoice>(`/sales-invoices/${id}/cancel`);
+export async function updateSalesInvoice(
+  id: string,
+  input: UpdateSalesInvoiceInput,
+): Promise<SalesInvoice> {
+  return apiClient.patch<SalesInvoice>(`/sales-invoices/${id}`, input);
 }
 
-export async function getSalesInvoicePdfBlob(
-  id: string,
-  signal?: AbortSignal,
-): Promise<Blob> {
-  return apiClient.getBlob(`/sales-invoices/${id}/pdf`, { signal });
+export async function cancelSalesInvoice(id: string): Promise<SalesInvoice> {
+  return apiClient.post<SalesInvoice>(`/sales-invoices/${id}/cancel`);
 }
 
 export async function getSalesInvoiceShare(
@@ -65,19 +68,37 @@ export async function getSalesInvoiceShare(
   );
 }
 
-export function openPdfBlob(blob: Blob): void {
-  const url = URL.createObjectURL(blob);
-  window.open(url, "_blank", "noopener,noreferrer");
-  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+export async function getPublicInvoice(
+  token: string,
+  signal?: AbortSignal,
+): Promise<PublicInvoice> {
+  const baseUrl = getApiUrl();
+  const url = `${baseUrl}/public/sales-invoices/${token}`;
+  const res = await fetch(url, { signal });
+  if (!res.ok) {
+    throw new Error(`Failed to load invoice (${res.status})`);
+  }
+  // Backend wraps JSON in { success, data } envelope
+  const body = (await res.json()) as { data?: PublicInvoice } | PublicInvoice;
+  if ("data" in body && body.data) return body.data;
+  return body as PublicInvoice;
 }
 
-export function downloadPdfBlob(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+export async function downloadInvoicePdf(
+  elementId: string,
+  invoiceNumber: string,
+): Promise<void> {
+  const html2pdf = (await import("html2pdf.js")).default;
+  const element = document.getElementById(elementId);
+  if (!element) return;
+  await html2pdf()
+    .set({
+      margin: 0,
+      filename: `فاتورة-${invoiceNumber}.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    })
+    .from(element)
+    .save();
 }
