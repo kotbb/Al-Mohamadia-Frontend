@@ -1,7 +1,7 @@
 "use client";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
-import { ApiError } from "@/lib/api/types";
 import { todayIsoDate } from "@/app/modules/invoices/utils/format-invoice-date";
 import { getStockAdjustments } from "@/app/modules/inventory/services/inventory.service";
 import type {
@@ -22,6 +22,7 @@ interface UseStockAdjustmentsOptions {
 }
 
 export function useStockAdjustments(options?: UseStockAdjustmentsOptions) {
+  const describeError = useApiErrorMessage();
   const [adjustments, setAdjustments] = useState<StockAdjustment[]>([]);
   const [meta, setMeta] = useState<StockAdjustmentListMeta>({
     page: 1,
@@ -77,11 +78,7 @@ export function useStockAdjustments(options?: UseStockAdjustmentsOptions) {
         if (controller.signal.aborted) return;
         setListStatus("error");
         setListError(
-          err instanceof ApiError
-            ? err.message
-            : err instanceof Error
-              ? err.message
-              : "Failed to load stock adjustments",
+          describeError(err, "Failed to load stock adjustments"),
         );
       });
 

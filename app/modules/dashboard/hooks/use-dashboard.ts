@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ApiError } from "@/lib/api/types";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { getDashboard } from "@/app/modules/dashboard/services/dashboard.service";
 import type {
   DashboardResponse,
@@ -12,6 +12,7 @@ import { todayIsoDate } from "@/app/modules/invoices/utils/format-invoice-date";
 type AsyncStatus = "idle" | "loading" | "success" | "error";
 
 export function useDashboard() {
+  const describeError = useApiErrorMessage();
   const [data, setData] = useState<DashboardResponse | null>(null);
   const [status, setStatus] = useState<AsyncStatus>("loading");
   const [error, setError] = useState<string | null>(null);
@@ -42,11 +43,11 @@ export function useDashboard() {
         setStatus("error");
         setData(null);
         setIsRefreshing(false);
-        setError(err instanceof ApiError ? err.message : null);
+        setError(describeError(err, "Failed to load dashboard"));
       });
 
     return () => controller.abort();
-  }, [period, periodDate, tick]);
+  }, [period, periodDate, tick, describeError]);
 
   return {
     data,

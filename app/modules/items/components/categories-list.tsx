@@ -21,7 +21,6 @@ interface CategoriesListProps {
   onDeactivate: (category: CategoryListRow) => void;
   onActivate: (category: CategoryListRow) => void;
   onDelete: (category: CategoryListRow) => void;
-  onViewHistory: (category: CategoryListRow) => void;
 }
 
 function StatusIcon({ active }: { active: boolean }) {
@@ -75,10 +74,8 @@ export function CategoriesList({
   onDeactivate,
   onActivate,
   onDelete,
-  onViewHistory,
 }: CategoriesListProps) {
   const t = useTranslations("categories");
-  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
 
@@ -132,11 +129,6 @@ export function CategoriesList({
           {categories.map((category) => {
             const hasItems = category.itemCount > 0;
             const actions: RowActionItem[] = [
-              {
-                id: "history",
-                label: tAudit("viewHistory"),
-                onSelect: () => onViewHistory(category),
-              },
               {
                 id: "edit",
                 label: t("edit"),

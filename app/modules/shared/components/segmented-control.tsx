@@ -27,11 +27,12 @@ export function SegmentedControl<T extends string>({
       {label ? (
         <span className="text-base font-medium text-text-secondary">{label}</span>
       ) : null}
-      <div
-        className="inline-flex rounded-xl border border-border bg-surface-muted p-1"
-        role="radiogroup"
-        aria-label={label}
-      >
+      <div className="w-full overflow-x-auto">
+        <div
+          className="inline-flex min-w-full rounded-xl border border-border bg-surface-muted p-1"
+          role="radiogroup"
+          aria-label={label}
+        >
         {options.map((option) => {
           const selected = option.value === value;
           return (
@@ -42,7 +43,7 @@ export function SegmentedControl<T extends string>({
               aria-checked={selected}
               disabled={disabled}
               onClick={() => onChange(option.value)}
-              className={`ds-focus-ring min-h-9 flex-1 cursor-pointer rounded-lg px-3.5 sm:px-4 text-sm font-medium whitespace-nowrap transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50 ${
+              className={`ds-focus-ring min-h-9 shrink-0 cursor-pointer rounded-lg px-3.5 sm:px-4 text-sm font-medium whitespace-nowrap transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50 ${
                 selected
                   ? "bg-surface text-text-primary shadow-sm"
                   : "bg-transparent text-text-secondary hover:text-text-primary"
@@ -52,6 +53,7 @@ export function SegmentedControl<T extends string>({
             </button>
           );
         })}
+        </div>
       </div>
     </div>
   );

@@ -165,7 +165,6 @@ export function InventoryPage() {
               onAdjustStock={(item) => setSelectedAdjustItem(item)}
               onUpdateThreshold={(item) => setSelectedThresholdItem(item)}
               onViewAdjustmentsForItem={handleViewAdjustmentsForItem}
-              onViewHistory={(item) => history.openRecord(item.id, item.name)}
             />
           </div>
         )}

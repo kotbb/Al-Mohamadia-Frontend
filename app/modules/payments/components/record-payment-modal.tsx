@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { listCustomers } from "@/app/modules/customers/services/customers.service";
 import type { Customer } from "@/app/modules/customers/types/customers.types";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import {
+  formatMoney,
+  roundMoneyAmount,
+} from "@/app/modules/items/utils/format-money";
 import type { PaymentMethod } from "@/app/modules/payments/types/payments.types";
 import { Button } from "@/app/modules/shared/components/button";
 import { Input } from "@/app/modules/shared/components/input";
@@ -309,6 +312,11 @@ export function RecordPaymentModal({
             label={t("fieldAmount", { currency })}
             value={amount}
             onChange={(e) => onAmountChange(e.target.value)}
+            onBlur={() => {
+              const rounded = roundMoneyAmount(amount);
+              if (rounded === null) return;
+              onAmountChange(String(rounded));
+            }}
             disabled={isSubmitting || !customer}
             placeholder={customer ? String(customer.balance) : ""}
             required
@@ -341,6 +349,7 @@ export function RecordPaymentModal({
             name="paymentNotes"
             rows={3}
             value={notes}
+            maxLength={500}
             onChange={(e) => onNotesChange(e.target.value)}
             placeholder={t("fieldNotesPlaceholder")}
             disabled={isSubmitting || !customer}

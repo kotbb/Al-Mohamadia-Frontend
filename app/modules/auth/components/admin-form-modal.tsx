@@ -2,6 +2,7 @@
 
 import type { FormEvent } from "react";
 import { useTranslations } from "next-intl";
+import type { UserRole } from "@/lib/auth/types";
 import { CreateAdminForm } from "@/app/modules/auth/components/create-admin-form";
 import { Modal } from "@/app/modules/shared/components/modal";
 import { Button } from "@/app/modules/shared/components/button";
@@ -14,10 +15,13 @@ interface AdminFormModalProps {
   lastName: string;
   username: string;
   password: string;
+  role: UserRole;
   onFirstNameChange: (value: string) => void;
   onLastNameChange: (value: string) => void;
   onUsernameChange: (value: string) => void;
   onPasswordChange: (value: string) => void;
+  onRoleChange: (value: UserRole) => void;
+  roleLocked?: boolean;
   isSubmitting: boolean;
   error: string | null;
   onSubmit: () => Promise<void>;
@@ -31,10 +35,13 @@ export function AdminFormModal({
   lastName,
   username,
   password,
+  role,
   onFirstNameChange,
   onLastNameChange,
   onUsernameChange,
   onPasswordChange,
+  onRoleChange,
+  roleLocked = false,
   isSubmitting,
   error,
   onSubmit,
@@ -91,10 +98,13 @@ export function AdminFormModal({
           lastName={lastName}
           username={username}
           password={password}
+          role={role}
           onFirstNameChange={onFirstNameChange}
           onLastNameChange={onLastNameChange}
           onUsernameChange={onUsernameChange}
           onPasswordChange={onPasswordChange}
+          onRoleChange={onRoleChange}
+          roleLocked={roleLocked}
           isSubmitting={isSubmitting}
           error={error}
           onSubmit={onSubmit}

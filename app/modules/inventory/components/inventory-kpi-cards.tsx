@@ -57,7 +57,7 @@ export function InventoryKpiCards({
         </div>
         <div className="mt-2 flex items-center border-t border-border/40 pt-1.5 min-h-[22px]">
           <span className="text-[11px] text-text-muted">
-            {locale === "ar" ? "رأس المال المجمد في المخزون" : "Capital tied in stock"}
+            {t("kpiCostHint")}
           </span>
         </div>
       </SurfaceCard>
@@ -84,7 +84,7 @@ export function InventoryKpiCards({
         </div>
         <div className="mt-2 flex items-center border-t border-border/40 pt-1.5 min-h-[22px]">
           <span className="text-[11px] text-text-muted">
-            {locale === "ar" ? "القيمة البيعية المتوقعة" : "Expected retail revenue"}
+            {t("kpiSellingHint")}
           </span>
         </div>
       </SurfaceCard>
@@ -152,7 +152,7 @@ export function InventoryKpiCards({
               {attentionCount}
             </span>
             <span className="text-[11px] font-medium text-text-muted">
-              {locale === "ar" ? "أصناف تتطلب الانتباه" : "items need attention"}
+              {t("kpiAttentionHint")}
             </span>
           </div>
         </div>
@@ -190,7 +190,7 @@ export function InventoryKpiCards({
           {attentionCount === 0 && (
             <span className="inline-flex items-center gap-1 text-[11px] font-medium text-success">
               <span className="h-1.5 w-1.5 rounded-full bg-success" />
-              {locale === "ar" ? "المخزون بمستويات آمنة" : "All levels healthy"}
+              {t("kpiHealthyHint")}
             </span>
           )}
         </div>

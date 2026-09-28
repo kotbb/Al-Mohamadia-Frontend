@@ -1,7 +1,7 @@
 "use client";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
-import { ApiError } from "@/lib/api/types";
 import {
   getInventoryValuation,
   getStockList,
@@ -23,6 +23,7 @@ const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
 
 export function useInventory() {
+  const describeError = useApiErrorMessage();
   // Stock list state
   const [items, setItems] = useState<StockItem[]>([]);
   const [summary, setSummary] = useState<StockListSummary>({
@@ -92,11 +93,7 @@ export function useInventory() {
         if (controller.signal.aborted) return;
         setValuationStatus("error");
         setValuationError(
-          err instanceof ApiError
-            ? err.message
-            : err instanceof Error
-              ? err.message
-              : "Failed to load valuation",
+          describeError(err, "Failed to load valuation"),
         );
       });
 
@@ -137,11 +134,7 @@ export function useInventory() {
         if (controller.signal.aborted) return;
         setListStatus("error");
         setListError(
-          err instanceof ApiError
-            ? err.message
-            : err instanceof Error
-              ? err.message
-              : "Failed to load stock list",
+          describeError(err, "Failed to load stock list"),
         );
       });
 

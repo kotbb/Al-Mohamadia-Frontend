@@ -16,7 +16,6 @@ interface StockTableProps {
   onAdjustStock: (item: StockItem) => void;
   onUpdateThreshold: (item: StockItem) => void;
   onViewAdjustmentsForItem: (item: StockItem) => void;
-  onViewHistory: (item: StockItem) => void;
 }
 
 export function StockTable({
@@ -28,10 +27,8 @@ export function StockTable({
   onAdjustStock,
   onUpdateThreshold,
   onViewAdjustmentsForItem,
-  onViewHistory,
 }: StockTableProps) {
   const t = useTranslations("inventory");
-  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
 
@@ -186,11 +183,6 @@ export function StockTable({
                           label={t("colActions")}
                           items={[
                             {
-                              id: "history",
-                              label: tAudit("viewHistory"),
-                              onSelect: () => onViewHistory(item),
-                            },
-                            {
                               id: "threshold",
                               label: t("actionUpdateThreshold"),
                               onSelect: () => onUpdateThreshold(item),
@@ -222,7 +214,7 @@ export function StockTable({
             disabled={page <= 1 || isLoading}
             onClick={() => onPageChange(page - 1)}
           >
-            {tShared("prevPage") || (locale === "ar" ? "السابق" : "Previous")}
+            {tShared("prevPage")}
           </Button>
 
           <span className="text-sm">
@@ -236,7 +228,7 @@ export function StockTable({
             disabled={page >= totalPages || isLoading}
             onClick={() => onPageChange(page + 1)}
           >
-            {tShared("nextPage") || (locale === "ar" ? "التالي" : "Next")}
+            {tShared("nextPage")}
           </Button>
         </div>
       )}

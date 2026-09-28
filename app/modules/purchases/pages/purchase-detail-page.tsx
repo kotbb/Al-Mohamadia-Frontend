@@ -294,17 +294,8 @@ export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
               </SurfaceCard>
             ) : null}
 
-            {/* Bottom Actions Row */}
-            <div className="flex flex-wrap items-center gap-3 border-t border-border pt-6 print:hidden">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => window.print()}
-              >
-                <PrintIcon />
-                <span>{t("print")}</span>
-              </Button>
-              {purchase.status === "saved" ? (
+            {purchase.status === "saved" ? (
+              <div className="flex flex-wrap items-center gap-3 border-t border-border pt-6">
                 <Button
                   type="button"
                   variant="danger"
@@ -313,32 +304,12 @@ export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
                   <CancelIcon />
                   <span>{t("cancelPurchase")}</span>
                 </Button>
-              ) : null}
-            </div>
+              </div>
+            ) : null}
           </>
         )}
       </div>
     </AppShell>
-  );
-}
-
-function PrintIcon() {
-  return (
-    <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M6 14h12v7H6v-7Z"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinejoin="round"
-      />
-      <circle cx="18" cy="13" r="1" fill="currentColor" />
-    </svg>
   );
 }
 

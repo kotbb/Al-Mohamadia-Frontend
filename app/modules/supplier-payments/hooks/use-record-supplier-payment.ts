@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
+import { roundMoneyAmount } from "@/app/modules/items/utils/format-money";
 import { recordSupplierPayment } from "@/app/modules/supplier-payments/services/supplier-payments.service";
 import type {
   SupplierPayment,
@@ -15,6 +17,7 @@ export interface SupplierTarget {
 }
 
 export function useRecordSupplierPayment() {
+  const describeError = useApiErrorMessage();
   const [isOpen, setIsOpen] = useState(false);
   const [supplier, setSupplier] = useState<SupplierTarget | null>(null);
   const [amount, setAmount] = useState("");
@@ -26,7 +29,11 @@ export function useRecordSupplierPayment() {
   const open = useCallback((target?: SupplierTarget) => {
     if (target) {
       setSupplier(target);
-      setAmount(target.amountOwed > 0 ? String(target.amountOwed) : "");
+      setAmount(
+        target.amountOwed > 0
+          ? String(roundMoneyAmount(String(target.amountOwed)) ?? target.amountOwed)
+          : "",
+      );
     } else {
       setSupplier(null);
       setAmount("");
@@ -39,7 +46,11 @@ export function useRecordSupplierPayment() {
 
   const selectSupplier = useCallback((target: SupplierTarget) => {
     setSupplier(target);
-    setAmount(target.amountOwed > 0 ? String(target.amountOwed) : "");
+    setAmount(
+      target.amountOwed > 0
+        ? String(roundMoneyAmount(String(target.amountOwed)) ?? target.amountOwed)
+        : "",
+    );
     setError(null);
   }, []);
 
@@ -64,11 +75,12 @@ export function useRecordSupplierPayment() {
     ): Promise<SupplierPayment | null> => {
       if (!supplier) return null;
 
-      const numAmount = parseFloat(amount);
-      if (isNaN(numAmount) || numAmount <= 0) {
+      const numAmount = roundMoneyAmount(amount);
+      if (numAmount === null || numAmount <= 0) {
         setError("amountInvalid");
         return null;
       }
+      setAmount(String(numAmount));
 
       if (numAmount > supplier.amountOwed) {
         setError("amountExceedsDebt");
@@ -90,14 +102,13 @@ export function useRecordSupplierPayment() {
         onSuccess?.(payment);
         return payment;
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "recordError";
-        setError(message);
+        setError(describeError(err, "recordError"));
         return null;
       } finally {
         setIsSubmitting(false);
       }
     },
-    [supplier, amount, method, notes],
+    [supplier, amount, method, notes, describeError],
   );
 
   return {

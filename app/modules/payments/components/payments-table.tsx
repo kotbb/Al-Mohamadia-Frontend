@@ -23,7 +23,6 @@ interface PaymentsTableProps {
   error: string | null;
   onRetry: () => void;
   onCancel: (payment: Payment) => void;
-  onViewHistory: (payment: Payment) => void;
 }
 
 export function PaymentsTable({
@@ -34,10 +33,8 @@ export function PaymentsTable({
   error,
   onRetry,
   onCancel,
-  onViewHistory,
 }: PaymentsTableProps) {
   const t = useTranslations("payments");
-  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
   const currency = t("currency");
@@ -102,13 +99,7 @@ export function PaymentsTable({
               ? (customerNames[payment.customerId] ?? "…")
               : t("cashCustomer");
 
-            const actions: RowActionItem[] = [
-              {
-                id: "history",
-                label: tAudit("viewHistory"),
-                onSelect: () => onViewHistory(payment),
-              },
-            ];
+            const actions: RowActionItem[] = [];
 
             if (!payment.isReversed && !payment.invoiceId) {
               // Only standalone active payments can be cancelled directly

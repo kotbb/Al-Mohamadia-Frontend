@@ -1,7 +1,7 @@
 "use client";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
-import { ApiError } from "@/lib/api/types";
 import { getCustomer } from "@/app/modules/customers/services/customers.service";
 import {
   cancelSalesInvoice,
@@ -32,6 +32,7 @@ const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
 
 export function useInvoices() {
+  const describeError = useApiErrorMessage();
   const [invoices, setInvoices] = useState<SalesInvoice[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -94,11 +95,7 @@ export function useInvoices() {
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
         const message =
-          error instanceof ApiError
-            ? error.message
-            : error instanceof Error
-              ? error.message
-              : "Failed to load invoices";
+          describeError(error, "Failed to load invoices");
         setListStatus("error");
         setListError(message);
       });
@@ -167,11 +164,7 @@ export function useInvoices() {
       refresh();
     } catch (error: unknown) {
       const message =
-        error instanceof ApiError
-          ? error.message
-          : error instanceof Error
-            ? error.message
-            : "Cancel failed";
+        describeError(error, "Cancel failed");
       setConfirmError(message);
     } finally {
       setIsConfirming(false);
@@ -185,11 +178,7 @@ export function useInvoices() {
       openPdfBlob(blob);
     } catch (error: unknown) {
       const message =
-        error instanceof ApiError
-          ? error.message
-          : error instanceof Error
-            ? error.message
-            : "Print failed";
+        describeError(error, "Print failed");
       setActionError(message);
     }
   }
@@ -201,11 +190,7 @@ export function useInvoices() {
       window.open(payload.whatsappUrl, "_blank", "noopener,noreferrer");
     } catch (error: unknown) {
       const message =
-        error instanceof ApiError
-          ? error.message
-          : error instanceof Error
-            ? error.message
-            : "Share failed";
+        describeError(error, "Share failed");
       setActionError(message);
     }
   }

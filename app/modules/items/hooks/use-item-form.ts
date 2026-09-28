@@ -1,7 +1,7 @@
 "use client";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
-import { ApiError } from "@/lib/api/types";
 import { listCategories } from "@/app/modules/items/services/categories.service";
 import {
   createItem,
@@ -71,6 +71,7 @@ function parseOptionalNumber(value: string): number | undefined {
 }
 
 export function useItemForm(itemId?: string): UseItemFormResult {
+  const describeError = useApiErrorMessage();
   const isEdit = Boolean(itemId);
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesStatus, setCategoriesStatus] =
@@ -147,11 +148,7 @@ export function useItemForm(itemId?: string): UseItemFormResult {
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
         const message =
-          error instanceof ApiError
-            ? error.message
-            : error instanceof Error
-              ? error.message
-              : "Request failed";
+          describeError(error, "Request failed");
         setItem(null);
         setItemStatus("error");
         setItemError(message);
@@ -266,11 +263,7 @@ export function useItemForm(itemId?: string): UseItemFormResult {
       return true;
     } catch (error: unknown) {
       const message =
-        error instanceof ApiError
-          ? error.message
-          : error instanceof Error
-            ? error.message
-            : "Save failed";
+        describeError(error, "Save failed");
       setSubmitError(message);
       return false;
     } finally {

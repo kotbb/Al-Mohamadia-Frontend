@@ -1,8 +1,8 @@
 "use client";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ApiError } from "@/lib/api/types";
 import { createStockAdjustment } from "@/app/modules/inventory/services/inventory.service";
 import { isCubicPricingMode, type StockItem } from "@/app/modules/inventory/types/inventory.types";
 
@@ -19,6 +19,7 @@ export function StockAdjustmentModal({
   item,
   onSuccess,
 }: StockAdjustmentModalProps) {
+  const describeError = useApiErrorMessage();
   const t = useTranslations("inventory");
 
   const [newQuantity, setNewQuantity] = useState<string>("");
@@ -87,11 +88,7 @@ export function StockAdjustmentModal({
       onClose();
     } catch (err: unknown) {
       setError(
-        err instanceof ApiError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : t("adjustError"),
+        describeError(err, t("adjustError")),
       );
     } finally {
       setIsSubmitting(false);
@@ -196,11 +193,11 @@ export function StockAdjustmentModal({
                   </span>
                 ) : diff > 0 ? (
                   <span className="rounded px-2 py-0.5 text-[11px] font-semibold bg-success/10 text-success border border-success/30">
-                    +{diff.toFixed(isCubic ? 3 : 0)} {unitLabel} (زيادة)
+                    +{diff.toFixed(isCubic ? 3 : 0)} {unitLabel} ({t("diffSurplus")})
                   </span>
                 ) : (
                   <span className="rounded px-2 py-0.5 text-[11px] font-semibold bg-danger/10 text-danger border border-danger/30">
-                    {diff.toFixed(isCubic ? 3 : 0)} {unitLabel} (عجز / خصم)
+                    {diff.toFixed(isCubic ? 3 : 0)} {unitLabel} ({t("diffDeficit")})
                   </span>
                 )}
               </div>
@@ -245,6 +242,7 @@ export function StockAdjustmentModal({
               rows={2}
               required
               minLength={3}
+              maxLength={500}
               placeholder={t("reasonFieldPlaceholder")}
               className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
             />

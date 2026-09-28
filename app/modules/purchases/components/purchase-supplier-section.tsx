@@ -102,6 +102,7 @@ export function PurchaseSupplierSection({
             <input
               type="text"
               value={notes}
+              maxLength={500}
               onChange={(e) => onNotesChange(e.target.value)}
               placeholder={t("fieldNotesPlaceholder")}
               className="ds-focus-input min-h-10 w-full rounded-xl border border-border bg-surface px-3.5 text-sm text-text-primary placeholder:text-text-muted"

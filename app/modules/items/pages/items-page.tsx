@@ -1,4 +1,5 @@
 "use client";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
@@ -11,7 +12,6 @@ import { PriceHistoryModal } from "@/app/modules/items/components/price-history-
 import { useItemsPage } from "@/app/modules/items/hooks/use-items-page";
 import { deleteItem } from "@/app/modules/items/services/items.service";
 import type { Item } from "@/app/modules/items/types/items.types";
-import { ApiError } from "@/lib/api/types";
 import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
@@ -20,6 +20,7 @@ import { ConfirmDialog } from "@/app/modules/shared/components/row-actions-menu"
 import { Toast } from "@/app/modules/shared/components/toast";
 
 export function ItemsPage() {
+  const describeError = useApiErrorMessage();
   const t = useTranslations("items");
   const tShared = useTranslations("shared");
   const history = useAuditHistory({ entityType: "Item" });
@@ -74,11 +75,7 @@ export function ItemsPage() {
       refresh();
     } catch (error: unknown) {
       const message =
-        error instanceof ApiError
-          ? error.message
-          : error instanceof Error
-            ? error.message
-            : "Delete failed";
+        describeError(error, "Delete failed");
       setDeleteError(message);
     } finally {
       setIsDeleting(false);

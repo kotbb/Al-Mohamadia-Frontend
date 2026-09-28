@@ -1,7 +1,7 @@
 "use client";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ApiError } from "@/lib/api/types";
 import {
   getCustomer,
   listCustomers,
@@ -23,6 +23,7 @@ import {
 } from "@/app/modules/invoices/utils/invoice-math";
 import { listItems } from "@/app/modules/items/services/items.service";
 import type { Item } from "@/app/modules/items/types/items.types";
+import { roundMoneyAmount } from "@/app/modules/items/utils/format-money";
 
 export interface InvoiceFormLine {
   key: string;
@@ -62,7 +63,48 @@ function parseNonNegative(value: string): number | null {
 
 const SEARCH_DEBOUNCE_MS = 300;
 
+function moneyFieldString(raw: string): string {
+  const rounded = roundMoneyAmount(raw);
+  return rounded === null ? raw : String(rounded);
+}
+
+function lineTotalForFormLine(
+  line: InvoiceFormLine,
+  itemsById: Map<string, Item>,
+): number {
+  const item = itemsById.get(line.itemId);
+  if (!item) return 0;
+  const quantity = parsePositive(line.quantity);
+  const piecePrice = parsePositive(line.piecePrice);
+  if (quantity === null || piecePrice === null) return 0;
+  const thickness =
+    item.pricingMode === "per_cubic_meter"
+      ? parsePositive(line.thickness)
+      : null;
+  const width =
+    item.pricingMode === "per_cubic_meter" ? parsePositive(line.width) : null;
+  const length =
+    item.pricingMode === "per_cubic_meter" ? parsePositive(line.length) : null;
+  if (
+    item.pricingMode === "per_cubic_meter" &&
+    (thickness === null || width === null || length === null)
+  ) {
+    return 0;
+  }
+  return roundMoney(
+    lineTotalForPricing({
+      pricingMode: item.pricingMode,
+      quantity,
+      piecePrice,
+      thicknessCm: thickness,
+      widthCm: width,
+      lengthCm: length,
+    }),
+  );
+}
+
 export function useInvoiceForm() {
+  const describeError = useApiErrorMessage();
   const [type, setType] = useState<SalesInvoiceType>("cash_sale");
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
@@ -100,11 +142,7 @@ export function useInvoiceForm() {
         if (controller.signal.aborted) return;
         setItemsStatus("error");
         setItemsError(
-          error instanceof ApiError
-            ? error.message
-            : error instanceof Error
-              ? error.message
-              : "Failed to load items",
+          describeError(error, "Failed to load items"),
         );
       });
     return () => controller.abort();
@@ -170,41 +208,7 @@ export function useInvoiceForm() {
   }, [items]);
 
   const lineTotals = useMemo(() => {
-    return lines.map((line) => {
-      const item = itemsById.get(line.itemId);
-      if (!item) return 0;
-      const quantity = parsePositive(line.quantity);
-      const piecePrice = parsePositive(line.piecePrice);
-      if (quantity === null || piecePrice === null) return 0;
-      const thickness =
-        item.pricingMode === "per_cubic_meter"
-          ? parsePositive(line.thickness)
-          : null;
-      const width =
-        item.pricingMode === "per_cubic_meter"
-          ? parsePositive(line.width)
-          : null;
-      const length =
-        item.pricingMode === "per_cubic_meter"
-          ? parsePositive(line.length)
-          : null;
-      if (
-        item.pricingMode === "per_cubic_meter" &&
-        (thickness === null || width === null || length === null)
-      ) {
-        return 0;
-      }
-      return roundMoney(
-        lineTotalForPricing({
-          pricingMode: item.pricingMode,
-          quantity,
-          piecePrice,
-          thicknessCm: thickness,
-          widthCm: width,
-          lengthCm: length,
-        }),
-      );
-    });
+    return lines.map((line) => lineTotalForFormLine(line, itemsById));
   }, [lines, itemsById]);
 
   const discountValue = parseNonNegative(discountInput) ?? 0;
@@ -286,62 +290,62 @@ export function useInvoiceForm() {
     });
   }
 
-  const validate = useCallback(
-    (t: (key: string) => string): string | null => {
-      if (type === "customer_sale" && !customerId) {
-        return t("validationCustomer");
-      }
-      const filled = lines.filter((line) => line.itemId);
-      if (filled.length === 0) return t("validationLines");
+  function validationError(
+    snapshotLines: InvoiceFormLine[],
+    snapshotDiscount: number,
+    snapshotPaid: number,
+    snapshotTotals: { total: number; net: number },
+    t: (key: string) => string,
+  ): string | null {
+    if (type === "customer_sale" && !customerId) {
+      return t("validationCustomer");
+    }
+    const filled = snapshotLines.filter((line) => line.itemId);
+    if (filled.length === 0) return t("validationLines");
 
-      for (const line of lines) {
-        if (!line.itemId) continue;
-        const item = itemsById.get(line.itemId);
-        if (!item) return t("validationItem");
-        if (parsePositive(line.quantity) === null) return t("validationItem");
-        if (parsePositive(line.piecePrice) === null) return t("validationItem");
-        if (item.pricingMode === "per_cubic_meter") {
-          if (
-            parsePositive(line.thickness) === null ||
-            parsePositive(line.width) === null ||
-            parsePositive(line.length) === null
-          ) {
-            return t("validationDims");
-          }
+    for (const line of snapshotLines) {
+      if (!line.itemId) continue;
+      const item = itemsById.get(line.itemId);
+      if (!item) return t("validationItem");
+      if (parsePositive(line.quantity) === null) return t("validationItem");
+      if (parsePositive(line.piecePrice) === null) return t("validationItem");
+      if (item.pricingMode === "per_cubic_meter") {
+        if (
+          parsePositive(line.thickness) === null ||
+          parsePositive(line.width) === null ||
+          parsePositive(line.length) === null
+        ) {
+          return t("validationDims");
         }
       }
+    }
 
-      if (discountValue > totals.total) return t("validationDiscount");
+    if (snapshotDiscount > snapshotTotals.total) return t("validationDiscount");
 
-      if (type === "cash_sale") {
-        if (roundMoney(paidValue) !== totals.net) return t("validationPaidCash");
-      } else if (paidValue > totals.net) {
-        return t("validationPaidCustomer");
+    if (type === "cash_sale") {
+      if (roundMoney(snapshotPaid) !== snapshotTotals.net) {
+        return t("validationPaidCash");
       }
+    } else if (snapshotPaid > snapshotTotals.net) {
+      return t("validationPaidCustomer");
+    }
 
-      return null;
-    },
-    [
-      type,
-      customerId,
-      lines,
-      itemsById,
-      discountValue,
-      paidValue,
-      totals.total,
-      totals.net,
-    ],
-  );
+    return null;
+  }
 
-  function buildPayload(): CreateSalesInvoiceInput {
-    const payloadLines = lines
+  function buildPayload(
+    snapshotLines: InvoiceFormLine[],
+    snapshotDiscount: number,
+    snapshotPaid: number,
+  ): CreateSalesInvoiceInput {
+    const payloadLines = snapshotLines
       .filter((line) => line.itemId)
       .map((line) => {
         const item = itemsById.get(line.itemId)!;
         const base = {
           itemId: line.itemId,
           quantity: parsePositive(line.quantity)!,
-          piecePrice: parsePositive(line.piecePrice)!,
+          piecePrice: roundMoney(parsePositive(line.piecePrice)!),
           note: line.note.trim() || undefined,
         };
         if (item.pricingMode === "per_cubic_meter") {
@@ -359,8 +363,8 @@ export function useInvoiceForm() {
       type,
       customerId: type === "customer_sale" ? customerId! : undefined,
       lines: payloadLines,
-      discount: discountValue,
-      paid: paidValue,
+      discount: roundMoney(snapshotDiscount),
+      paid: roundMoney(snapshotPaid),
     };
   }
 
@@ -368,7 +372,51 @@ export function useInvoiceForm() {
     print: boolean;
     t: (key: string) => string;
   }): Promise<string | null> {
-    const error = validate(options.t);
+    const snapshotLines = lines.map((line) => ({
+      ...line,
+      piecePrice: moneyFieldString(line.piecePrice),
+    }));
+    const discountRounded = roundMoneyAmount(discountInput);
+    const snapshotDiscount =
+      discountRounded ?? parseNonNegative(discountInput) ?? 0;
+    const snapshotDiscountInput =
+      discountRounded === null ? discountInput : String(discountRounded);
+    const snapshotLineTotals = snapshotLines.map((line) =>
+      lineTotalForFormLine(line, itemsById),
+    );
+    const preview = computeInvoiceTotals({
+      lineTotals: snapshotLineTotals,
+      discount: snapshotDiscount,
+      paid: 0,
+    });
+    const paidRounded = roundMoneyAmount(paidInput);
+    const snapshotPaid =
+      type === "cash_sale"
+        ? preview.net
+        : (paidRounded ?? parseNonNegative(paidInput) ?? 0);
+    const snapshotPaidInput =
+      type === "cash_sale"
+        ? String(preview.net)
+        : paidRounded === null
+          ? paidInput
+          : String(paidRounded);
+    const snapshotTotals = computeInvoiceTotals({
+      lineTotals: snapshotLineTotals,
+      discount: snapshotDiscount,
+      paid: snapshotPaid,
+    });
+
+    setLines(snapshotLines);
+    setDiscountInput(snapshotDiscountInput);
+    setPaidInput(snapshotPaidInput);
+
+    const error = validationError(
+      snapshotLines,
+      snapshotDiscount,
+      snapshotPaid,
+      snapshotTotals,
+      options.t,
+    );
     if (error) {
       setSubmitError(error);
       return null;
@@ -376,7 +424,9 @@ export function useInvoiceForm() {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      const created = await createSalesInvoice(buildPayload());
+      const created = await createSalesInvoice(
+        buildPayload(snapshotLines, snapshotDiscount, snapshotPaid),
+      );
       if (options.print) {
         try {
           const blob = await getSalesInvoicePdfBlob(created.id);
@@ -388,11 +438,7 @@ export function useInvoiceForm() {
       return created.id;
     } catch (error: unknown) {
       setSubmitError(
-        error instanceof ApiError
-          ? error.message
-          : error instanceof Error
-            ? error.message
-            : "Save failed",
+        describeError(error, "Save failed"),
       );
       return null;
     } finally {

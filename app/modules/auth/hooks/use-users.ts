@@ -1,8 +1,9 @@
 "use client";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
-import { ApiError } from "@/lib/api/types";
-import type { AuthUser } from "@/lib/auth/types";
+import type { AuthUser, UserRole } from "@/lib/auth/types";
+import { useAuth } from "@/lib/auth/auth-provider";
 import {
   createAdmin,
   deleteUser,
@@ -40,10 +41,12 @@ interface UseUsersResult {
   formLastName: string;
   formUsername: string;
   formPassword: string;
+  formRole: UserRole;
   setFormFirstName: (value: string) => void;
   setFormLastName: (value: string) => void;
   setFormUsername: (value: string) => void;
   setFormPassword: (value: string) => void;
+  setFormRole: (value: UserRole) => void;
   isSaving: boolean;
   formError: string | null;
   submitForm: () => Promise<void>;
@@ -58,9 +61,12 @@ interface UseUsersResult {
   openDeleteConfirm: (user: AuthUser) => void;
   closeConfirm: () => void;
   submitConfirm: () => Promise<void>;
+  roleLocked: boolean;
 }
 
 export function useUsers(): UseUsersResult {
+  const describeError = useApiErrorMessage();
+  const { user: currentUser, logout } = useAuth();
   const [users, setUsers] = useState<AuthUser[]>([]);
   const [listStatus, setListStatus] = useState<ListStatus>("loading");
   const [listError, setListError] = useState<string | null>(null);
@@ -73,6 +79,7 @@ export function useUsers(): UseUsersResult {
   const [formLastName, setFormLastName] = useState("");
   const [formUsername, setFormUsername] = useState("");
   const [formPassword, setFormPassword] = useState("");
+  const [formRole, setFormRole] = useState<UserRole>("admin");
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [toast, setToast] = useState<UsersToastState | null>(null);
@@ -100,11 +107,7 @@ export function useUsers(): UseUsersResult {
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
         const message =
-          error instanceof ApiError
-            ? error.message
-            : error instanceof Error
-              ? error.message
-              : "Request failed";
+          describeError(error, "Request failed");
         setUsers([]);
         setListError(message);
         setListStatus("error");
@@ -120,6 +123,7 @@ export function useUsers(): UseUsersResult {
     setFormLastName("");
     setFormUsername("");
     setFormPassword("");
+    setFormRole("admin");
     setFormError(null);
     setEditingUserId(null);
   }, []);
@@ -137,6 +141,7 @@ export function useUsers(): UseUsersResult {
     setFormLastName(user.lastName ?? "");
     setFormUsername(user.username);
     setFormPassword("");
+    setFormRole(user.role);
     setFormError(null);
     setIsFormOpen(true);
   }, []);
@@ -166,6 +171,7 @@ export function useUsers(): UseUsersResult {
           lastName: formLastName.trim(),
           username: formUsername.trim(),
           ...(formPassword.trim() ? { password: formPassword } : {}),
+          ...(currentUser?.id === editingUserId ? {} : { role: formRole }),
         });
         setToast({ kind: "updated", variant: "success" });
       }
@@ -174,11 +180,7 @@ export function useUsers(): UseUsersResult {
       refresh();
     } catch (error: unknown) {
       const message =
-        error instanceof ApiError
-          ? error.message
-          : error instanceof Error
-            ? error.message
-            : "Save failed";
+        describeError(error, "Save failed");
       setFormError(message);
     } finally {
       setIsSaving(false);
@@ -190,6 +192,8 @@ export function useUsers(): UseUsersResult {
     formLastName,
     formUsername,
     formPassword,
+    formRole,
+    currentUser?.id,
     refresh,
     resetForm,
   ]);
@@ -226,13 +230,28 @@ export function useUsers(): UseUsersResult {
     try {
       if (confirmKind === "delete") {
         await deleteUser(confirmUser.id);
+      } else {
+        const nextActive = confirmKind === "activate";
+        await updateUser(confirmUser.id, { isActive: nextActive });
+      }
+
+      const signedOutSelf =
+        confirmUser.id === currentUser?.id &&
+        (confirmKind === "delete" || confirmKind === "deactivate");
+      if (signedOutSelf) {
+        await logout();
+        return;
+      }
+
+      if (confirmKind === "delete") {
         setUsers((current) => current.filter((item) => item.id !== confirmUser.id));
         setToast({ kind: "deleted", variant: "danger" });
       } else {
         const nextActive = confirmKind === "activate";
-        const updated = await updateUser(confirmUser.id, { isActive: nextActive });
         setUsers((current) =>
-          current.map((item) => (item.id === updated.id ? updated : item)),
+          current.map((item) =>
+            item.id === confirmUser.id ? { ...item, isActive: nextActive } : item,
+          ),
         );
         setToast(
           nextActive
@@ -244,16 +263,12 @@ export function useUsers(): UseUsersResult {
       setConfirmUser(null);
     } catch (error: unknown) {
       const message =
-        error instanceof ApiError
-          ? error.message
-          : error instanceof Error
-            ? error.message
-            : "Action failed";
+        describeError(error, "Action failed");
       setConfirmError(message);
     } finally {
       setIsConfirming(false);
     }
-  }, [confirmUser, confirmKind]);
+  }, [confirmUser, confirmKind, currentUser?.id, logout]);
 
   return {
     users,
@@ -269,10 +284,12 @@ export function useUsers(): UseUsersResult {
     formLastName,
     formUsername,
     formPassword,
+    formRole,
     setFormFirstName,
     setFormLastName,
     setFormUsername,
     setFormPassword,
+    setFormRole,
     isSaving,
     formError,
     submitForm,
@@ -287,5 +304,6 @@ export function useUsers(): UseUsersResult {
     openDeleteConfirm,
     closeConfirm,
     submitConfirm,
+    roleLocked: editingUserId !== null && editingUserId === currentUser?.id,
   };
 }

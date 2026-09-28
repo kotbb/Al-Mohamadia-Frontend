@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
+import { roundMoneyAmount } from "@/app/modules/items/utils/format-money";
 import { recordPayment } from "@/app/modules/payments/services/payments.service";
 import type { Payment, PaymentMethod } from "@/app/modules/payments/types/payments.types";
 
@@ -12,6 +14,7 @@ export interface CustomerTarget {
 }
 
 export function useRecordPayment() {
+  const describeError = useApiErrorMessage();
   const [isOpen, setIsOpen] = useState(false);
   const [customer, setCustomer] = useState<CustomerTarget | null>(null);
   const [amount, setAmount] = useState("");
@@ -23,7 +26,11 @@ export function useRecordPayment() {
   const open = useCallback((target?: CustomerTarget) => {
     if (target) {
       setCustomer(target);
-      setAmount(target.balance > 0 ? String(target.balance) : "");
+      setAmount(
+        target.balance > 0
+          ? String(roundMoneyAmount(String(target.balance)) ?? target.balance)
+          : "",
+      );
     } else {
       setCustomer(null);
       setAmount("");
@@ -36,7 +43,11 @@ export function useRecordPayment() {
 
   const selectCustomer = useCallback((target: CustomerTarget) => {
     setCustomer(target);
-    setAmount(target.balance > 0 ? String(target.balance) : "");
+    setAmount(
+      target.balance > 0
+        ? String(roundMoneyAmount(String(target.balance)) ?? target.balance)
+        : "",
+    );
     setError(null);
   }, []);
 
@@ -59,11 +70,12 @@ export function useRecordPayment() {
     async (onSuccess?: (payment: Payment) => void): Promise<Payment | null> => {
       if (!customer) return null;
 
-      const numAmount = parseFloat(amount);
-      if (isNaN(numAmount) || numAmount <= 0) {
+      const numAmount = roundMoneyAmount(amount);
+      if (numAmount === null || numAmount <= 0) {
         setError("amountInvalid");
         return null;
       }
+      setAmount(String(numAmount));
 
       if (numAmount > customer.balance) {
         setError("amountExceedsBalance");
@@ -85,14 +97,13 @@ export function useRecordPayment() {
         onSuccess?.(payment);
         return payment;
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "recordError";
-        setError(message);
+        setError(describeError(err, "recordError"));
         return null;
       } finally {
         setIsSubmitting(false);
       }
     },
-    [customer, amount, method, notes],
+    [customer, amount, method, notes, describeError],
   );
 
   return {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { Link, useRouter } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
 import { formatMoney } from "@/app/modules/items/utils/format-money";
 import type { PurchaseInvoice } from "@/app/modules/purchases/types/purchases.types";
@@ -60,7 +60,6 @@ export function PurchasesTable({
   const t = useTranslations("purchases");
   const tShared = useTranslations("shared");
   const locale = useLocale();
-  const router = useRouter();
   const currency = t("currency");
 
   if (status === "loading" || status === "idle") {
@@ -123,13 +122,7 @@ export function PurchasesTable({
               ? (supplierNames[purchase.supplierId] ?? "…")
               : "-";
 
-            const actions: RowActionItem[] = [
-              {
-                id: "print",
-                label: t("print"),
-                onSelect: () => router.push(`/purchases/${purchase.id}`),
-              },
-            ];
+            const actions: RowActionItem[] = [];
 
             if (purchase.status === "saved" && onCancel) {
               actions.push({
@@ -217,7 +210,9 @@ export function PurchasesTable({
                     >
                       {t("view")}
                     </Link>
-                    <RowActionsMenu label={t("colActions")} items={actions} />
+                    {actions.length > 0 ? (
+                      <RowActionsMenu label={t("colActions")} items={actions} />
+                    ) : null}
                   </div>
                 </td>
               </tr>

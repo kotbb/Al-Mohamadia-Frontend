@@ -183,12 +183,6 @@ export function PaymentsPage() {
           error={listError}
           onRetry={refresh}
           onCancel={openCancelConfirm}
-          onViewHistory={(payment) =>
-            history.openRecord(
-              payment.id,
-              formatMoney(payment.amount, locale),
-            )
-          }
         />
 
         {/* Pagination */}

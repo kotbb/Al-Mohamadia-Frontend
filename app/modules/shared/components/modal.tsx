@@ -7,6 +7,7 @@ import {
   useRef,
   type ReactNode,
 } from "react";
+import { useTranslations } from "next-intl";
 
 interface ModalProps {
   open: boolean;
@@ -26,6 +27,7 @@ export function Modal({
   footer,
   size = "md",
 }: ModalProps) {
+  const tShared = useTranslations("shared");
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
@@ -82,7 +84,7 @@ export function Modal({
       <button
         type="button"
         className="absolute inset-0 cursor-default bg-black/40"
-        aria-label="Close dialog"
+        aria-label={tShared("closeDialog")}
         onClick={onClose}
       />
       <div

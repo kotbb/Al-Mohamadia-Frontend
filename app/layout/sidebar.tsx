@@ -162,7 +162,7 @@ function NavIcon({ name }: { name: NavItem["key"] }) {
   }
 }
 
-export function Sidebar() {
+export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const t = useTranslations("nav");
   const tApp = useTranslations("app");
   const pathname = usePathname();
@@ -220,6 +220,7 @@ export function Sidebar() {
                 href={item.href}
                 className={className}
                 aria-current={isActive ? "page" : undefined}
+                onClick={onNavigate}
               >
                 <NavIcon name={item.key} />
                 <span className="truncate">{label}</span>

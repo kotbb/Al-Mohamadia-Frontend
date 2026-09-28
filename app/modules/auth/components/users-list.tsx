@@ -22,7 +22,6 @@ interface UsersListProps {
   onDeactivate: (user: AuthUser) => void;
   onActivate: (user: AuthUser) => void;
   onDelete: (user: AuthUser) => void;
-  onViewHistory: (user: AuthUser) => void;
 }
 
 function StatusIcon({ active }: { active: boolean }) {
@@ -63,10 +62,8 @@ export function UsersList({
   onDeactivate,
   onActivate,
   onDelete,
-  onViewHistory,
 }: UsersListProps) {
   const t = useTranslations("users");
-  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
 
@@ -134,38 +131,29 @@ export function UsersList({
           {users.map((user) => {
             const actions: RowActionItem[] = [
               {
-                id: "history",
-                label: tAudit("viewHistory"),
-                onSelect: () => onViewHistory(user),
+                id: "edit",
+                label: t("edit"),
+                onSelect: () => onEdit(user),
+              },
+              user.isActive
+                ? {
+                    id: "deactivate",
+                    label: t("deactivate"),
+                    onSelect: () => onDeactivate(user),
+                    tone: "danger",
+                  }
+                : {
+                    id: "activate",
+                    label: t("activate"),
+                    onSelect: () => onActivate(user),
+                  },
+              {
+                id: "delete",
+                label: t("delete"),
+                onSelect: () => onDelete(user),
+                tone: "danger",
               },
             ];
-            if (user.role !== "super_admin") {
-              actions.push(
-                {
-                  id: "edit",
-                  label: t("edit"),
-                  onSelect: () => onEdit(user),
-                },
-                user.isActive
-                  ? {
-                      id: "deactivate",
-                      label: t("deactivate"),
-                      onSelect: () => onDeactivate(user),
-                      tone: "danger",
-                    }
-                  : {
-                      id: "activate",
-                      label: t("activate"),
-                      onSelect: () => onActivate(user),
-                    },
-                {
-                  id: "delete",
-                  label: t("delete"),
-                  onSelect: () => onDelete(user),
-                  tone: "danger",
-                },
-              );
-            }
 
             const displayName = getDisplayName(
               user.firstName,
@@ -187,19 +175,13 @@ export function UsersList({
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xs font-bold text-primary transition-all duration-150 group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-sm">
                       {initial}
                     </div>
-                    {user.role !== "super_admin" ? (
-                      <button
-                        type="button"
-                        onClick={() => onEdit(user)}
-                        className="ds-focus-ring truncate rounded text-start font-semibold text-text-primary transition-colors hover:text-primary hover:underline"
-                      >
-                        {displayName}
-                      </button>
-                    ) : (
-                      <span className="truncate font-semibold text-text-primary">
-                        {displayName}
-                      </span>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => onEdit(user)}
+                      className="ds-focus-ring truncate rounded text-start font-semibold text-text-primary transition-colors hover:text-primary hover:underline"
+                    >
+                      {displayName}
+                    </button>
                   </div>
                 </td>
                 <td className={`${cell} truncate text-text-secondary`}>

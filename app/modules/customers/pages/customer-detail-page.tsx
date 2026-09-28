@@ -34,7 +34,6 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
   const fromParam = searchParams.get("from");
   const backHref = fromParam && fromParam.startsWith("/") ? fromParam : "/customers";
   const customerHistory = useAuditHistory({ entityType: "Customer" });
-  const paymentHistory = useAuditHistory({ entityType: "Payment" });
   const [paymentToast, setPaymentToast] = useState<
     "recorded" | "cancelled" | null
   >(null);
@@ -184,7 +183,6 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
       }
     >
       {customerHistory.modal}
-      {paymentHistory.modal}
       <Toast
         open={toast !== null}
         message={toastMessage}
@@ -354,12 +352,6 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
               error={customerPayments.error}
               onRetry={customerPayments.refresh}
               onCancel={customerPayments.openCancelConfirm}
-              onViewHistory={(payment) =>
-                paymentHistory.openRecord(
-                  payment.id,
-                  formatMoney(payment.amount, locale),
-                )
-              }
             />
 
             {customerPayments.status === "success" &&
@@ -374,7 +366,7 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
                     customerPayments.setPage(customerPayments.page - 1)
                   }
                 >
-                  {tShared("prevPage") || "Previous"}
+                  {tShared("prevPage")}
                 </Button>
                 <span className="text-sm text-text-secondary">
                   {customerPayments.page} / {customerPayments.totalPages}
@@ -390,7 +382,7 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
                     customerPayments.setPage(customerPayments.page + 1)
                   }
                 >
-                  {tShared("nextPage") || "Next"}
+                  {tShared("nextPage")}
                 </Button>
               </div>
             ) : null}

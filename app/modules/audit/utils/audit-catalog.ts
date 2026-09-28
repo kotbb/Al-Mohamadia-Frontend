@@ -46,9 +46,9 @@ export const AUDIT_ACTIONS: readonly string[] = AUDIT_ENTITY_TYPES.flatMap(
   (entityType) => AUDIT_ACTIONS_BY_ENTITY[entityType],
 );
 
-/** Entity and action codes that can still appear on a row after they leave the filters. */
-export const AUDIT_LABEL_ENTITIES = [...AUDIT_ENTITY_TYPES, "Setting"] as const;
-export const AUDIT_LABEL_ACTIONS = [...AUDIT_ACTIONS, "setting_changed"] as const;
+/** Labels for entity and action codes stored on audit rows. */
+export const AUDIT_LABEL_ENTITIES = AUDIT_ENTITY_TYPES;
+export const AUDIT_LABEL_ACTIONS = AUDIT_ACTIONS;
 
 export function entityTypesForRole(isSuperAdmin: boolean): readonly AuditEntityType[] {
   if (isSuperAdmin) return AUDIT_ENTITY_TYPES;
@@ -127,8 +127,7 @@ export function auditActionTone(action: string): BadgeVariant {
     action.endsWith("_updated") ||
     action.endsWith("_merged") ||
     action === "price_changed" ||
-    action === "stock_adjusted" ||
-    action === "setting_changed"
+    action === "stock_adjusted"
   ) {
     return "warning";
   }

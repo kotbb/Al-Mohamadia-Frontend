@@ -1,7 +1,7 @@
 "use client";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
-import { ApiError } from "@/lib/api/types";
 import {
   createCustomer,
   deleteCustomer,
@@ -33,6 +33,7 @@ const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
 
 export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
+  const describeError = useApiErrorMessage();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [totalDebt, setTotalDebt] = useState(0);
   const [debtorCount, setDebtorCount] = useState(0);
@@ -119,11 +120,7 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
         const message =
-          error instanceof ApiError
-            ? error.message
-            : error instanceof Error
-              ? error.message
-              : "Request failed";
+          describeError(error, "Request failed");
         setCustomers([]);
         setTotal(0);
         setTotalDebt(0);
@@ -211,11 +208,7 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
       refresh();
     } catch (error: unknown) {
       const message =
-        error instanceof ApiError
-          ? error.message
-          : error instanceof Error
-            ? error.message
-            : "Save failed";
+        describeError(error, "Save failed");
       setFormError(message);
     } finally {
       setIsSaving(false);
@@ -242,11 +235,7 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
         setMergeOptions(result.items);
       } catch (error: unknown) {
         const message =
-          error instanceof ApiError
-            ? error.message
-            : error instanceof Error
-              ? error.message
-              : "Could not load customers";
+          describeError(error, "Could not load customers");
         setMergeError(message);
       }
     },
@@ -291,11 +280,7 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
       refresh();
     } catch (error: unknown) {
       const message =
-        error instanceof ApiError
-          ? error.message
-          : error instanceof Error
-            ? error.message
-            : "Merge failed";
+        describeError(error, "Merge failed");
       setMergeError(message);
     } finally {
       setIsMerging(false);
@@ -349,11 +334,7 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
       refresh();
     } catch (error: unknown) {
       const message =
-        error instanceof ApiError
-          ? error.message
-          : error instanceof Error
-            ? error.message
-            : "Action failed";
+        describeError(error, "Action failed");
       setConfirmError(message);
     } finally {
       setIsConfirming(false);

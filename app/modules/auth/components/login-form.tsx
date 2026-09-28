@@ -6,6 +6,12 @@ import { useLogin } from "@/app/modules/auth/hooks/use-login";
 import { Input } from "@/app/modules/shared/components/input";
 import { Button } from "@/app/modules/shared/components/button";
 
+function formatRetryWait(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
 function EyeIcon({ open }: { open: boolean }) {
   if (open) {
     return (
@@ -51,6 +57,7 @@ function EyeIcon({ open }: { open: boolean }) {
 
 export function LoginForm() {
   const t = useTranslations("auth");
+  const tShared = useTranslations("shared");
   const [showPassword, setShowPassword] = useState(false);
   const {
     username,
@@ -58,9 +65,11 @@ export function LoginForm() {
     setUsername,
     setPassword,
     isSubmitting,
+    rateLimitSecondsLeft,
     errorMessage,
     submit,
   } = useLogin();
+  const isRateLimited = rateLimitSecondsLeft > 0;
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -108,12 +117,12 @@ export function LoginForm() {
         </div>
       </div>
 
-      {errorMessage ? (
+      {isRateLimited || errorMessage ? (
         <p
           className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2.5 text-sm text-danger"
           role="alert"
         >
-          {errorMessage}
+          {isRateLimited ? tShared("rateLimit") : errorMessage}
         </p>
       ) : null}
 
@@ -121,9 +130,13 @@ export function LoginForm() {
         type="submit"
         variant="primary"
         className="mt-2 w-full shadow-[0_8px_24px_rgba(122,74,34,0.28)]"
-        disabled={isSubmitting || !username || !password}
+        disabled={isSubmitting || isRateLimited || !username || !password}
       >
-        {isSubmitting ? t("submitting") : t("submit")}
+        {isSubmitting
+          ? t("submitting")
+          : isRateLimited
+            ? t("retryIn", { time: formatRetryWait(rateLimitSecondsLeft) })
+            : t("submit")}
       </Button>
 
       <p className="pt-1 text-center text-sm text-text-muted">

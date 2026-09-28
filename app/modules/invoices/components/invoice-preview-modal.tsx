@@ -157,7 +157,7 @@ export function InvoicePreviewModal({
       <button
         type="button"
         className="absolute inset-0 cursor-default bg-black/60 backdrop-blur-sm transition-opacity"
-        aria-label="Close dialog"
+        aria-label={tShared("closeDialog")}
         onClick={onClose}
       />
 
@@ -225,7 +225,7 @@ export function InvoicePreviewModal({
         </div>
 
         {/* Scrollable Preview Area */}
-        <div className="min-h-0 flex-1 overflow-y-auto bg-neutral-100/70 p-4 sm:p-6 dark:bg-neutral-900/60">
+        <div className="min-h-0 flex-1 overflow-y-auto bg-background p-4 sm:p-6">
           {isLoading ? (
             <div className="py-16">
               <LoadingState message={tShared("loading")} />

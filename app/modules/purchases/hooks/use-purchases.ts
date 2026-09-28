@@ -1,7 +1,7 @@
 "use client";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
-import { ApiError } from "@/lib/api/types";
 import { todayIsoDate } from "@/app/modules/invoices/utils/format-invoice-date";
 import {
   cancelPurchase,
@@ -35,6 +35,7 @@ interface UsePurchasesOptions {
 }
 
 export function usePurchases(options?: UsePurchasesOptions) {
+  const describeError = useApiErrorMessage();
   const [purchases, setPurchases] = useState<PurchaseInvoice[]>([]);
   const [total, setTotal] = useState(0);
   const [summaryTotalAmount, setSummaryTotalAmount] = useState(0);
@@ -158,11 +159,7 @@ export function usePurchases(options?: UsePurchasesOptions) {
         if (controller.signal.aborted) return;
         setListStatus("error");
         setListError(
-          err instanceof ApiError
-            ? err.message
-            : err instanceof Error
-              ? err.message
-              : "Failed to load purchases",
+          describeError(err, "Failed to load purchases"),
         );
       });
 
@@ -203,11 +200,7 @@ export function usePurchases(options?: UsePurchasesOptions) {
       onSuccess?.();
     } catch (e: unknown) {
       setConfirmError(
-        e instanceof ApiError
-          ? e.message
-          : e instanceof Error
-            ? e.message
-            : "Failed to cancel purchase",
+        describeError(e, "Failed to cancel purchase"),
       );
     } finally {
       setIsConfirming(false);

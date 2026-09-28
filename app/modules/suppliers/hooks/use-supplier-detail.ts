@@ -1,8 +1,8 @@
 "use client";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
-import { ApiError } from "@/lib/api/types";
 import {
   deleteSupplier,
   getSupplier,
@@ -22,6 +22,7 @@ export type SupplierDetailToastKind =
   | "merged";
 
 export function useSupplierDetail(id: string) {
+  const describeError = useApiErrorMessage();
   const router = useRouter();
   const [supplier, setSupplier] = useState<Supplier | null>(null);
   const [status, setStatus] = useState<DetailStatus>("loading");
@@ -69,11 +70,7 @@ export function useSupplierDetail(id: string) {
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
         const message =
-          err instanceof ApiError
-            ? err.message
-            : err instanceof Error
-              ? err.message
-              : "Request failed";
+          describeError(err, "Request failed");
         setSupplier(null);
         setError(message);
         setStatus("error");
@@ -117,11 +114,7 @@ export function useSupplierDetail(id: string) {
       setToast({ kind: "updated", variant: "success" });
     } catch (err: unknown) {
       const message =
-        err instanceof ApiError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : "Save failed";
+        describeError(err, "Save failed");
       setFormError(message);
     } finally {
       setIsSaving(false);
@@ -138,11 +131,7 @@ export function useSupplierDetail(id: string) {
       setMergeOptions(result.items);
     } catch (err: unknown) {
       const message =
-        err instanceof ApiError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : "Could not load suppliers";
+        describeError(err, "Could not load suppliers");
       setMergeError(message);
     }
   }, [id]);
@@ -182,11 +171,7 @@ export function useSupplierDetail(id: string) {
       }
     } catch (err: unknown) {
       const message =
-        err instanceof ApiError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : "Merge failed";
+        describeError(err, "Merge failed");
       setMergeError(message);
     } finally {
       setIsMerging(false);
@@ -238,11 +223,7 @@ export function useSupplierDetail(id: string) {
       setConfirmKind(null);
     } catch (err: unknown) {
       const message =
-        err instanceof ApiError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : "Action failed";
+        describeError(err, "Action failed");
       setConfirmError(message);
     } finally {
       setIsConfirming(false);

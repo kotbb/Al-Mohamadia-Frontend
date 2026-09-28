@@ -143,7 +143,7 @@ export function AdjustmentsTable({
             disabled={page <= 1 || isLoading}
             onClick={() => onPageChange(page - 1)}
           >
-            {tShared("prevPage") || (locale === "ar" ? "السابق" : "Previous")}
+            {tShared("prevPage")}
           </Button>
 
           <span className="text-sm">
@@ -157,7 +157,7 @@ export function AdjustmentsTable({
             disabled={page >= totalPages || isLoading}
             onClick={() => onPageChange(page + 1)}
           >
-            {tShared("nextPage") || (locale === "ar" ? "التالي" : "Next")}
+            {tShared("nextPage")}
           </Button>
         </div>
       )}

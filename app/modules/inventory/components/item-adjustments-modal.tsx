@@ -270,7 +270,7 @@ export function ItemAdjustmentsModal({
                 disabled={page <= 1}
                 onClick={() => setPage(page - 1)}
               >
-                {tShared("prevPage") || "Previous"}
+                {tShared("prevPage")}
               </Button>
               <span className="text-xs text-text-secondary">
                 {t("pageOf", { page, totalPages })}
@@ -282,7 +282,7 @@ export function ItemAdjustmentsModal({
                 disabled={page >= totalPages}
                 onClick={() => setPage(page + 1)}
               >
-                {tShared("nextPage") || "Next"}
+                {tShared("nextPage")}
               </Button>
             </div>
           )}

@@ -36,7 +36,6 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
   const fromParam = searchParams.get("from");
   const backHref = fromParam && fromParam.startsWith("/") ? fromParam : "/suppliers";
   const supplierHistory = useAuditHistory({ entityType: "Supplier" });
-  const paymentHistory = useAuditHistory({ entityType: "SupplierPayment" });
   const supplierPurchases = usePurchases({ supplierId, pageSize: 10 });
   const supplierPayments = useSupplierAccountPayments(supplierId);
   const recordPaymentHook = useRecordSupplierPayment();
@@ -193,7 +192,6 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
       }
     >
       {supplierHistory.modal}
-      {paymentHistory.modal}
       <Toast
         open={toast !== null}
         message={toastMessage}
@@ -382,7 +380,7 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
                     supplierPurchases.setPage(supplierPurchases.page - 1)
                   }
                 >
-                  {tShared("prevPage") || "Previous"}
+                  {tShared("prevPage")}
                 </Button>
                 <span className="text-sm text-text-secondary">
                   {supplierPurchases.page} / {supplierPurchases.totalPages}
@@ -398,7 +396,7 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
                     supplierPurchases.setPage(supplierPurchases.page + 1)
                   }
                 >
-                  {tShared("nextPage") || "Next"}
+                  {tShared("nextPage")}
                 </Button>
               </div>
             ) : null}
@@ -417,12 +415,6 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
               error={supplierPayments.error}
               onRetry={supplierPayments.refresh}
               onCancel={supplierPayments.openCancelConfirm}
-              onViewHistory={(payment) =>
-                paymentHistory.openRecord(
-                  payment.id,
-                  formatMoney(payment.amount, locale),
-                )
-              }
             />
             {supplierPayments.status === "success" &&
             supplierPayments.totalPages > 1 ? (
@@ -436,7 +428,7 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
                     supplierPayments.setPage(supplierPayments.page - 1)
                   }
                 >
-                  {tShared("prevPage") || "Previous"}
+                  {tShared("prevPage")}
                 </Button>
                 <span className="text-sm text-text-secondary">
                   {supplierPayments.page} / {supplierPayments.totalPages}
@@ -452,7 +444,7 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
                     supplierPayments.setPage(supplierPayments.page + 1)
                   }
                 >
-                  {tShared("nextPage") || "Next"}
+                  {tShared("nextPage")}
                 </Button>
               </div>
             ) : null}

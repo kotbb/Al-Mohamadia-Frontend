@@ -1,7 +1,7 @@
 "use client";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ApiError } from "@/lib/api/types";
+import { useEffect, useMemo, useState } from "react";
 import {
   getSupplier,
   listSuppliers,
@@ -19,6 +19,7 @@ import {
 } from "@/app/modules/invoices/utils/invoice-math";
 import { listItems } from "@/app/modules/items/services/items.service";
 import type { Item } from "@/app/modules/items/types/items.types";
+import { roundMoneyAmount } from "@/app/modules/items/utils/format-money";
 
 function newLine(): PurchaseLineFormState {
   return {
@@ -41,11 +42,54 @@ function parsePositive(value: string): number | null {
 
 const SEARCH_DEBOUNCE_MS = 300;
 
+function moneyFieldString(raw: string): string {
+  const rounded = roundMoneyAmount(raw);
+  return rounded === null ? raw : String(rounded);
+}
+
+function lineTotalForPurchaseLine(
+  line: PurchaseLineFormState,
+  itemsById: Map<string, Item>,
+): number {
+  const item = itemsById.get(line.itemId);
+  if (!item) return 0;
+  const quantity = parsePositive(line.quantity);
+  const unitCost = parsePositive(line.unitCost);
+  if (quantity === null || unitCost === null) return 0;
+  const thickness =
+    item.pricingMode === "per_cubic_meter"
+      ? parsePositive(line.thicknessCm)
+      : null;
+  const width =
+    item.pricingMode === "per_cubic_meter" ? parsePositive(line.widthCm) : null;
+  const length =
+    item.pricingMode === "per_cubic_meter"
+      ? parsePositive(line.lengthCm)
+      : null;
+  if (
+    item.pricingMode === "per_cubic_meter" &&
+    (thickness === null || width === null || length === null)
+  ) {
+    return 0;
+  }
+  return roundMoney(
+    lineTotalForPricing({
+      pricingMode: item.pricingMode,
+      quantity,
+      piecePrice: unitCost,
+      thicknessCm: thickness,
+      widthCm: width,
+      lengthCm: length,
+    }),
+  );
+}
+
 interface UsePurchaseFormOptions {
   initialSupplierId?: string | null;
 }
 
 export function usePurchaseForm(options?: UsePurchaseFormOptions) {
+  const describeError = useApiErrorMessage();
   const [supplierId, setSupplierId] = useState<string | null>(
     options?.initialSupplierId ?? null,
   );
@@ -82,11 +126,7 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
         if (controller.signal.aborted) return;
         setItemsStatus("error");
         setItemsError(
-          error instanceof ApiError
-            ? error.message
-            : error instanceof Error
-              ? error.message
-              : "Failed to load items",
+          describeError(error, "Failed to load items"),
         );
       });
     return () => controller.abort();
@@ -166,41 +206,7 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
   }, [items]);
 
   const lineTotals = useMemo(() => {
-    return lines.map((line) => {
-      const item = itemsById.get(line.itemId);
-      if (!item) return 0;
-      const quantity = parsePositive(line.quantity);
-      const unitCost = parsePositive(line.unitCost);
-      if (quantity === null || unitCost === null) return 0;
-      const thickness =
-        item.pricingMode === "per_cubic_meter"
-          ? parsePositive(line.thicknessCm)
-          : null;
-      const width =
-        item.pricingMode === "per_cubic_meter"
-          ? parsePositive(line.widthCm)
-          : null;
-      const length =
-        item.pricingMode === "per_cubic_meter"
-          ? parsePositive(line.lengthCm)
-          : null;
-      if (
-        item.pricingMode === "per_cubic_meter" &&
-        (thickness === null || width === null || length === null)
-      ) {
-        return 0;
-      }
-      return roundMoney(
-        lineTotalForPricing({
-          pricingMode: item.pricingMode,
-          quantity,
-          piecePrice: unitCost,
-          thicknessCm: thickness,
-          widthCm: width,
-          lengthCm: length,
-        }),
-      );
-    });
+    return lines.map((line) => lineTotalForPurchaseLine(line, itemsById));
   }, [lines, itemsById]);
 
   const total = useMemo(() => {
@@ -288,50 +294,77 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
     setSubmitError(null);
   }
 
-  const validate = useCallback(
-    (t: (key: string) => string): string | null => {
-      if (!supplierId) {
-        return t("validationSupplier");
-      }
-      const filled = lines.filter((line) => line.itemId);
-      if (filled.length === 0) return t("validationLines");
+  function validationError(
+    snapshotLines: PurchaseLineFormState[],
+    snapshotPaidInput: string,
+    snapshotTotal: number,
+    t: (key: string) => string,
+  ): string | null {
+    if (!supplierId) {
+      return t("validationSupplier");
+    }
+    const filled = snapshotLines.filter((line) => line.itemId);
+    if (filled.length === 0) return t("validationLines");
 
-      for (const line of lines) {
-        if (!line.itemId) continue;
-        const item = itemsById.get(line.itemId);
-        if (!item) return t("validationItem");
-        if (parsePositive(line.quantity) === null) return t("validationQuantity");
-        if (parsePositive(line.unitCost) === null) return t("validationUnitCost");
-        if (item.pricingMode === "per_cubic_meter") {
-          if (
-            parsePositive(line.thicknessCm) === null ||
-            parsePositive(line.widthCm) === null ||
-            parsePositive(line.lengthCm) === null
-          ) {
-            return t("validationDims");
-          }
+    for (const line of snapshotLines) {
+      if (!line.itemId) continue;
+      const item = itemsById.get(line.itemId);
+      if (!item) return t("validationItem");
+      if (parsePositive(line.quantity) === null) return t("validationQuantity");
+      if (parsePositive(line.unitCost) === null) return t("validationUnitCost");
+      if (item.pricingMode === "per_cubic_meter") {
+        if (
+          parsePositive(line.thicknessCm) === null ||
+          parsePositive(line.widthCm) === null ||
+          parsePositive(line.lengthCm) === null
+        ) {
+          return t("validationDims");
         }
       }
+    }
 
-      if (paidInput.trim() !== "") {
-        const rawPaid = Number(paidInput);
-        if (!Number.isFinite(rawPaid) || rawPaid < 0) {
-          return t("validationPaidNegative");
-        }
-        if (rawPaid > total) {
-          return t("validationPaidExceedsTotal");
-        }
+    if (snapshotPaidInput.trim() !== "") {
+      const rawPaid = Number(snapshotPaidInput);
+      if (!Number.isFinite(rawPaid) || rawPaid < 0) {
+        return t("validationPaidNegative");
       }
+      if (rawPaid > snapshotTotal) {
+        return t("validationPaidExceedsTotal");
+      }
+    }
 
-      return null;
-    },
-    [supplierId, lines, itemsById, paidInput, total],
-  );
+    return null;
+  }
 
   async function submit(opts: {
     t: (key: string) => string;
   }): Promise<string | null> {
-    const err = validate(opts.t);
+    const snapshotLines = lines.map((line) => ({
+      ...line,
+      unitCost: moneyFieldString(line.unitCost),
+    }));
+    const paidRounded = roundMoneyAmount(paidInput);
+    const snapshotPaidInput =
+      paidRounded === null ? paidInput : String(paidRounded);
+    const snapshotPaid =
+      paidRounded ??
+      (snapshotPaidInput.trim() === "" ? 0 : Number(snapshotPaidInput));
+    const snapshotTotal = roundMoney(
+      snapshotLines.reduce(
+        (sum, line) => sum + lineTotalForPurchaseLine(line, itemsById),
+        0,
+      ),
+    );
+
+    setLines(snapshotLines);
+    setPaidInput(snapshotPaidInput);
+
+    const err = validationError(
+      snapshotLines,
+      snapshotPaidInput,
+      snapshotTotal,
+      opts.t,
+    );
     if (err) {
       setSubmitError(err);
       return null;
@@ -339,13 +372,13 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
 
     if (!supplierId) return null;
 
-    const payloadLines: CreatePurchaseInvoiceLineInput[] = lines
+    const payloadLines: CreatePurchaseInvoiceLineInput[] = snapshotLines
       .filter((line) => Boolean(line.itemId))
       .map((line) => {
         const item = itemsById.get(line.itemId);
         const isCubic = item?.pricingMode === "per_cubic_meter";
         const quantity = parsePositive(line.quantity) ?? 1;
-        const unitCost = parsePositive(line.unitCost) ?? 0;
+        const unitCost = roundMoney(parsePositive(line.unitCost) ?? 0);
         const note = line.note.trim() ? line.note.trim() : undefined;
 
         if (isCubic) {
@@ -371,7 +404,7 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
     const payload: CreatePurchaseInvoiceInput = {
       supplierId,
       lines: payloadLines,
-      paid: paidValue,
+      paid: roundMoney(Number.isFinite(snapshotPaid) ? snapshotPaid : 0),
       notes: notes.trim() ? notes.trim() : undefined,
     };
 
@@ -383,11 +416,7 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
       return created.id;
     } catch (e: unknown) {
       const message =
-        e instanceof ApiError
-          ? e.message
-          : e instanceof Error
-            ? e.message
-            : "Failed to create purchase invoice";
+        describeError(e, "Failed to create purchase invoice");
       setSubmitError(message);
       return null;
     } finally {

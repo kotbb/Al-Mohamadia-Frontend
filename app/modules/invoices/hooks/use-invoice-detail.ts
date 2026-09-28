@@ -1,7 +1,7 @@
 "use client";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
-import { ApiError } from "@/lib/api/types";
 import { getCustomer } from "@/app/modules/customers/services/customers.service";
 import {
   cancelSalesInvoice,
@@ -17,6 +17,7 @@ import type { Item } from "@/app/modules/items/types/items.types";
 type Status = "idle" | "loading" | "success" | "error";
 
 export function useInvoiceDetail(invoiceId: string) {
+  const describeError = useApiErrorMessage();
   const [invoice, setInvoice] = useState<SalesInvoice | null>(null);
   const [status, setStatus] = useState<Status>("loading");
   const [error, setError] = useState<string | null>(null);
@@ -84,11 +85,7 @@ export function useInvoiceDetail(invoiceId: string) {
         if (controller.signal.aborted) return;
         setStatus("error");
         setError(
-          err instanceof ApiError
-            ? err.message
-            : err instanceof Error
-              ? err.message
-              : "Failed to load invoice",
+          describeError(err, "Failed to load invoice"),
         );
       });
 
@@ -117,11 +114,7 @@ export function useInvoiceDetail(invoiceId: string) {
       setToastKind("cancelled");
     } catch (err: unknown) {
       setCancelError(
-        err instanceof ApiError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : "Cancel failed",
+        describeError(err, "Cancel failed"),
       );
     } finally {
       setIsCancelling(false);
@@ -136,11 +129,7 @@ export function useInvoiceDetail(invoiceId: string) {
       openPdfBlob(blob);
     } catch (err: unknown) {
       setActionError(
-        err instanceof ApiError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : "Print failed",
+        describeError(err, "Print failed"),
       );
     }
   }
@@ -153,11 +142,7 @@ export function useInvoiceDetail(invoiceId: string) {
       window.open(payload.whatsappUrl, "_blank", "noopener,noreferrer");
     } catch (err: unknown) {
       setActionError(
-        err instanceof ApiError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : "Share failed",
+        describeError(err, "Share failed"),
       );
     }
   }

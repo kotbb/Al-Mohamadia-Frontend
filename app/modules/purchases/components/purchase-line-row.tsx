@@ -3,7 +3,10 @@
 import { useLocale, useTranslations } from "next-intl";
 import type { PurchaseLineFormState } from "@/app/modules/purchases/types/purchases.types";
 import type { Item } from "@/app/modules/items/types/items.types";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import {
+  formatMoney,
+  roundMoneyAmount,
+} from "@/app/modules/items/utils/format-money";
 import { Button } from "@/app/modules/shared/components/button";
 import { Input } from "@/app/modules/shared/components/input";
 
@@ -69,6 +72,11 @@ export function PurchaseLineRow({
           step="any"
           value={line.unitCost}
           onChange={(e) => onChange({ unitCost: e.target.value })}
+          onBlur={() => {
+            const rounded = roundMoneyAmount(line.unitCost);
+            if (rounded === null) return;
+            onChange({ unitCost: String(rounded) });
+          }}
         />
       </div>
 
@@ -110,6 +118,7 @@ export function PurchaseLineRow({
           label={t("fieldNote")}
           placeholder={t("fieldNotePlaceholder")}
           value={line.note}
+          maxLength={500}
           onChange={(e) => onChange({ note: e.target.value })}
         />
         <div className="rounded-xl border border-border bg-surface-muted px-4 py-2.5">

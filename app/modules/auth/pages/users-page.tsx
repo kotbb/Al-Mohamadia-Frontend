@@ -28,10 +28,12 @@ export function UsersPage() {
     formLastName,
     formUsername,
     formPassword,
+    formRole,
     setFormFirstName,
     setFormLastName,
     setFormUsername,
     setFormPassword,
+    setFormRole,
     isSaving,
     formError,
     submitForm,
@@ -46,6 +48,7 @@ export function UsersPage() {
     openDeleteConfirm,
     closeConfirm,
     submitConfirm,
+    roleLocked,
   } = useUsers();
 
   const toastMessage =
@@ -130,10 +133,13 @@ export function UsersPage() {
         lastName={formLastName}
         username={formUsername}
         password={formPassword}
+        role={formRole}
         onFirstNameChange={setFormFirstName}
         onLastNameChange={setFormLastName}
         onUsernameChange={setFormUsername}
         onPasswordChange={setFormPassword}
+        onRoleChange={setFormRole}
+        roleLocked={roleLocked}
         isSubmitting={isSaving}
         error={formError}
         onSubmit={submitForm}
@@ -169,12 +175,6 @@ export function UsersPage() {
         onDeactivate={openDeactivateConfirm}
         onActivate={openActivateConfirm}
         onDelete={openDeleteConfirm}
-        onViewHistory={(user) =>
-          history.openRecord(
-            user.id,
-            getDisplayName(user.firstName, user.lastName, user.username),
-          )
-        }
       />
     </AppShell>
   );

@@ -23,7 +23,6 @@ interface SupplierPaymentsTableProps {
   error: string | null;
   onRetry: () => void;
   onCancel: (payment: SupplierPayment) => void;
-  onViewHistory: (payment: SupplierPayment) => void;
 }
 
 export function SupplierPaymentsTable({
@@ -34,10 +33,8 @@ export function SupplierPaymentsTable({
   error,
   onRetry,
   onCancel,
-  onViewHistory,
 }: SupplierPaymentsTableProps) {
   const t = useTranslations("supplierPayments");
-  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
   const currency = t("currency");
@@ -102,13 +99,7 @@ export function SupplierPaymentsTable({
               ? (supplierNames[payment.supplierId] ?? "…")
               : "-";
 
-            const actions: RowActionItem[] = [
-              {
-                id: "history",
-                label: tAudit("viewHistory"),
-                onSelect: () => onViewHistory(payment),
-              },
-            ];
+            const actions: RowActionItem[] = [];
 
             if (!payment.isReversed && !payment.purchaseInvoiceId) {
               actions.push({

@@ -1,7 +1,7 @@
 "use client";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
-import { ApiError } from "@/lib/api/types";
 import {
   cancelSupplierPayment,
   listSupplierPayments,
@@ -13,6 +13,7 @@ type ListStatus = "idle" | "loading" | "success" | "error";
 const PAGE_SIZE = 10;
 
 export function useSupplierAccountPayments(supplierId: string) {
+  const describeError = useApiErrorMessage();
   const [payments, setPayments] = useState<SupplierPayment[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -55,11 +56,7 @@ export function useSupplierAccountPayments(supplierId: string) {
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
         const message =
-          err instanceof ApiError
-            ? err.message
-            : err instanceof Error
-              ? err.message
-              : "Failed to load supplier payments";
+          describeError(err, "Failed to load supplier payments");
         setStatus("error");
         setError(message);
       });
@@ -92,11 +89,7 @@ export function useSupplierAccountPayments(supplierId: string) {
       onSuccess?.();
     } catch (err: unknown) {
       const message =
-        err instanceof ApiError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : "Failed to cancel supplier payment";
+        describeError(err, "Failed to cancel supplier payment");
       setCancelError(message);
     } finally {
       setIsCancelling(false);

@@ -2,6 +2,7 @@
 
 import type { FormEvent } from "react";
 import { useTranslations } from "next-intl";
+import type { UserRole } from "@/lib/auth/types";
 import { Input } from "@/app/modules/shared/components/input";
 import { Button } from "@/app/modules/shared/components/button";
 
@@ -10,10 +11,13 @@ interface CreateAdminFormProps {
   lastName: string;
   username: string;
   password: string;
+  role?: UserRole;
   onFirstNameChange: (value: string) => void;
   onLastNameChange: (value: string) => void;
   onUsernameChange: (value: string) => void;
   onPasswordChange: (value: string) => void;
+  onRoleChange?: (value: UserRole) => void;
+  roleLocked?: boolean;
   isSubmitting: boolean;
   error: string | null;
   onSubmit: () => Promise<void>;
@@ -27,10 +31,13 @@ export function CreateAdminForm({
   lastName,
   username,
   password,
+  role = "admin",
   onFirstNameChange,
   onLastNameChange,
   onUsernameChange,
   onPasswordChange,
+  onRoleChange,
+  roleLocked = false,
   isSubmitting,
   error,
   onSubmit,
@@ -113,6 +120,22 @@ export function CreateAdminForm({
           disabled={isSubmitting}
         />
       </div>
+
+      {isEdit && onRoleChange ? (
+        <label className="flex w-full flex-col gap-1.5">
+          <span className="text-base font-medium text-text-secondary">{t("colRole")}</span>
+          <select
+            name="adminRole"
+            value={role}
+            disabled={isSubmitting || roleLocked}
+            onChange={(event) => onRoleChange(event.target.value as UserRole)}
+            className="ds-focus-input min-h-11 rounded-xl border border-border bg-surface px-4 text-base text-text-primary disabled:bg-surface-muted disabled:text-text-muted"
+          >
+            <option value="admin">{t("roleAdmin")}</option>
+            <option value="super_admin">{t("roleSuperAdmin")}</option>
+          </select>
+        </label>
+      ) : null}
 
       {error ? (
         <p

@@ -1,7 +1,10 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import {
+  formatMoney,
+  roundMoneyAmount,
+} from "@/app/modules/items/utils/format-money";
 import { Input } from "@/app/modules/shared/components/input";
 import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
 
@@ -54,6 +57,11 @@ export function InvoiceTotals({
           step="any"
           value={discountInput}
           onChange={(event) => onDiscountChange(event.target.value)}
+          onBlur={() => {
+            const rounded = roundMoneyAmount(discountInput);
+            if (rounded === null) return;
+            onDiscountChange(String(rounded));
+          }}
         />
         <Input
           name="paid"
@@ -63,6 +71,12 @@ export function InvoiceTotals({
           step="any"
           value={paidInput}
           onChange={(event) => onPaidChange(event.target.value)}
+          onBlur={() => {
+            if (paidReadOnly) return;
+            const rounded = roundMoneyAmount(paidInput);
+            if (rounded === null) return;
+            onPaidChange(String(rounded));
+          }}
           readOnly={paidReadOnly}
           disabled={paidReadOnly}
         />

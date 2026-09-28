@@ -1,7 +1,7 @@
 "use client";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ApiError } from "@/lib/api/types";
 import { listCategories } from "@/app/modules/items/services/categories.service";
 import { listItems } from "@/app/modules/items/services/items.service";
 import type { Category, Item } from "@/app/modules/items/types/items.types";
@@ -28,6 +28,7 @@ export interface UseItemsPageResult {
 }
 
 export function useItemsPage(): UseItemsPageResult {
+  const describeError = useApiErrorMessage();
   const [categories, setCategories] = useState<Category[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [status, setStatus] = useState<LoadStatus>("loading");
@@ -62,11 +63,7 @@ export function useItemsPage(): UseItemsPageResult {
       .catch((loadError: unknown) => {
         if (controller.signal.aborted) return;
         const message =
-          loadError instanceof ApiError
-            ? loadError.message
-            : loadError instanceof Error
-              ? loadError.message
-              : "Request failed";
+          describeError(loadError, "Request failed");
         setCategories([]);
         setItems([]);
         setStatus("error");

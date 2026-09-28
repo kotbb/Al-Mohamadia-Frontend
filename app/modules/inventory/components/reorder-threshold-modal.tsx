@@ -1,8 +1,8 @@
 "use client";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ApiError } from "@/lib/api/types";
 import { updateItem } from "@/app/modules/items/services/items.service";
 import { isCubicPricingMode, type StockItem } from "@/app/modules/inventory/types/inventory.types";
 
@@ -19,6 +19,7 @@ export function ReorderThresholdModal({
   item,
   onSuccess,
 }: ReorderThresholdModalProps) {
+  const describeError = useApiErrorMessage();
   const t = useTranslations("inventory");
 
   const [threshold, setThreshold] = useState<string>("");
@@ -63,11 +64,7 @@ export function ReorderThresholdModal({
       onClose();
     } catch (err: unknown) {
       setError(
-        err instanceof ApiError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : "Failed to update threshold",
+        describeError(err, "Failed to update threshold"),
       );
     } finally {
       setIsSubmitting(false);

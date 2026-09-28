@@ -21,7 +21,9 @@
     "items": "الأصناف والأسعار",
     "users": "المستخدمين",
     "audit": "سجل المراجعة",
-    "comingSoon": "قريباً"
+    "comingSoon": "قريباً",
+    "openMenu": "فتح القائمة",
+    "closeMenu": "إغلاق القائمة"
   },
   "controls": {
     "theme": "المظهر",
@@ -47,7 +49,8 @@
     "hidePassword": "إخفاء كلمة المرور",
     "forgotPassword": "نسيت كلمة المرور؟",
     "submit": "دخول",
-    "submitting": "جاري الدخول…"
+    "submitting": "جاري الدخول…",
+    "retryIn": "حاول مرة أخرى خلال {time}"
   },
   "users": {
     "title": "المستخدمين",
@@ -55,7 +58,7 @@
     "createTitle": "إنشاء مشرف",
     "createSubtitle": "يمكن لحساب المشرف استخدام المتجر دون إدارة المستخدمين",
     "editTitle": "تعديل مشرف",
-    "editSubtitle": "تحديث الاسم أو اسم المستخدم أو كلمة المرور",
+    "editSubtitle": "تحديث الاسم أو اسم المستخدم أو كلمة المرور أو الدور",
     "username": "اسم المستخدم",
     "firstName": "الاسم الأول",
     "lastName": "اسم العائلة",
@@ -112,7 +115,15 @@
     "errorTitle": "حدث خطأ",
     "emptyTitle": "لا يوجد شيء هنا",
     "emptyDescription": "لا توجد عناصر لعرضها حالياً.",
-    "retry": "إعادة المحاولة"
+    "retry": "إعادة المحاولة",
+    "rateLimit": "محاولات كثيرة. انتظر دقيقة ثم حاول مرة أخرى.",
+    "prevPage": "السابق",
+    "nextPage": "التالي",
+    "closeDialog": "إغلاق",
+    "notFoundTitle": "الصفحة غير موجودة",
+    "notFoundDescription": "هذه الصفحة غير موجودة.",
+    "backHome": "العودة للوحة التحكم",
+    "errorDescription": "حدث خطأ أثناء تحميل هذه الصفحة."
   },
   "dashboard": {
     "title": "لوحة التحكم",
@@ -731,7 +742,6 @@
     "statusCancelled": "ملغاة",
     "view": "عرض",
     "viewDetails": "عرض",
-    "print": "طباعة",
     "cancelPurchase": "إلغاء الفاتورة",
     "confirmCancelTitle": "إلغاء فاتورة الشراء؟",
     "confirmCancelBody": "سيتم إلغاء فاتورة الشراء {number} وخصم البضاعة المضافة من المخزون واسترجاع مديونية المورد. لا يمكن التراجع عن هذا الإجراء.",
@@ -769,6 +779,12 @@
     "kpiProfitMargin": "الهامش: {percent}%",
     "kpiStockAlerts": "تنبيهات النواقص",
     "kpiItemsNeedAttention": "{count} أصناف تتطلب الانتباه",
+    "kpiCostHint": "رأس المال المجمد في المخزون",
+    "kpiSellingHint": "القيمة البيعية المتوقعة",
+    "kpiAttentionHint": "أصناف تتطلب الانتباه",
+    "kpiHealthyHint": "المخزون بمستويات آمنة",
+    "diffSurplus": "زيادة",
+    "diffDeficit": "عجز / خصم",
     "viewCategoryBreakdown": "تفصيل حسب الفئات",
     "searchPlaceholder": "بحث باسم الصنف أو الكود…",
     "categoryAll": "جميع الفئات",
@@ -891,8 +907,7 @@
       "PurchaseInvoice": "فاتورة شراء",
       "SupplierPayment": "دفعة مورد",
       "Item": "صنف",
-      "Category": "فئة",
-      "Setting": "إعداد"
+      "Category": "فئة"
     },
     "actions": {
       "admin_created": "إنشاء مشرف",
@@ -921,8 +936,7 @@
       "stock_adjusted": "تعديل مخزون",
       "category_created": "إنشاء فئة",
       "category_edited": "تعديل فئة",
-      "category_deleted": "حذف فئة",
-      "setting_changed": "تغيير إعداد"
+      "category_deleted": "حذف فئة"
     },
     "fields": {
       "username": "اسم المستخدم",

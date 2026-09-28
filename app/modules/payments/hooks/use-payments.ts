@@ -1,7 +1,7 @@
 "use client";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
-import { ApiError } from "@/lib/api/types";
 import { getCustomer, listCustomers } from "@/app/modules/customers/services/customers.service";
 import type { Customer } from "@/app/modules/customers/types/customers.types";
 import { todayIsoDate } from "@/app/modules/invoices/utils/format-invoice-date";
@@ -26,6 +26,7 @@ const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
 
 export function usePayments() {
+  const describeError = useApiErrorMessage();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [total, setTotal] = useState(0);
   const [summaryTotal, setSummaryTotal] = useState(0);
@@ -125,11 +126,7 @@ export function usePayments() {
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
         const message =
-          err instanceof ApiError
-            ? err.message
-            : err instanceof Error
-              ? err.message
-              : "Failed to load payments";
+          describeError(err, "Failed to load payments");
         setListStatus("error");
         setListError(message);
       });
@@ -218,11 +215,7 @@ export function usePayments() {
       refresh();
     } catch (err: unknown) {
       const message =
-        err instanceof ApiError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : "Failed to cancel payment";
+        describeError(err, "Failed to cancel payment");
       setCancelError(message);
     } finally {
       setIsCancelling(false);

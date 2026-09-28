@@ -50,12 +50,6 @@ export interface PriceHistoryEntry {
   createdAt?: string;
 }
 
-export interface BaseReferencePrice {
-  key: string;
-  value: number | null;
-  updatedAt?: string;
-}
-
 export interface CreateItemInput {
   code: string;
   name: string;
@@ -82,10 +76,6 @@ export interface UpdateItemInput {
 export interface UpdateItemPricingInput {
   unitPrice?: number;
   cost?: number;
-}
-
-export interface UpdateBaseReferencePriceInput {
-  value: number;
 }
 
 export interface ListItemsFilters {

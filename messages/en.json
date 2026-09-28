@@ -21,7 +21,9 @@
     "items": "Items & Prices",
     "users": "Users",
     "audit": "Audit log",
-    "comingSoon": "Coming soon"
+    "comingSoon": "Coming soon",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "controls": {
     "theme": "Theme",
@@ -47,7 +49,8 @@
     "hidePassword": "Hide password",
     "forgotPassword": "Forgot password?",
     "submit": "Sign in",
-    "submitting": "Signing in…"
+    "submitting": "Signing in…",
+    "retryIn": "Try again in {time}"
   },
   "users": {
     "title": "Users",
@@ -55,7 +58,7 @@
     "createTitle": "Create admin",
     "createSubtitle": "Admins can run the shop but cannot manage users",
     "editTitle": "Edit admin",
-    "editSubtitle": "Update name, username, or password",
+    "editSubtitle": "Update name, username, password, or role",
     "username": "Username",
     "firstName": "First name",
     "lastName": "Last name",
@@ -112,7 +115,15 @@
     "errorTitle": "Something went wrong",
     "emptyTitle": "Nothing here",
     "emptyDescription": "There are no items to show right now.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "rateLimit": "Too many attempts. Wait a minute and try again.",
+    "prevPage": "Previous",
+    "nextPage": "Next",
+    "closeDialog": "Close dialog",
+    "notFoundTitle": "Page not found",
+    "notFoundDescription": "That page does not exist.",
+    "backHome": "Back to dashboard",
+    "errorDescription": "Something went wrong while loading this page."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -731,7 +742,6 @@
     "statusCancelled": "Cancelled",
     "view": "View",
     "viewDetails": "View",
-    "print": "Print",
     "cancelPurchase": "Cancel Invoice",
     "confirmCancelTitle": "Cancel purchase invoice?",
     "confirmCancelBody": "Purchase invoice {number} will be cancelled. Added stock will be deducted and supplier debt will be reversed. This cannot be undone.",
@@ -769,6 +779,12 @@
     "kpiProfitMargin": "Margin: {percent}%",
     "kpiStockAlerts": "Stock Alerts",
     "kpiItemsNeedAttention": "{count} items need attention",
+    "kpiCostHint": "Capital tied in stock",
+    "kpiSellingHint": "Expected retail revenue",
+    "kpiAttentionHint": "items need attention",
+    "kpiHealthyHint": "All levels healthy",
+    "diffSurplus": "Increase",
+    "diffDeficit": "Shortage",
     "viewCategoryBreakdown": "Category Breakdown",
     "searchPlaceholder": "Search by item name or code…",
     "categoryAll": "All categories",
@@ -891,8 +907,7 @@
       "PurchaseInvoice": "Purchase invoice",
       "SupplierPayment": "Supplier payment",
       "Item": "Item",
-      "Category": "Category",
-      "Setting": "Setting"
+      "Category": "Category"
     },
     "actions": {
       "admin_created": "Admin created",
@@ -921,8 +936,7 @@
       "stock_adjusted": "Stock adjusted",
       "category_created": "Category created",
       "category_edited": "Category edited",
-      "category_deleted": "Category deleted",
-      "setting_changed": "Setting changed"
+      "category_deleted": "Category deleted"
     },
     "fields": {
       "username": "Username",

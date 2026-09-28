@@ -3,7 +3,10 @@
 import { useLocale, useTranslations } from "next-intl";
 import type { InvoiceFormLine } from "@/app/modules/invoices/hooks/use-invoice-form";
 import type { Item } from "@/app/modules/items/types/items.types";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import {
+  formatMoney,
+  roundMoneyAmount,
+} from "@/app/modules/items/utils/format-money";
 import { Button } from "@/app/modules/shared/components/button";
 import { Input } from "@/app/modules/shared/components/input";
 
@@ -69,6 +72,11 @@ export function InvoiceLineRow({
           step="any"
           value={line.piecePrice}
           onChange={(event) => onChange({ piecePrice: event.target.value })}
+          onBlur={() => {
+            const rounded = roundMoneyAmount(line.piecePrice);
+            if (rounded === null) return;
+            onChange({ piecePrice: String(rounded) });
+          }}
         />
       </div>
 
@@ -109,6 +117,7 @@ export function InvoiceLineRow({
           name={`note-${line.key}`}
           label={t("fieldNote")}
           value={line.note}
+          maxLength={500}
           onChange={(event) => onChange({ note: event.target.value })}
         />
         <div className="rounded-xl border border-border bg-surface-muted px-4 py-2.5">

@@ -37,7 +37,7 @@ export function CategoryItemsTable({
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
       {/* Category Header */}
-      <div className="flex items-center justify-between border-b border-border bg-[#faf8f5] px-4 py-3 dark:bg-surface-muted/40">
+      <div className="flex items-center justify-between border-b border-border bg-surface-muted px-4 py-3">
         <div className="flex items-center gap-2.5">
           <span className="h-4 w-1 rounded-full bg-primary" aria-hidden="true" />
           <h2 className="text-sm font-semibold text-text-primary sm:text-base">
@@ -101,7 +101,7 @@ export function CategoryItemsTable({
               return (
                 <tr
                   key={item.id}
-                  className="transition-colors hover:bg-[#faf7f2]/80 dark:hover:bg-surface-muted/40"
+                  className="transition-colors hover:bg-surface-muted/80"
                 >
                   <td className={`${cell} align-middle text-text-primary`}>
                     <div className="truncate font-semibold text-text-primary">{item.name}</div>

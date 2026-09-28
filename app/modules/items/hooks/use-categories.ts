@@ -1,7 +1,7 @@
 "use client";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ApiError } from "@/lib/api/types";
 import {
   createCategory,
   deleteCategory,
@@ -60,6 +60,7 @@ interface UseCategoriesResult {
 }
 
 export function useCategories(): UseCategoriesResult {
+  const describeError = useApiErrorMessage();
   const [categories, setCategories] = useState<Category[]>([]);
   const [itemCounts, setItemCounts] = useState<Record<string, number>>({});
   const [listStatus, setListStatus] = useState<ListStatus>("loading");
@@ -110,11 +111,7 @@ export function useCategories(): UseCategoriesResult {
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
         const message =
-          error instanceof ApiError
-            ? error.message
-            : error instanceof Error
-              ? error.message
-              : "Request failed";
+          describeError(error, "Request failed");
         setCategories([]);
         setItemCounts({});
         setListError(message);
@@ -184,11 +181,7 @@ export function useCategories(): UseCategoriesResult {
       refresh();
     } catch (error: unknown) {
       const message =
-        error instanceof ApiError
-          ? error.message
-          : error instanceof Error
-            ? error.message
-            : "Save failed";
+        describeError(error, "Save failed");
       setFormError(message);
     } finally {
       setIsSaving(false);
@@ -243,11 +236,7 @@ export function useCategories(): UseCategoriesResult {
       refresh();
     } catch (error: unknown) {
       const message =
-        error instanceof ApiError
-          ? error.message
-          : error instanceof Error
-            ? error.message
-            : "Action failed";
+        describeError(error, "Action failed");
       setConfirmError(message);
     } finally {
       setIsConfirming(false);

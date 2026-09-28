@@ -1,7 +1,7 @@
 "use client";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
-import { ApiError } from "@/lib/api/types";
 import { useAuth } from "@/lib/auth/auth-provider";
 import { listAuditLogs } from "@/app/modules/audit/services/audit.service";
 import type { AuditLog } from "@/app/modules/audit/types/audit.types";
@@ -22,6 +22,7 @@ export function useAuditLogs({
   entityId,
   initialAction = "",
 }: UseAuditLogsOptions = {}) {
+  const describeError = useApiErrorMessage();
   const { isSuperAdmin } = useAuth();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [total, setTotal] = useState(0);
@@ -132,11 +133,7 @@ export function useAuditLogs({
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
         const message =
-          err instanceof ApiError
-            ? err.message
-            : err instanceof Error
-              ? err.message
-              : "Failed to load audit logs";
+          describeError(err, "Failed to load audit logs");
         setListStatus("error");
         setListError(message);
       });

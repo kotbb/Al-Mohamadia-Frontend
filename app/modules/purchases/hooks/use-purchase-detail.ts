@@ -1,7 +1,7 @@
 "use client";
+import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
-import { ApiError } from "@/lib/api/types";
 import {
   cancelPurchase,
   getPurchase,
@@ -15,6 +15,7 @@ import type { Item } from "@/app/modules/items/types/items.types";
 type DetailStatus = "idle" | "loading" | "success" | "error";
 
 export function usePurchaseDetail(purchaseId: string) {
+  const describeError = useApiErrorMessage();
   const [purchase, setPurchase] = useState<PurchaseInvoice | null>(null);
   const [supplier, setSupplier] = useState<Supplier | null>(null);
   const [itemsMap, setItemsMap] = useState<Record<string, Item>>({});
@@ -66,11 +67,7 @@ export function usePurchaseDetail(purchaseId: string) {
         if (controller.signal.aborted) return;
         setStatus("error");
         setError(
-          err instanceof ApiError
-            ? err.message
-            : err instanceof Error
-              ? err.message
-              : "Failed to load purchase invoice",
+          describeError(err, "Failed to load purchase invoice"),
         );
       });
 
@@ -100,11 +97,7 @@ export function usePurchaseDetail(purchaseId: string) {
       onSuccess?.();
     } catch (e: unknown) {
       setCancelError(
-        e instanceof ApiError
-          ? e.message
-          : e instanceof Error
-            ? e.message
-            : "Failed to cancel purchase",
+        describeError(e, "Failed to cancel purchase"),
       );
     } finally {
       setIsCancelling(false);

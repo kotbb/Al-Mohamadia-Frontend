@@ -1,7 +1,10 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import {
+  formatMoney,
+  roundMoneyAmount,
+} from "@/app/modules/items/utils/format-money";
 import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
 
 interface PurchaseTotalsProps {
@@ -54,6 +57,11 @@ export function PurchaseTotals({
                 step="any"
                 value={paidInput}
                 onChange={(e) => onPaidChange(e.target.value)}
+                onBlur={() => {
+                  const rounded = roundMoneyAmount(paidInput);
+                  if (rounded === null) return;
+                  onPaidChange(String(rounded));
+                }}
                 className="ds-focus-input min-h-10 w-full rounded-lg border border-border bg-surface ps-3 pe-12 text-lg font-bold text-text-primary"
               />
               <span className="pointer-events-none absolute end-3 text-sm text-text-muted">

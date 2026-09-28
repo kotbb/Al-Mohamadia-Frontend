@@ -1,4 +1,5 @@
 export type { AuthUser, UserRole, AuthTokens } from "@/lib/auth/types";
+import type { UserRole } from "@/lib/auth/types";
 
 export interface CreateAdminInput {
   username: string;
@@ -13,6 +14,7 @@ export interface UpdateUserInput {
   username?: string;
   isActive?: boolean;
   password?: string;
+  role?: UserRole;
 }
 
 export interface UpdateUserActiveInput {
