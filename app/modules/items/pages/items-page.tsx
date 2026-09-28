@@ -184,6 +184,7 @@ export function ItemsPage() {
                 onEdit={openEditModal}
                 onPriceHistory={setHistoryItemId}
                 onDelete={setDeleteTarget}
+                onHistory={(item) => history.openRecord(item.id, item.name)}
               />
             ))}
           </div>

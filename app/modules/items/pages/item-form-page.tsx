@@ -60,13 +60,8 @@ export function ItemFormPage({ itemId }: ItemFormPageProps) {
             variant="secondary"
             size="sm"
             className="min-h-10 rounded-lg px-3.5 text-sm"
-            disabled={isLoading || !(values.name.trim() || values.code.trim())}
-            onClick={() =>
-              history.openRecord(
-                itemId,
-                values.name.trim() || values.code.trim(),
-              )
-            }
+            disabled={isLoading || !values.name.trim()}
+            onClick={() => history.openRecord(itemId, values.name.trim())}
           >
             {tAudit("viewHistory")}
           </Button>

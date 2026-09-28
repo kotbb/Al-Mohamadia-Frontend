@@ -13,7 +13,6 @@ interface ItemFormProps {
   isEdit: boolean;
   isSubmitting: boolean;
   error: string | null;
-  codeIsManual?: boolean;
   onFieldChange: <K extends keyof ItemFormValues>(
     key: K,
     value: ItemFormValues[K],
@@ -28,7 +27,6 @@ export function ItemForm({
   isEdit,
   isSubmitting,
   error,
-  codeIsManual = true,
   onFieldChange,
   onSubmit,
   compact = false,
@@ -46,11 +44,6 @@ export function ItemForm({
   ];
 
   const gap = compact ? "gap-4" : "gap-6";
-  const codeHint = isEdit
-    ? undefined
-    : codeIsManual
-      ? t("fieldCodeHintManual")
-      : t("fieldCodeHintAuto");
 
   return (
     <form id="item-form" onSubmit={handleSubmit} className={`flex flex-col ${gap}`}>
@@ -84,16 +77,6 @@ export function ItemForm({
           ))}
         </select>
       </label>
-
-      <Input
-        name="code"
-        label={t("fieldCode")}
-        value={values.code}
-        onChange={(event) => onFieldChange("code", event.target.value)}
-        required
-        disabled={isSubmitting}
-        hint={codeHint}
-      />
 
       <SegmentedControl
         label={t("fieldPricingMode")}

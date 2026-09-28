@@ -209,13 +209,17 @@ export function CustomersPage() {
         <SurfaceCard padding="md">
           <div className="grid gap-4 sm:grid-cols-2 sm:divide-x sm:divide-border rtl:sm:divide-x-reverse">
             <div className="sm:px-4">
-              <p className="text-sm text-text-secondary">{t("statTotalDebt")}</p>
+              <p className="text-sm text-text-secondary">
+                {t("statTotalDebt")}
+              </p>
               <p className="mt-1 text-2xl font-bold text-text-primary">
                 {formatMoney(totalDebt, locale)} {t("currency")}
               </p>
             </div>
             <div className="sm:px-4">
-              <p className="text-sm text-text-secondary">{t("statDebtorCount")}</p>
+              <p className="text-sm text-text-secondary">
+                {t("statDebtorCount")}
+              </p>
               <p className="mt-1 text-2xl font-bold text-text-primary">
                 {debtorCount}
               </p>
@@ -255,6 +259,7 @@ export function CustomersPage() {
           onDeactivate={openDeactivateConfirm}
           onActivate={openActivateConfirm}
           onDelete={openDeleteConfirm}
+          onHistory={(customer) => history.openRecord(customer.id, customer.name)}
         />
 
         {listStatus === "success" && totalPages > 1 ? (

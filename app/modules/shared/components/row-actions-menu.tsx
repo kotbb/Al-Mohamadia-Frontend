@@ -22,6 +22,13 @@ export interface RowActionItem {
   title?: string;
 }
 
+export function historyRowAction(
+  label: string,
+  onSelect: () => void,
+): RowActionItem {
+  return { id: "audit-history", label, onSelect };
+}
+
 interface RowActionsMenuProps {
   label: string;
   items: RowActionItem[];
@@ -55,10 +62,16 @@ export function RowActionsMenu({ label, items }: RowActionsMenuProps) {
     const padding = 8;
 
     let left = rect.right - menuWidth;
-    left = Math.max(padding, Math.min(left, window.innerWidth - menuWidth - padding));
+    left = Math.max(
+      padding,
+      Math.min(left, window.innerWidth - menuWidth - padding),
+    );
 
     let top = rect.bottom + gap;
-    if (top + menuHeight > window.innerHeight - padding && rect.top > menuHeight + gap) {
+    if (
+      top + menuHeight > window.innerHeight - padding &&
+      rect.top > menuHeight + gap
+    ) {
       top = rect.top - menuHeight - gap;
     }
 
@@ -165,7 +178,12 @@ export function RowActionsMenu({ label, items }: RowActionsMenuProps) {
 
 function KebabIcon() {
   return (
-    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+    <svg
+      className="h-5 w-5"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      aria-hidden
+    >
       <circle cx="10" cy="4" r="1.5" />
       <circle cx="10" cy="10" r="1.5" />
       <circle cx="10" cy="16" r="1.5" />
@@ -225,7 +243,9 @@ export function ConfirmDialog({
         </div>
       }
     >
-      <div className="text-sm leading-relaxed text-text-secondary">{description}</div>
+      <div className="text-sm leading-relaxed text-text-secondary">
+        {description}
+      </div>
     </Modal>
   );
 }

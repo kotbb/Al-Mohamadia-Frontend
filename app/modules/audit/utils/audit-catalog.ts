@@ -102,6 +102,7 @@ export const AUDIT_FIELD_KEYS = [
   "unitPrice",
   "cost",
   "stockQuantity",
+  "reason",
   "isWood",
   "reorderThreshold",
 ] as const;

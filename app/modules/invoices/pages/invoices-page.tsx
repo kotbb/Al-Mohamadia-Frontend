@@ -26,7 +26,9 @@ export function InvoicesPage() {
   const history = useAuditHistory({ entityType: "SalesInvoice" });
   const searchParams = useSearchParams();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [previewInvoice, setPreviewInvoice] = useState<SalesInvoice | null>(null);
+  const [previewInvoice, setPreviewInvoice] = useState<SalesInvoice | null>(
+    null,
+  );
   const form = useInvoiceForm();
 
   const {
@@ -213,6 +215,9 @@ export function InvoicesPage() {
           onPrint={(invoice) => setPreviewInvoice(invoice)}
           onShare={(invoice) => void shareInvoice(invoice)}
           onCancel={openCancelConfirm}
+          onHistory={(invoice) =>
+            history.openRecord(invoice.id, invoice.invoiceNumber)
+          }
         />
 
         {listStatus === "success" && totalPages > 1 ? (

@@ -328,9 +328,7 @@ export function InvoicePreviewModal({
                 <tbody>
                   {invoice.lines.map((line, idx) => {
                     const item = itemsById[line.itemId];
-                    const itemLabel = item
-                      ? `${item.name} (${item.code})`
-                      : `صنف #${idx + 1}`;
+                    const itemLabel = item ? item.name : `صنف #${idx + 1}`;
 
                     return (
                       <tr

@@ -32,7 +32,6 @@ export function ItemFormModal({
     itemError,
     values,
     setField,
-    codeIsManual,
     isSubmitting,
     submitError,
     submit,
@@ -92,7 +91,6 @@ export function ItemFormModal({
           isEdit={isEdit}
           isSubmitting={isSubmitting}
           error={submitError}
-          codeIsManual={codeIsManual}
           onFieldChange={setField}
           onSubmit={handleSubmit}
           compact

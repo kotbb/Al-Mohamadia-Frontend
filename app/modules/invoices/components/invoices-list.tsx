@@ -10,6 +10,7 @@ import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
 import {
+  historyRowAction,
   RowActionsMenu,
   type RowActionItem,
 } from "@/app/modules/shared/components/row-actions-menu";
@@ -23,11 +24,17 @@ interface InvoicesListProps {
   onPrint: (invoice: SalesInvoice) => void;
   onShare: (invoice: SalesInvoice) => void;
   onCancel: (invoice: SalesInvoice) => void;
+  onHistory: (invoice: SalesInvoice) => void;
 }
 
 function InvoiceDocIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
       <path
         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
         stroke="currentColor"
@@ -48,8 +55,10 @@ export function InvoicesList({
   onPrint,
   onShare,
   onCancel,
+  onHistory,
 }: InvoicesListProps) {
   const t = useTranslations("invoices");
+  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
   const currency = t("currency");
@@ -113,6 +122,7 @@ export function InvoicesList({
                   : "-";
 
             const actions: RowActionItem[] = [
+              historyRowAction(tAudit("viewHistory"), () => onHistory(invoice)),
               {
                 id: "print",
                 label: t("print"),
@@ -154,18 +164,26 @@ export function InvoicesList({
                 <td className="px-4 py-3 whitespace-nowrap text-text-secondary">
                   {formatInvoiceDate(invoice.createdAt, locale)}
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-text-primary">{customerLabel}</td>
-                <td className="px-4 py-3 whitespace-nowrap text-text-primary">
+                <td className="px-4 py-3 whitespace-nowrap font-medium text-text-primary">
+                  {customerLabel}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap font-medium text-text-primary">
                   {formatMoney(invoice.total, locale)} {currency}
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-text-primary">
-                  {formatMoney(invoice.remaining, locale)} {currency}
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <span
+                    className={
+                      invoice.remaining > 0
+                        ? "font-bold text-danger"
+                        : "text-text-secondary"
+                    }
+                  >
+                    {formatMoney(invoice.remaining, locale)} {currency}
+                  </span>
                 </td>
                 <td className="px-4 py-3">
                   <Badge
-                    variant={
-                      invoice.status === "saved" ? "success" : "danger"
-                    }
+                    variant={invoice.status === "saved" ? "success" : "danger"}
                   >
                     {invoice.status === "saved"
                       ? t("statusSaved")

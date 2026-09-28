@@ -183,6 +183,7 @@ export function PaymentsPage() {
           error={listError}
           onRetry={refresh}
           onCancel={openCancelConfirm}
+          onHistory={(payment, label) => history.openRecord(payment.id, label)}
         />
 
         {/* Pagination */}

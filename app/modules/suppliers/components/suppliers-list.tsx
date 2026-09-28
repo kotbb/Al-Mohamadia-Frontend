@@ -9,6 +9,7 @@ import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
 import {
+  historyRowAction,
   RowActionsMenu,
   type RowActionItem,
 } from "@/app/modules/shared/components/row-actions-menu";
@@ -22,6 +23,7 @@ interface SuppliersListProps {
   onDeactivate: (supplier: Supplier) => void;
   onActivate: (supplier: Supplier) => void;
   onDelete: (supplier: Supplier) => void;
+  onHistory: (supplier: Supplier) => void;
 }
 
 function StatusIcon({ active }: { active: boolean }) {
@@ -62,8 +64,10 @@ export function SuppliersList({
   onDeactivate,
   onActivate,
   onDelete,
+  onHistory,
 }: SuppliersListProps) {
   const t = useTranslations("suppliers");
+  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
   const currency = t("currency");
@@ -114,6 +118,7 @@ export function SuppliersList({
         <tbody>
           {suppliers.map((supplier) => {
             const actions: RowActionItem[] = [
+              historyRowAction(tAudit("viewHistory"), () => onHistory(supplier)),
               {
                 id: "edit",
                 label: t("edit"),
@@ -162,8 +167,16 @@ export function SuppliersList({
                 <td className="px-4 py-3 text-text-secondary">
                   {supplier.phone ?? "-"}
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-text-primary">
-                  {formatMoney(supplier.amountOwed, locale)} {currency}
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <span
+                    className={
+                      supplier.amountOwed > 0
+                        ? "font-bold text-danger"
+                        : "text-text-secondary"
+                    }
+                  >
+                    {formatMoney(supplier.amountOwed, locale)} {currency}
+                  </span>
                 </td>
                 <td className="px-4 py-3">
                   <Badge variant={supplier.isActive ? "success" : "danger"}>

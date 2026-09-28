@@ -175,6 +175,7 @@ export function UsersPage() {
         onDeactivate={openDeactivateConfirm}
         onActivate={openActivateConfirm}
         onDelete={openDeleteConfirm}
+        onHistory={(user, label) => history.openRecord(user.id, label)}
       />
     </AppShell>
   );

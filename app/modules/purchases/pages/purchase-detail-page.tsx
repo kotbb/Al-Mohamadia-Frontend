@@ -3,7 +3,6 @@
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { AppShell } from "@/app/layout/app-shell";
-import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
 import { formatMoney } from "@/app/modules/items/utils/format-money";
 import { usePurchaseDetail } from "@/app/modules/purchases/hooks/use-purchase-detail";
@@ -21,11 +20,9 @@ interface PurchaseDetailPageProps {
 
 export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
   const t = useTranslations("purchases");
-  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
   const currency = t("currency");
-  const history = useAuditHistory({ entityType: "PurchaseInvoice" });
 
   const {
     purchase,
@@ -68,23 +65,9 @@ export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
           >
             {t("backToList")}
           </Link>
-          {purchase ? (
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              className="min-h-10 rounded-lg px-3.5 text-sm"
-              onClick={() =>
-                history.openRecord(purchase.id, purchase.invoiceNumber)
-              }
-            >
-              {tAudit("viewHistory")}
-            </Button>
-          ) : null}
         </div>
       }
     >
-      {history.modal}
       <Toast
         open={toast !== null}
         message={t("cancelSuccess")}
@@ -190,9 +173,7 @@ export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
                   <tbody>
                     {purchase.lines.map((line, index) => {
                       const item = itemsMap[line.itemId];
-                      const label = item
-                        ? `${item.name} (${item.code})`
-                        : null;
+                      const label = item ? item.name : null;
                       const dims =
                         line.thickness != null &&
                         line.width != null &&
@@ -207,13 +188,8 @@ export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
                           <td className="px-4 py-3 text-text-primary">
                             <div className="font-semibold text-text-primary">
                               {label ?? (
-                                <span className="inline-flex items-center gap-1.5 text-text-secondary">
-                                  <span className="italic">
-                                    {t("validationItem")}
-                                  </span>
-                                  <span className="font-mono text-xs text-text-secondary/70">
-                                    ({line.itemId.slice(-6)})
-                                  </span>
+                                <span className="italic text-text-secondary">
+                                  {t("validationItem")}
                                 </span>
                               )}
                             </div>
@@ -234,7 +210,7 @@ export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
                           <td className="px-4 py-3 text-end whitespace-nowrap text-text-primary">
                             {formatMoney(line.unitCost, locale)} {currency}
                           </td>
-                          <td className="px-4 py-3 text-end whitespace-nowrap font-semibold text-text-primary">
+                          <td className="px-4 py-3 text-end whitespace-nowrap font-medium text-text-primary">
                             {formatMoney(line.lineTotal, locale)} {currency}
                           </td>
                         </tr>
@@ -272,8 +248,8 @@ export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
                     {t("remaining")}
                   </p>
                   <p
-                    className={`mt-1 text-2xl font-black ${
-                      purchase.remaining > 0 ? "text-primary" : "text-success"
+                    className={`mt-1 text-2xl font-bold ${
+                      purchase.remaining > 0 ? "text-danger" : "text-success"
                     }`}
                   >
                     {formatMoney(purchase.remaining, locale)} {currency}

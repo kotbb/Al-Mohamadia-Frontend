@@ -34,18 +34,18 @@ export function DashboardDebtStrip({ debt }: DashboardDebtStripProps) {
             <DebtIcon className="h-4 w-4" />
           </div>
           <div>
-            <p className="text-xs font-medium text-text-secondary">
+            <p className="text-base font-medium text-text-secondary">
               {t("debtTitle")}
             </p>
-            <div className="mt-0.5 flex items-baseline gap-1">
+            <div className="mt-1 flex items-baseline gap-1.5">
               <span
-                className={`text-lg font-bold tracking-tight tabular-nums ${
+                className={`text-2xl font-bold tracking-tight tabular-nums ${
                   hasDebtors ? "text-danger" : "text-text-primary"
                 }`}
               >
                 {formatMoney(debt.totalDebt, locale)}
               </span>
-              <span className="text-[11px] font-medium text-text-muted">
+              <span className="text-sm font-medium text-text-muted">
                 {t("currency")}
               </span>
             </div>

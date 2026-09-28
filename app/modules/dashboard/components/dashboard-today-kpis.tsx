@@ -14,52 +14,50 @@ export function DashboardTodayKpis({ today }: DashboardTodayKpisProps) {
   const locale = useLocale();
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <SurfaceCard padding="none" className="flex flex-col justify-between p-3.5 sm:p-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <SurfaceCard padding="none" className="flex flex-col justify-between p-5 sm:p-6">
         <div>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-text-secondary">
+            <span className="text-base font-medium text-text-secondary">
               {t("kpiSales")}
             </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
-              <SalesIcon className="h-3.5 w-3.5" />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-success/12 text-success">
+              <SalesIcon className="h-4 w-4" />
             </div>
           </div>
-          <div className="mt-1.5 flex items-baseline gap-1">
-            <span className="text-xl font-bold tracking-tight tabular-nums text-text-primary">
+          <div className="mt-3 flex items-baseline gap-1.5">
+            <span className="text-2xl font-bold tracking-tight tabular-nums text-text-primary">
               {formatMoney(today.sales, locale)}
             </span>
-            <span className="text-[11px] font-medium text-text-muted">
+            <span className="text-sm font-medium text-text-muted">
               {t("currency")}
             </span>
           </div>
         </div>
-        <div className="mt-2 flex items-center border-t border-border/40 pt-1.5 min-h-[22px]">
-          <span className="text-[11px] text-text-muted">{t("kpiSalesHint")}</span>
+        <div className="mt-4 flex items-center border-t border-border/40 pt-3 min-h-8">
+          <span className="text-sm text-text-muted">{t("kpiSalesHint")}</span>
         </div>
       </SurfaceCard>
 
-      <SurfaceCard padding="none" className="flex flex-col justify-between p-3.5 sm:p-4">
+      <SurfaceCard padding="none" className="flex flex-col justify-between p-5 sm:p-6">
         <div>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-text-secondary">
+            <span className="text-base font-medium text-text-secondary">
               {t("kpiEstimatedProfit")}
             </span>
             <div
-              className={`flex h-7 w-7 items-center justify-center rounded-md ${
-                today.estimatedProfit > 0
-                  ? "bg-success/12 text-success"
-                  : today.estimatedProfit < 0
-                    ? "bg-danger/12 text-danger"
-                    : "bg-surface-muted text-text-muted"
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+                today.estimatedProfit < 0
+                  ? "bg-danger/12 text-danger"
+                  : "bg-success/12 text-success"
               }`}
             >
-              <ProfitIcon className="h-3.5 w-3.5" />
+              <ProfitIcon className="h-4 w-4" />
             </div>
           </div>
-          <div className="mt-1.5 flex items-baseline gap-1">
+          <div className="mt-3 flex items-baseline gap-1.5">
             <span
-              className={`text-xl font-bold tracking-tight tabular-nums ${
+              className={`text-2xl font-bold tracking-tight tabular-nums ${
                 today.estimatedProfit > 0
                   ? "text-success"
                   : today.estimatedProfit < 0
@@ -69,61 +67,61 @@ export function DashboardTodayKpis({ today }: DashboardTodayKpisProps) {
             >
               {formatMoney(today.estimatedProfit, locale)}
             </span>
-            <span className="text-[11px] font-medium text-text-muted">
+            <span className="text-sm font-medium text-text-muted">
               {t("currency")}
             </span>
           </div>
         </div>
-        <div className="mt-2 flex items-center border-t border-border/40 pt-1.5 min-h-[22px]">
-          <span className="text-[11px] text-text-muted">{t("kpiProfitHelper")}</span>
+        <div className="mt-4 flex items-center border-t border-border/40 pt-3 min-h-8">
+          <span className="text-sm text-text-muted">{t("kpiProfitHelper")}</span>
         </div>
       </SurfaceCard>
 
-      <SurfaceCard padding="none" className="flex flex-col justify-between p-3.5 sm:p-4">
+      <SurfaceCard padding="none" className="flex flex-col justify-between p-5 sm:p-6">
         <div>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-text-secondary">
+            <span className="text-base font-medium text-text-secondary">
               {t("kpiInvoiceCount")}
             </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-info/12 text-info">
-              <InvoiceIcon className="h-3.5 w-3.5" />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-info/12 text-info">
+              <InvoiceIcon className="h-4 w-4" />
             </div>
           </div>
-          <div className="mt-1.5 flex items-baseline gap-1">
-            <span className="text-xl font-bold tracking-tight tabular-nums text-text-primary">
+          <div className="mt-3 flex items-baseline gap-1.5">
+            <span className="text-2xl font-bold tracking-tight tabular-nums text-text-primary">
               {today.invoiceCount}
             </span>
-            <span className="text-[11px] font-medium text-text-muted">
+            <span className="text-sm font-medium text-text-muted">
               {t("kpiInvoiceCountUnit")}
             </span>
           </div>
         </div>
-        <div className="mt-2 flex items-center border-t border-border/40 pt-1.5 min-h-[22px]">
-          <span className="text-[11px] text-text-muted">{t("kpiInvoiceCountHint")}</span>
+        <div className="mt-4 flex items-center border-t border-border/40 pt-3 min-h-8">
+          <span className="text-sm text-text-muted">{t("kpiInvoiceCountHint")}</span>
         </div>
       </SurfaceCard>
 
-      <SurfaceCard padding="none" className="flex flex-col justify-between p-3.5 sm:p-4">
+      <SurfaceCard padding="none" className="flex flex-col justify-between p-5 sm:p-6">
         <div>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-text-secondary">
+            <span className="text-base font-medium text-text-secondary">
               {t("kpiCollected")}
             </span>
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
-              <CollectedIcon className="h-3.5 w-3.5" />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-warning/12 text-warning">
+              <CollectedIcon className="h-4 w-4" />
             </div>
           </div>
-          <div className="mt-1.5 flex items-baseline gap-1">
-            <span className="text-xl font-bold tracking-tight tabular-nums text-text-primary">
+          <div className="mt-3 flex items-baseline gap-1.5">
+            <span className="text-2xl font-bold tracking-tight tabular-nums text-text-primary">
               {formatMoney(today.collected, locale)}
             </span>
-            <span className="text-[11px] font-medium text-text-muted">
+            <span className="text-sm font-medium text-text-muted">
               {t("currency")}
             </span>
           </div>
         </div>
-        <div className="mt-2 flex items-center border-t border-border/40 pt-1.5 min-h-[22px]">
-          <span className="text-[11px] text-text-muted">{t("kpiCollectedHint")}</span>
+        <div className="mt-4 flex items-center border-t border-border/40 pt-3 min-h-8">
+          <span className="text-sm text-text-muted">{t("kpiCollectedHint")}</span>
         </div>
       </SurfaceCard>
     </div>

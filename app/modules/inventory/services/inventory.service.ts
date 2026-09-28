@@ -1,11 +1,9 @@
 import { apiClient } from "@/lib/api/client";
 import type {
+  AdjustStockResult,
   CreateStockAdjustmentInput,
   InventoryValuation,
-  ListAdjustmentsFilters,
   ListStockFilters,
-  StockAdjustment,
-  StockAdjustmentListResponse,
   StockListResponse,
 } from "@/app/modules/inventory/types/inventory.types";
 
@@ -23,20 +21,6 @@ function buildStockQuery(filters?: ListStockFilters): string {
   return query ? `/inventory/stock?${query}` : "/inventory/stock";
 }
 
-function buildAdjustmentsQuery(filters?: ListAdjustmentsFilters): string {
-  if (!filters) return "/inventory/adjustments";
-  const params = new URLSearchParams();
-  if (filters.itemId) params.set("itemId", filters.itemId);
-  if (filters.period && filters.date) {
-    params.set("period", filters.period);
-    params.set("date", filters.date);
-  }
-  if (filters.page !== undefined) params.set("page", String(filters.page));
-  if (filters.limit !== undefined) params.set("limit", String(filters.limit));
-  const query = params.toString();
-  return query ? `/inventory/adjustments?${query}` : "/inventory/adjustments";
-}
-
 export async function getStockList(
   filters?: ListStockFilters,
   signal?: AbortSignal,
@@ -52,25 +36,6 @@ export async function getInventoryValuation(
 
 export async function createStockAdjustment(
   input: CreateStockAdjustmentInput,
-): Promise<StockAdjustment> {
-  return apiClient.post<StockAdjustment>("/inventory/adjustments", input);
-}
-
-export async function getStockAdjustments(
-  filters?: ListAdjustmentsFilters,
-  signal?: AbortSignal,
-): Promise<StockAdjustmentListResponse> {
-  return apiClient.get<StockAdjustmentListResponse>(
-    buildAdjustmentsQuery(filters),
-    { signal },
-  );
-}
-
-export async function getStockAdjustment(
-  id: string,
-  signal?: AbortSignal,
-): Promise<StockAdjustment> {
-  return apiClient.get<StockAdjustment>(`/inventory/adjustments/${id}`, {
-    signal,
-  });
+): Promise<AdjustStockResult> {
+  return apiClient.post<AdjustStockResult>("/inventory/adjustments", input);
 }

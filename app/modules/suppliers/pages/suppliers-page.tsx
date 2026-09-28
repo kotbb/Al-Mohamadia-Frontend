@@ -241,6 +241,7 @@ export function SuppliersPage() {
           onDeactivate={openDeactivateConfirm}
           onActivate={openActivateConfirm}
           onDelete={openDeleteConfirm}
+          onHistory={(supplier) => history.openRecord(supplier.id, supplier.name)}
         />
 
         {listStatus === "success" && totalPages > 1 ? (

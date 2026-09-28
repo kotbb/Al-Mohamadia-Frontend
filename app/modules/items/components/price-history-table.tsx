@@ -65,19 +65,19 @@ export function PriceHistoryTable({
               key={entry.id}
               className="border-b border-border last:border-b-0"
             >
-              <td className={`${cell} text-text-primary`}>
+              <td className={`${cell} font-medium text-text-primary`}>
                 {formatFieldLabel(entry.field, t)}
               </td>
               <td className={`${cell} text-text-secondary`}>
                 {formatValue(entry.field, entry.oldValue, locale)}
               </td>
-              <td className={`${cell} text-text-primary`}>
+              <td className={`${cell} font-semibold text-text-primary`}>
                 {formatValue(entry.field, entry.newValue, locale)}
               </td>
-              <td className={`${cell} font-mono text-xs text-text-muted`}>
-                {entry.changedBy}
+              <td className={`${cell} text-text-secondary`}>
+                {entry.changedBy?.trim() ? entry.changedBy : "-"}
               </td>
-              <td className={`${cell} whitespace-nowrap text-text-muted`}>
+              <td className={`${cell} whitespace-nowrap text-text-secondary`}>
                 {formatInvoiceDate(entry.createdAt, locale)}
               </td>
             </tr>

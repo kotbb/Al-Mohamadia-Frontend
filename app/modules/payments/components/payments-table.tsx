@@ -11,6 +11,7 @@ import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
 import {
+  historyRowAction,
   RowActionsMenu,
   type RowActionItem,
 } from "@/app/modules/shared/components/row-actions-menu";
@@ -23,6 +24,7 @@ interface PaymentsTableProps {
   error: string | null;
   onRetry: () => void;
   onCancel: (payment: Payment) => void;
+  onHistory: (payment: Payment, label: string) => void;
 }
 
 export function PaymentsTable({
@@ -33,8 +35,10 @@ export function PaymentsTable({
   error,
   onRetry,
   onCancel,
+  onHistory,
 }: PaymentsTableProps) {
   const t = useTranslations("payments");
+  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
   const currency = t("currency");
@@ -56,10 +60,7 @@ export function PaymentsTable({
 
   if (payments.length === 0) {
     return (
-      <EmptyState
-        title={t("emptyTitle")}
-        description={t("emptyDescription")}
-      />
+      <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />
     );
   }
 
@@ -99,7 +100,11 @@ export function PaymentsTable({
               ? (customerNames[payment.customerId] ?? "…")
               : t("cashCustomer");
 
-            const actions: RowActionItem[] = [];
+            const actions: RowActionItem[] = [
+              historyRowAction(tAudit("viewHistory"), () =>
+                onHistory(payment, customerName),
+              ),
+            ];
 
             if (!payment.isReversed && !payment.invoiceId) {
               // Only standalone active payments can be cancelled directly
@@ -124,27 +129,40 @@ export function PaymentsTable({
                     {payment.customerId ? (
                       <Link
                         href={`/customers/${payment.customerId}?from=/payments`}
-                        className="ds-focus-ring rounded font-medium text-primary hover:underline"
+                        className="ds-focus-ring rounded font-medium text-text-primary hover:underline"
                       >
                         {customerName}
                       </Link>
                     ) : (
-                      <span className="text-text-secondary">{t("cashCustomer")}</span>
+                      <span className="text-text-secondary">
+                        {t("cashCustomer")}
+                      </span>
                     )}
                   </td>
                 ) : null}
-                <td className="px-4 py-3 whitespace-nowrap font-semibold text-text-primary">
+                <td
+                  className={`px-4 py-3 whitespace-nowrap font-semibold ${
+                    payment.isReversed
+                      ? "text-text-secondary"
+                      : "text-text-primary"
+                  }`}
+                >
                   {formatMoney(payment.amount, locale)} {currency}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
                   <PaymentMethodBadge method={payment.method} />
                 </td>
-                <td className="max-w-[14rem] truncate px-4 py-3 text-text-secondary" title={payment.notes ?? ""}>
+                <td
+                  className="max-w-[14rem] truncate px-4 py-3 text-text-secondary"
+                  title={payment.notes ?? ""}
+                >
                   {payment.notes?.trim() ? payment.notes : "-"}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
                   <Badge variant={payment.isReversed ? "danger" : "success"}>
-                    {payment.isReversed ? t("statusCancelled") : t("statusActive")}
+                    {payment.isReversed
+                      ? t("statusCancelled")
+                      : t("statusActive")}
                   </Badge>
                 </td>
                 <td className="px-4 py-3 text-center">

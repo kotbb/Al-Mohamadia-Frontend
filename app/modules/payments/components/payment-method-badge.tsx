@@ -26,7 +26,7 @@ export function PaymentMethodBadge({
 
   return (
     <span
-      className={`inline-flex items-center text-xs font-medium text-text-secondary ${className}`}
+      className={`inline-flex items-center font-medium text-text-secondary ${className}`}
     >
       {label}
     </span>

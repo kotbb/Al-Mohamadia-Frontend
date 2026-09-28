@@ -10,6 +10,7 @@ import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
 import {
+  historyRowAction,
   RowActionsMenu,
   type RowActionItem,
 } from "@/app/modules/shared/components/row-actions-menu";
@@ -22,6 +23,7 @@ interface PurchasesTableProps {
   error: string | null;
   onRetry: () => void;
   onCancel?: (purchase: PurchaseInvoice) => void;
+  onHistory: (purchase: PurchaseInvoice) => void;
 }
 
 function PurchaseBagIcon({ className = "h-4 w-4" }: { className?: string }) {
@@ -56,8 +58,10 @@ export function PurchasesTable({
   error,
   onRetry,
   onCancel,
+  onHistory,
 }: PurchasesTableProps) {
   const t = useTranslations("purchases");
+  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
   const currency = t("currency");
@@ -122,7 +126,9 @@ export function PurchasesTable({
               ? (supplierNames[purchase.supplierId] ?? "…")
               : "-";
 
-            const actions: RowActionItem[] = [];
+            const actions: RowActionItem[] = [
+              historyRowAction(tAudit("viewHistory"), () => onHistory(purchase)),
+            ];
 
             if (purchase.status === "saved" && onCancel) {
               actions.push({

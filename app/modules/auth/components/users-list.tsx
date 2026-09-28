@@ -8,6 +8,7 @@ import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
 import {
+  historyRowAction,
   RowActionsMenu,
   type RowActionItem,
 } from "@/app/modules/shared/components/row-actions-menu";
@@ -22,6 +23,7 @@ interface UsersListProps {
   onDeactivate: (user: AuthUser) => void;
   onActivate: (user: AuthUser) => void;
   onDelete: (user: AuthUser) => void;
+  onHistory: (user: AuthUser, label: string) => void;
 }
 
 function StatusIcon({ active }: { active: boolean }) {
@@ -62,8 +64,10 @@ export function UsersList({
   onDeactivate,
   onActivate,
   onDelete,
+  onHistory,
 }: UsersListProps) {
   const t = useTranslations("users");
+  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
 
@@ -92,7 +96,7 @@ export function UsersList({
 
   return (
     <div className="w-full overflow-x-auto rounded-xl border border-border bg-white dark:bg-surface">
-      <table className="w-full min-w-[48rem] table-fixed border-collapse text-sm lg:text-[0.9375rem]">
+      <table className="w-full min-w-[48rem] table-fixed border-collapse text-sm lg:text-base">
         <colgroup>
           <col className="w-[22%]" />
           <col className="w-[14%]" />
@@ -129,7 +133,15 @@ export function UsersList({
         </thead>
         <tbody>
           {users.map((user) => {
+            const displayName = getDisplayName(
+              user.firstName,
+              user.lastName,
+              user.username,
+            );
             const actions: RowActionItem[] = [
+              historyRowAction(tAudit("viewHistory"), () =>
+                onHistory(user, displayName),
+              ),
               {
                 id: "edit",
                 label: t("edit"),
@@ -155,11 +167,6 @@ export function UsersList({
               },
             ];
 
-            const displayName = getDisplayName(
-              user.firstName,
-              user.lastName,
-              user.username,
-            );
             const initial = (user.firstName || user.username)
               .trim()
               .charAt(0)
@@ -171,18 +178,18 @@ export function UsersList({
                 className="border-b border-border last:border-b-0 transition-colors hover:bg-surface-muted/50"
               >
                 <td className={cell}>
-                  <div className="flex items-center gap-3 min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => onEdit(user)}
+                    className="ds-focus-ring group inline-flex min-w-0 max-w-full items-center gap-3 rounded-xl text-start transition-colors"
+                  >
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xs font-bold text-primary transition-all duration-150 group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-sm">
                       {initial}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => onEdit(user)}
-                      className="ds-focus-ring truncate rounded text-start font-semibold text-text-primary transition-colors hover:text-primary hover:underline"
-                    >
+                    <span className="truncate font-semibold text-text-primary transition-colors group-hover:text-primary group-hover:underline">
                       {displayName}
-                    </button>
-                  </div>
+                    </span>
+                  </button>
                 </td>
                 <td className={`${cell} truncate text-text-secondary`}>
                   {user.username}
@@ -207,10 +214,10 @@ export function UsersList({
                     )}
                   </Badge>
                 </td>
-                <td className={`${cell} whitespace-nowrap text-text-muted`}>
+                <td className={`${cell} whitespace-nowrap text-text-secondary`}>
                   {formatInvoiceDate(user.createdAt, locale)}
                 </td>
-                <td className={`${cell} whitespace-nowrap text-text-muted`}>
+                <td className={`${cell} whitespace-nowrap text-text-secondary`}>
                   {formatInvoiceDate(user.updatedAt, locale)}
                 </td>
                 <td className={`${cell} text-center`}>

@@ -29,15 +29,17 @@ interface SupplierDetailPageProps {
 
 export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
   const t = useTranslations("suppliers");
-  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
   const searchParams = useSearchParams();
   const fromParam = searchParams.get("from");
   const backHref = fromParam && fromParam.startsWith("/") ? fromParam : "/suppliers";
-  const supplierHistory = useAuditHistory({ entityType: "Supplier" });
   const supplierPurchases = usePurchases({ supplierId, pageSize: 10 });
   const supplierPayments = useSupplierAccountPayments(supplierId);
+  const purchaseHistory = useAuditHistory({ entityType: "PurchaseInvoice" });
+  const supplierPaymentHistory = useAuditHistory({
+    entityType: "SupplierPayment",
+  });
   const recordPaymentHook = useRecordSupplierPayment();
   const [paymentToast, setPaymentToast] = useState<
     "recorded" | "cancelled" | null
@@ -156,15 +158,6 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
           </Link>
           <Button
             type="button"
-            variant="secondary"
-            size="sm"
-            className="min-h-10 rounded-lg px-3.5 text-sm"
-            onClick={() => supplierHistory.openRecord(supplier.id, supplier.name)}
-          >
-            {tAudit("viewHistory")}
-          </Button>
-          <Button
-            type="button"
             variant="primary"
             size="sm"
             disabled={supplier.amountOwed <= 0 || !supplier.isActive}
@@ -191,7 +184,8 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
         </div>
       }
     >
-      {supplierHistory.modal}
+      {purchaseHistory.modal}
+      {supplierPaymentHistory.modal}
       <Toast
         open={toast !== null}
         message={toastMessage}
@@ -366,6 +360,9 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
               error={supplierPurchases.listError}
               onRetry={supplierPurchases.refresh}
               onCancel={supplierPurchases.openCancelConfirm}
+              onHistory={(purchase) =>
+                purchaseHistory.openRecord(purchase.id, purchase.invoiceNumber)
+              }
             />
 
             {supplierPurchases.listStatus === "success" &&
@@ -415,6 +412,9 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
               error={supplierPayments.error}
               onRetry={supplierPayments.refresh}
               onCancel={supplierPayments.openCancelConfirm}
+              onHistory={(payment, label) =>
+                supplierPaymentHistory.openRecord(payment.id, label)
+              }
             />
             {supplierPayments.status === "success" &&
             supplierPayments.totalPages > 1 ? (

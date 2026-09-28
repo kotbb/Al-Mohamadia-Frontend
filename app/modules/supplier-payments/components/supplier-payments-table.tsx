@@ -11,6 +11,7 @@ import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
 import {
+  historyRowAction,
   RowActionsMenu,
   type RowActionItem,
 } from "@/app/modules/shared/components/row-actions-menu";
@@ -23,6 +24,7 @@ interface SupplierPaymentsTableProps {
   error: string | null;
   onRetry: () => void;
   onCancel: (payment: SupplierPayment) => void;
+  onHistory: (payment: SupplierPayment, label: string) => void;
 }
 
 export function SupplierPaymentsTable({
@@ -33,8 +35,10 @@ export function SupplierPaymentsTable({
   error,
   onRetry,
   onCancel,
+  onHistory,
 }: SupplierPaymentsTableProps) {
   const t = useTranslations("supplierPayments");
+  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
   const currency = t("currency");
@@ -99,7 +103,11 @@ export function SupplierPaymentsTable({
               ? (supplierNames[payment.supplierId] ?? "…")
               : "-";
 
-            const actions: RowActionItem[] = [];
+            const actions: RowActionItem[] = [
+              historyRowAction(tAudit("viewHistory"), () =>
+                onHistory(payment, supplierName),
+              ),
+            ];
 
             if (!payment.isReversed && !payment.purchaseInvoiceId) {
               actions.push({
@@ -123,7 +131,7 @@ export function SupplierPaymentsTable({
                     {payment.supplierId ? (
                       <Link
                         href={`/suppliers/${payment.supplierId}?from=/supplier-payments`}
-                        className="ds-focus-ring rounded font-medium text-primary hover:underline"
+                        className="ds-focus-ring rounded font-medium text-text-primary hover:underline"
                       >
                         {supplierName}
                       </Link>
@@ -132,7 +140,13 @@ export function SupplierPaymentsTable({
                     )}
                   </td>
                 ) : null}
-                <td className="px-4 py-3 whitespace-nowrap font-semibold text-text-primary">
+                <td
+                  className={`px-4 py-3 whitespace-nowrap font-semibold ${
+                    payment.isReversed
+                      ? "text-text-secondary"
+                      : "text-text-primary"
+                  }`}
+                >
                   {formatMoney(payment.amount, locale)} {currency}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">

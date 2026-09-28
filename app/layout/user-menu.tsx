@@ -58,9 +58,15 @@ export function UserMenu() {
   }
 
   const initials = getInitials(user.firstName, user.lastName, user.username);
-  const displayName = getDisplayName(user.firstName, user.lastName, user.username);
+  const displayName = getDisplayName(
+    user.firstName,
+    user.lastName,
+    user.username,
+  );
   const roleLabel =
-    user.role === "super_admin" ? tUsers("roleSuperAdmin") : tUsers("roleAdmin");
+    user.role === "super_admin"
+      ? tUsers("roleSuperAdmin")
+      : tUsers("roleAdmin");
 
   function switchLocale(next: Locale) {
     if (next === locale) return;
@@ -111,7 +117,9 @@ export function UserMenu() {
             <p className="truncate text-sm font-semibold text-text-primary">
               {displayName}
             </p>
-            <p className="mt-0.5 truncate text-xs text-text-muted">@{user.username}</p>
+            <p className="mt-0.5 truncate text-xs text-text-muted">
+              @{user.username}
+            </p>
             <p className="mt-0.5 text-xs text-text-muted">{roleLabel}</p>
           </div>
 

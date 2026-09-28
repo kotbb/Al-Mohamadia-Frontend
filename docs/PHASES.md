@@ -301,7 +301,7 @@ low-stock warnings reflect real thresholds.
 |----------|-----------|
 | Stock List | `GET /inventory/stock` |
 | Inventory Valuation | `GET /inventory/valuation` |
-| Stock Adjustments | `POST /inventory/adjustments`, `GET /inventory/adjustments`, `GET /inventory/adjustments/:id` |
+| Stock Adjustments | `POST /inventory/adjustments` (history is `stock_adjusted` on the audit log) |
 
 List query params (Stock): `categoryId`, `stockStatus`, `q`, `page`, `limit`.
 List query params (Adjustments): `itemId`, `period`, `date`, `page`, `limit`.
@@ -357,7 +357,7 @@ Module: `src/modules/dashboard` (backend); `app/modules/dashboard` (frontend).
 **Done when:** every action performed across Phases 1–8 is visible and
 correctly attributed in the audit log UI.
 
-`price_changed` writes `changes` as `{ unitPrice: { old, new } }` or `{ cost: { old, new } }`. `stock_adjusted` writes `{ stockQuantity: { old, new } }`. The stock reason stays in `summary`.
+`price_changed` writes `changes` as `{ unitPrice: { old, new } }` or `{ cost: { old, new } }`. `stock_adjusted` writes `{ stockQuantity: { old, new }, reason: { old: null, new } }` and names the item in `summary`.
 
 **Backend API** (`/api/v1`, JWT + `admin` | `super_admin`):
 

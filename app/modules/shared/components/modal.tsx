@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useRef,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useId, useRef, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
 interface ModalProps {
@@ -100,9 +94,13 @@ export function Modal({
             {title}
           </h2>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+          {children}
+        </div>
         {footer ? (
-          <div className="shrink-0 border-t border-border px-5 py-3.5">{footer}</div>
+          <div className="shrink-0 border-t border-border px-5 py-3.5">
+            {footer}
+          </div>
         ) : null}
       </div>
     </div>

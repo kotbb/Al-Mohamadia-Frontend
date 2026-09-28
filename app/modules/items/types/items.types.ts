@@ -46,7 +46,7 @@ export interface PriceHistoryEntry {
   field: string;
   oldValue: unknown;
   newValue: unknown;
-  changedBy: string;
+  changedBy: string | null;
   createdAt?: string;
 }
 

@@ -36,7 +36,11 @@ export function Input({
         </span>
       ) : null}
       {error ? (
-        <span id={`${inputId}-error`} className="text-sm text-danger" role="alert">
+        <span
+          id={`${inputId}-error`}
+          className="text-sm text-danger"
+          role="alert"
+        >
           {error}
         </span>
       ) : null}

@@ -9,6 +9,7 @@ import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
 import {
+  historyRowAction,
   RowActionsMenu,
   type RowActionItem,
 } from "@/app/modules/shared/components/row-actions-menu";
@@ -22,6 +23,7 @@ interface CustomersListProps {
   onDeactivate: (customer: Customer) => void;
   onActivate: (customer: Customer) => void;
   onDelete: (customer: Customer) => void;
+  onHistory: (customer: Customer) => void;
 }
 
 function StatusIcon({ active }: { active: boolean }) {
@@ -62,8 +64,10 @@ export function CustomersList({
   onDeactivate,
   onActivate,
   onDelete,
+  onHistory,
 }: CustomersListProps) {
   const t = useTranslations("customers");
+  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
   const currency = t("currency");
@@ -114,6 +118,7 @@ export function CustomersList({
         <tbody>
           {customers.map((customer) => {
             const actions: RowActionItem[] = [
+              historyRowAction(tAudit("viewHistory"), () => onHistory(customer)),
               {
                 id: "edit",
                 label: t("edit"),
@@ -159,9 +164,19 @@ export function CustomersList({
                     </span>
                   </Link>
                 </td>
-                <td className="px-4 py-3 text-text-secondary">{customer.phone}</td>
-                <td className="px-4 py-3 whitespace-nowrap text-text-primary">
-                  {formatMoney(customer.balance, locale)} {currency}
+                <td className="px-4 py-3 text-text-secondary">
+                  {customer.phone}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <span
+                    className={
+                      customer.balance > 0
+                        ? "font-bold text-danger"
+                        : "text-text-secondary"
+                    }
+                  >
+                    {formatMoney(customer.balance, locale)} {currency}
+                  </span>
                 </td>
                 <td className="px-4 py-3">
                   <Badge variant={customer.isActive ? "success" : "danger"}>

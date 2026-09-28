@@ -11,7 +11,9 @@ import {
 } from "@/app/modules/audit/utils/audit-catalog";
 import {
   formatAuditChangeValue,
+  formatAuditSummary,
   formatAuditTimestamp,
+  isHiddenAuditField,
 } from "@/app/modules/audit/utils/format-audit-value";
 import { Badge } from "@/app/modules/shared/components/badge";
 import { EmptyState } from "@/app/modules/shared/components/empty-state";
@@ -115,13 +117,36 @@ export function AuditLogTable({
         </thead>
         <tbody>
           {logs.map((log) => {
-            const changeEntries = Object.entries(log.changes ?? {}).filter(
-              (entry): entry is [string, { old: unknown; new: unknown }] =>
-                isChangePair(entry[1]),
+            const changeEntries = Object.entries(log.changes ?? {}).flatMap(
+              (entry) => {
+                if (!isChangePair(entry[1]) || isHiddenAuditField(entry[0])) {
+                  return [];
+                }
+                const oldText = formatAuditChangeValue(
+                  entry[0],
+                  entry[1].old,
+                  locale,
+                  t("emptyValue"),
+                );
+                const newText = formatAuditChangeValue(
+                  entry[0],
+                  entry[1].new,
+                  locale,
+                  t("emptyValue"),
+                );
+                const oldShown = oldText ?? t("emptyValue");
+                const newShown = newText ?? t("emptyValue");
+                if (oldShown === t("emptyValue") && newShown === t("emptyValue")) {
+                  return [];
+                }
+                return [[entry[0], oldShown, newShown] as const];
+              },
             );
             const hasChanges = changeEntries.length > 0;
             const isOpen = openId === log.id;
-            const summary = log.summary?.trim() ? log.summary : t("emptyValue");
+            const summary = log.summary?.trim()
+              ? formatAuditSummary(log.summary)
+              : t("emptyValue");
 
             return (
               <LogRows
@@ -132,7 +157,6 @@ export function AuditLogTable({
                 isOpen={isOpen}
                 changeEntries={changeEntries}
                 locale={locale}
-                emptyLabel={t("emptyValue")}
                 actionText={actionLabel(log.action)}
                 entityText={entityLabel(log.entityType)}
                 userText={log.user.username ?? t("unknownUser")}
@@ -159,7 +183,6 @@ function LogRows({
   isOpen,
   changeEntries,
   locale,
-  emptyLabel,
   actionText,
   entityText,
   userText,
@@ -173,9 +196,8 @@ function LogRows({
   summary: string;
   hasChanges: boolean;
   isOpen: boolean;
-  changeEntries: [string, { old: unknown; new: unknown }][];
+  changeEntries: readonly (readonly [string, string, string])[];
   locale: string;
-  emptyLabel: string;
   actionText: string;
   entityText: string;
   userText: string;
@@ -191,22 +213,24 @@ function LogRows({
         <td className="px-4 py-3 whitespace-nowrap text-text-secondary">
           {timeText}
         </td>
-        <td className="px-4 py-3 text-text-primary">{userText}</td>
+        <td className="px-4 py-3 font-medium text-text-primary">{userText}</td>
         <td className="px-4 py-3 whitespace-nowrap">
           <Badge variant={auditActionTone(log.action)}>{actionText}</Badge>
         </td>
-        <td className="px-4 py-3 text-text-primary">{entityText}</td>
+        <td className="px-4 py-3 font-medium text-text-primary">{entityText}</td>
         <td className="max-w-[22rem] px-4 py-3 text-text-secondary">
           <div className="flex flex-col items-start gap-1">
             <span className="break-words">{summary}</span>
             {hasChanges ? (
               <button
                 type="button"
-                className="ds-focus-ring rounded text-sm font-medium text-primary hover:underline"
+                className="ds-focus-ring mt-1 inline-flex items-center rounded-lg bg-primary/10 px-2.5 py-1 text-sm text-primary hover:bg-primary/15"
                 aria-expanded={isOpen}
                 onClick={onToggle}
               >
-                {isOpen ? hideChangesLabel : changesLabel}
+                <span className="font-bold">
+                  {isOpen ? hideChangesLabel : changesLabel}
+                </span>
               </button>
             ) : null}
           </div>
@@ -216,7 +240,7 @@ function LogRows({
         <tr className="border-b border-border bg-surface-muted/40">
           <td colSpan={5} className="px-4 py-3">
             <dl className="flex flex-col gap-2">
-              {changeEntries.map(([field, change]) => (
+              {changeEntries.map(([field, oldText, newText]) => (
                 <div
                   key={`${log.id}-${field}`}
                   className="flex flex-wrap items-baseline gap-x-2 text-sm"
@@ -225,9 +249,7 @@ function LogRows({
                     {fieldLabel(field)}
                   </dt>
                   <dd className="text-text-secondary">
-                    <bdi>
-                      {formatAuditChangeValue(field, change.old, locale, emptyLabel)}
-                    </bdi>
+                    <bdi>{oldText}</bdi>
                     <span
                       dir="ltr"
                       className="inline-block px-1.5 text-text-muted"
@@ -235,9 +257,7 @@ function LogRows({
                     >
                       {locale === "ar" ? "←" : "→"}
                     </span>
-                    <bdi>
-                      {formatAuditChangeValue(field, change.new, locale, emptyLabel)}
-                    </bdi>
+                    <bdi>{newText}</bdi>
                   </dd>
                 </div>
               ))}

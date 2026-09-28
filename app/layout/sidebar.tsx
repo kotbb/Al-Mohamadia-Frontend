@@ -6,7 +6,13 @@ import { useAuth } from "@/lib/auth/auth-provider";
 import { BrandMark } from "@/app/modules/shared/components/brand-mark";
 
 interface NavItem {
-  key: "home" | "hubSales" | "hubProcurement" | "hubInventory" | "audit" | "users";
+  key:
+    | "home"
+    | "hubSales"
+    | "hubProcurement"
+    | "hubInventory"
+    | "audit"
+    | "users";
   href: string;
   matchPrefixes: string[];
   enabled: boolean;
@@ -70,7 +76,13 @@ function NavIcon({ name }: { name: NavItem["key"] }) {
     case "hubSales":
       return (
         <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <circle cx="9" cy="8" r="3" stroke="currentColor" strokeWidth="1.75" />
+          <circle
+            cx="9"
+            cy="8"
+            r="3"
+            stroke="currentColor"
+            strokeWidth="1.75"
+          />
           <circle
             cx="16.5"
             cy="9"
@@ -196,7 +208,8 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           }
 
           const label = t(item.key);
-          const enabled = item.enabled && (!item.superAdminOnly || isSuperAdmin);
+          const enabled =
+            item.enabled && (!item.superAdminOnly || isSuperAdmin);
           const isActive =
             enabled &&
             (item.key === "home"

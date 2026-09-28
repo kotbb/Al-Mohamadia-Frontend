@@ -5,22 +5,15 @@ import { useTranslations } from "next-intl";
 import { AppShell } from "@/app/layout/app-shell";
 import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { useInventory } from "@/app/modules/inventory/hooks/use-inventory";
-import { useStockAdjustments } from "@/app/modules/inventory/hooks/use-stock-adjustments";
 import { InventoryKpiCards } from "@/app/modules/inventory/components/inventory-kpi-cards";
 import { StockFilters } from "@/app/modules/inventory/components/stock-filters";
 import { StockTable } from "@/app/modules/inventory/components/stock-table";
-import { AdjustmentsFilters } from "@/app/modules/inventory/components/adjustments-filters";
-import { AdjustmentsTable } from "@/app/modules/inventory/components/adjustments-table";
 import { StockAdjustmentModal } from "@/app/modules/inventory/components/stock-adjustment-modal";
 import { ReorderThresholdModal } from "@/app/modules/inventory/components/reorder-threshold-modal";
 import { CategoryValuationModal } from "@/app/modules/inventory/components/category-valuation-modal";
-import { ItemAdjustmentsModal } from "@/app/modules/inventory/components/item-adjustments-modal";
 import { Toast } from "@/app/modules/shared/components/toast";
 import { Button } from "@/app/modules/shared/components/button";
-import { SegmentedControl } from "@/app/modules/shared/components/segmented-control";
 import type { StockItem } from "@/app/modules/inventory/types/inventory.types";
-
-type ViewMode = "stock" | "adjustments";
 
 export function InventoryPage() {
   const t = useTranslations("inventory");
@@ -28,10 +21,8 @@ export function InventoryPage() {
     entityType: "Item",
     defaultAction: "stock_adjusted",
   });
+  const itemHistory = useAuditHistory({ entityType: "Item" });
 
-  const [viewMode, setViewMode] = useState<ViewMode>("stock");
-
-  // Stock inventory hook
   const {
     items,
     summary,
@@ -50,27 +41,9 @@ export function InventoryPage() {
     refresh: refreshStock,
   } = useInventory();
 
-  // Adjustments hook
-  const {
-    adjustments,
-    page: adjPage,
-    totalPages: adjTotalPages,
-    setPage: setAdjPage,
-    itemIdFilter,
-    setItemIdFilter,
-    periodFilter,
-    setPeriodFilter,
-    periodDate,
-    setPeriodDate,
-    listStatus: adjListStatus,
-    refresh: refreshAdjustments,
-  } = useStockAdjustments();
-
-  // Modals state
   const [isCategoryValuationOpen, setIsCategoryValuationOpen] = useState(false);
   const [selectedAdjustItem, setSelectedAdjustItem] = useState<StockItem | null>(null);
   const [selectedThresholdItem, setSelectedThresholdItem] = useState<StockItem | null>(null);
-  const [selectedLogItem, setSelectedLogItem] = useState<StockItem | null>(null);
 
   // Toast state
   const [toastMessage, setToastMessage] = useState<string>("");
@@ -85,17 +58,12 @@ export function InventoryPage() {
 
   const handleAdjustSuccess = (msg?: string) => {
     refreshStock();
-    refreshAdjustments();
     showToast(msg || t("adjustSuccess"));
   };
 
   const handleThresholdSuccess = (msg?: string) => {
     refreshStock();
     showToast(msg || t("thresholdSuccess"));
-  };
-
-  const handleViewAdjustmentsForItem = (item: StockItem) => {
-    setSelectedLogItem(item);
   };
 
   return (
@@ -120,77 +88,39 @@ export function InventoryPage() {
     >
       <div className="flex flex-col gap-5">
         {history.modal}
+        {itemHistory.modal}
         {/* KPI Summary Cards */}
         <InventoryKpiCards
           valuation={valuation}
           summary={summary}
-          onSelectStatusFilter={(status) => {
-            setViewMode("stock");
-            setStatusFilter(status);
-          }}
+          onSelectStatusFilter={setStatusFilter}
         />
 
-        {/* View Mode Segmented Control */}
-        <div className="w-full sm:w-fit">
-          <SegmentedControl
-            value={viewMode}
-            onChange={(val) => setViewMode(val as ViewMode)}
-            options={[
-              { value: "stock", label: `${t("viewStock")} (${summary.totalItems})` },
-              { value: "adjustments", label: t("viewAdjustments") },
-            ]}
+        <div className="flex flex-col gap-4">
+          <StockFilters
+            searchInput={searchInput}
+            onSearchChange={setSearchInput}
+            categoryId={categoryId}
+            onCategoryChange={setCategoryId}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            categories={categories}
+            summary={summary}
+          />
+
+          <StockTable
+            items={items}
+            isLoading={stockListStatus === "loading"}
+            page={stockPage}
+            totalPages={stockTotalPages}
+            onPageChange={setStockPage}
+            onAdjustStock={(item) => setSelectedAdjustItem(item)}
+            onUpdateThreshold={(item) => setSelectedThresholdItem(item)}
+            onViewAdjustmentsForItem={(item) =>
+              itemHistory.openRecord(item.id, item.name)
+            }
           />
         </div>
-
-        {/* View 1: Stock Levels */}
-        {viewMode === "stock" && (
-          <div className="flex flex-col gap-4">
-            <StockFilters
-              searchInput={searchInput}
-              onSearchChange={setSearchInput}
-              categoryId={categoryId}
-              onCategoryChange={setCategoryId}
-              statusFilter={statusFilter}
-              onStatusFilterChange={setStatusFilter}
-              categories={categories}
-              summary={summary}
-            />
-
-            <StockTable
-              items={items}
-              isLoading={stockListStatus === "loading"}
-              page={stockPage}
-              totalPages={stockTotalPages}
-              onPageChange={setStockPage}
-              onAdjustStock={(item) => setSelectedAdjustItem(item)}
-              onUpdateThreshold={(item) => setSelectedThresholdItem(item)}
-              onViewAdjustmentsForItem={handleViewAdjustmentsForItem}
-            />
-          </div>
-        )}
-
-        {/* View 2: Adjustments Log */}
-        {viewMode === "adjustments" && (
-          <div className="flex flex-col gap-4">
-            <AdjustmentsFilters
-              itemId={itemIdFilter}
-              onItemIdChange={setItemIdFilter}
-              periodFilter={periodFilter}
-              onPeriodFilterChange={setPeriodFilter}
-              periodDate={periodDate}
-              onPeriodDateChange={setPeriodDate}
-              allItems={items}
-            />
-
-            <AdjustmentsTable
-              adjustments={adjustments}
-              isLoading={adjListStatus === "loading"}
-              page={adjPage}
-              totalPages={adjTotalPages}
-              onPageChange={setAdjPage}
-            />
-          </div>
-        )}
 
         {/* Modals */}
         <CategoryValuationModal
@@ -211,12 +141,6 @@ export function InventoryPage() {
           onClose={() => setSelectedThresholdItem(null)}
           item={selectedThresholdItem}
           onSuccess={handleThresholdSuccess}
-        />
-
-        <ItemAdjustmentsModal
-          isOpen={selectedLogItem !== null}
-          onClose={() => setSelectedLogItem(null)}
-          item={selectedLogItem}
         />
 
         {/* Toast Feedback */}

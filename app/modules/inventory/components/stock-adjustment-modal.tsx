@@ -142,9 +142,6 @@ export function StockAdjustmentModal({
           <div className="rounded-xl border border-border bg-surface-muted/50 p-3.5 space-y-1.5">
             <div className="flex items-center justify-between">
               <span className="font-bold text-text-primary">{item.name}</span>
-              <span className="text-xs font-mono px-2 py-0.5 rounded bg-surface border border-border text-text-secondary">
-                {item.code}
-              </span>
             </div>
             <div className="flex items-center justify-between text-xs text-text-secondary">
               <span>{item.category?.name || "-"}</span>

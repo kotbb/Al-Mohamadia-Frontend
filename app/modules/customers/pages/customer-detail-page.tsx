@@ -27,18 +27,18 @@ interface CustomerDetailPageProps {
 
 export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
   const t = useTranslations("customers");
-  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
   const searchParams = useSearchParams();
   const fromParam = searchParams.get("from");
-  const backHref = fromParam && fromParam.startsWith("/") ? fromParam : "/customers";
-  const customerHistory = useAuditHistory({ entityType: "Customer" });
+  const backHref =
+    fromParam && fromParam.startsWith("/") ? fromParam : "/customers";
   const [paymentToast, setPaymentToast] = useState<
     "recorded" | "cancelled" | null
   >(null);
   const recordPaymentHook = useRecordPayment();
   const customerPayments = useCustomerPayments(customerId);
+  const paymentHistory = useAuditHistory({ entityType: "Payment" });
   const {
     customer,
     status,
@@ -153,19 +153,12 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
           </Link>
           <Button
             type="button"
-            variant="secondary"
-            size="sm"
-            className="min-h-10 rounded-lg px-3.5 text-sm"
-            onClick={() => customerHistory.openRecord(customer.id, customer.name)}
-          >
-            {tAudit("viewHistory")}
-          </Button>
-          <Button
-            type="button"
             variant="primary"
             size="sm"
             disabled={customer.balance <= 0 || !customer.isActive}
-            title={customer.balance <= 0 ? t("recordPaymentDisabled") : undefined}
+            title={
+              customer.balance <= 0 ? t("recordPaymentDisabled") : undefined
+            }
             onClick={() =>
               recordPaymentHook.open({
                 id: customer.id,
@@ -176,13 +169,18 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
           >
             {t("recordPayment")}
           </Button>
-          <Button type="button" variant="secondary" size="sm" onClick={openEdit}>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={openEdit}
+          >
             {t("edit")}
           </Button>
         </div>
       }
     >
-      {customerHistory.modal}
+      {paymentHistory.modal}
       <Toast
         open={toast !== null}
         message={toastMessage}
@@ -319,7 +317,9 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
               <dl className="mt-3 flex flex-col gap-3 text-base">
                 <div>
                   <dt className="text-text-muted">{t("fieldPhone")}</dt>
-                  <dd className="font-medium text-text-primary">{customer.phone}</dd>
+                  <dd className="font-medium text-text-primary">
+                    {customer.phone}
+                  </dd>
                 </div>
                 <div>
                   <dt className="text-text-muted">{t("fieldAddress")}</dt>
@@ -330,7 +330,9 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
               </dl>
             </div>
             <div className="lg:text-end">
-              <p className="text-sm text-text-secondary">{t("currentBalance")}</p>
+              <p className="text-sm text-text-secondary">
+                {t("currentBalance")}
+              </p>
               <p className="mt-2 text-3xl font-bold text-text-primary">
                 {formatMoney(customer.balance, locale)} {t("currency")}
               </p>
@@ -352,6 +354,9 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
               error={customerPayments.error}
               onRetry={customerPayments.refresh}
               onCancel={customerPayments.openCancelConfirm}
+              onHistory={(payment, label) =>
+                paymentHistory.openRecord(payment.id, label)
+              }
             />
 
             {customerPayments.status === "success" &&
@@ -390,7 +395,12 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
         </SurfaceCard>
 
         <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="primary" size="sm" onClick={() => void openMerge()}>
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            onClick={() => void openMerge()}
+          >
             {t("mergeButton")}
           </Button>
           {customer.isActive ? (

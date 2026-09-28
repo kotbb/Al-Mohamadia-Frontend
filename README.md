@@ -200,7 +200,7 @@ Unauthenticated users are sent to `/login`. The **Users** screen is `super_admin
 | `/purchases/new`           | Both        | New purchase          |
 | `/purchases/:id`           | Both        | Purchase detail       |
 | `/supplier-payments`       | Both        | Supplier payments     |
-| `/inventory`               | Both        | Stock and adjustments |
+| `/inventory`               | Both        | Stock levels          |
 | `/items`                   | Both        | Item list             |
 | `/items/new`               | Both        | New item              |
 | `/items/:id/edit`          | Both        | Edit item             |

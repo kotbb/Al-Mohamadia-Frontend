@@ -37,7 +37,7 @@ export function Button({
     <button
       type={type}
       disabled={disabled}
-      className={`ds-focus-ring inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl font-medium transition-colors duration-150 disabled:cursor-not-allowed ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
+      className={`ds-focus-ring inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl font-medium transition-[color,background-color,transform,opacity] duration-[var(--duration-fast)] ease-[var(--ease-standard)] active:scale-[0.98] disabled:cursor-not-allowed disabled:active:scale-100 ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
       {...props}
     >
       {children}

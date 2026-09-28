@@ -193,6 +193,9 @@ export function PurchasesPage() {
           error={listError}
           onRetry={refresh}
           onCancel={openCancelConfirm}
+          onHistory={(purchase) =>
+            history.openRecord(purchase.id, purchase.invoiceNumber)
+          }
         />
 
         {listStatus === "success" && totalPages > 1 ? (

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { AppShell } from "@/app/layout/app-shell";
-import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { CancelInvoiceDialog } from "@/app/modules/invoices/components/cancel-invoice-dialog";
 import { InvoicePreviewModal } from "@/app/modules/invoices/components/invoice-preview-modal";
 import { useInvoiceDetail } from "@/app/modules/invoices/hooks/use-invoice-detail";
@@ -23,11 +22,9 @@ interface InvoiceDetailPageProps {
 
 export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
   const t = useTranslations("invoices");
-  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const history = useAuditHistory({ entityType: "SalesInvoice" });
   const {
     invoice,
     status,
@@ -74,23 +71,9 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
           >
             {t("backToList")}
           </Link>
-          {invoice ? (
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              className="min-h-10 rounded-lg px-3.5 text-sm"
-              onClick={() =>
-                history.openRecord(invoice.id, invoice.invoiceNumber)
-              }
-            >
-              {tAudit("viewHistory")}
-            </Button>
-          ) : null}
         </div>
       }
     >
-      {history.modal}
       <Toast
         open={toastKind === "cancelled"}
         message={t("cancelSuccess")}
@@ -170,9 +153,7 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
                   <tbody>
                     {invoice.lines.map((line, index) => {
                       const item = itemsById[line.itemId];
-                      const label = item
-                        ? `${item.name} (${item.code})`
-                        : null;
+                      const label = item ? item.name : null;
                       const dims =
                         line.thickness != null &&
                         line.width != null &&
@@ -187,13 +168,8 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
                           <td className="px-4 py-3 text-text-primary">
                             <div className="font-semibold text-text-primary">
                               {label ?? (
-                                <span className="inline-flex items-center gap-1.5 text-text-secondary">
-                                  <span className="italic">
-                                    {t("itemUnavailable")}
-                                  </span>
-                                  <span className="font-mono text-xs text-text-secondary/70">
-                                    ({line.itemId.slice(-6)})
-                                  </span>
+                                <span className="italic text-text-secondary">
+                                  {t("itemUnavailable")}
                                 </span>
                               )}
                             </div>
@@ -214,7 +190,7 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
                           <td className="px-4 py-3 text-end whitespace-nowrap text-text-primary">
                             {formatMoney(line.piecePrice, locale)} {currency}
                           </td>
-                          <td className="px-4 py-3 text-end whitespace-nowrap font-semibold text-text-primary">
+                          <td className="px-4 py-3 text-end whitespace-nowrap font-medium text-text-primary">
                             {formatMoney(line.lineTotal, locale)} {currency}
                           </td>
                         </tr>
@@ -259,8 +235,8 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
                     {t("remaining")}
                   </p>
                   <p
-                    className={`mt-1 text-2xl font-black ${
-                      invoice.remaining > 0 ? "text-primary" : "text-success"
+                    className={`mt-1 text-2xl font-bold ${
+                      invoice.remaining > 0 ? "text-danger" : "text-success"
                     }`}
                   >
                     {formatMoney(invoice.remaining, locale)} {currency}
@@ -287,11 +263,7 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
                 {t("share")}
               </Button>
               {invoice.status === "saved" ? (
-                <Button
-                  type="button"
-                  variant="danger"
-                  onClick={openCancel}
-                >
+                <Button type="button" variant="danger" onClick={openCancel}>
                   <CancelIcon />
                   {t("cancel")}
                 </Button>
@@ -314,7 +286,12 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
 
 function PrinterIcon() {
   return (
-    <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg
+      className="h-4 w-4 shrink-0"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden
+    >
       <path
         d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"
         stroke="currentColor"
@@ -334,7 +311,12 @@ function PrinterIcon() {
 
 function WhatsAppIcon() {
   return (
-    <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg
+      className="h-4 w-4 shrink-0"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden
+    >
       <path
         d="M17.5 6.5A7.8 7.8 0 0 0 12 4.2C7.7 4.2 4.2 7.7 4.2 12c0 1.4.4 2.7 1.1 3.9L4 20l4.3-1.1c1.1.6 2.4 1 3.7 1 4.3 0 7.8-3.5 7.8-7.8 0-2.1-.8-4.1-2.3-5.6Z"
         stroke="currentColor"
@@ -351,7 +333,12 @@ function WhatsAppIcon() {
 
 function CancelIcon() {
   return (
-    <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg
+      className="h-4 w-4 shrink-0"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden
+    >
       <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.75" />
       <path
         d="m9 9 6 6m0-6-6 6"

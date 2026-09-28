@@ -150,6 +150,7 @@ export function CategoriesPage() {
         onDeactivate={openDeactivateConfirm}
         onActivate={openActivateConfirm}
         onDelete={openDeleteConfirm}
+        onHistory={(category) => history.openRecord(category.id, category.name)}
       />
     </AppShell>
   );

@@ -81,8 +81,9 @@
   --color-sidebar-active: var(--sidebar-active);
   --color-sidebar-active-foreground: var(--sidebar-active-foreground);
   --radius-shell: var(--radius-shell);
-  --font-sans: var(--font-noto-sans-arabic), var(--font-noto-sans),
-    "Noto Sans Arabic", "Noto Sans", "Segoe UI", system-ui, sans-serif;
+  --font-sans:
+    var(--font-noto-sans-arabic), var(--font-noto-sans), "Noto Sans Arabic",
+    "Noto Sans", "Segoe UI", system-ui, sans-serif;
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;
@@ -95,20 +96,21 @@
 
 html {
   font-size: 16px;
-  font-family: var(--font-noto-sans-arabic), var(--font-noto-sans),
-    "Noto Sans Arabic", "Noto Sans", "Segoe UI", system-ui, sans-serif;
+  font-family:
+    var(--font-noto-sans-arabic), var(--font-noto-sans), "Noto Sans Arabic",
+    "Noto Sans", "Segoe UI", system-ui, sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--text-primary);
   accent-color: var(--primary);
-  font-family: var(--font-noto-sans-arabic), var(--font-noto-sans),
-    "Noto Sans Arabic", "Noto Sans", "Segoe UI", system-ui, sans-serif;
+  font-family:
+    var(--font-noto-sans-arabic), var(--font-noto-sans), "Noto Sans Arabic",
+    "Noto Sans", "Segoe UI", system-ui, sans-serif;
   font-size: 1rem;
   line-height: 1.7;
 }
-
 
 *,
 *::before,

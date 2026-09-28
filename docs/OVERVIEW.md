@@ -44,8 +44,7 @@ User (super_admin | admin)
   └── RefreshToken
 
 Category → Item
-  ├── ItemPriceHistory
-  └── StockAdjustment
+  └── ItemPriceHistory
 
 Customer
   ├── SalesInvoice → SalesInvoiceLine (+ Payment)

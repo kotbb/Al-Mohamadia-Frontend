@@ -7,6 +7,7 @@ import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
 import {
+  historyRowAction,
   RowActionsMenu,
   type RowActionItem,
 } from "@/app/modules/shared/components/row-actions-menu";
@@ -21,6 +22,7 @@ interface CategoriesListProps {
   onDeactivate: (category: CategoryListRow) => void;
   onActivate: (category: CategoryListRow) => void;
   onDelete: (category: CategoryListRow) => void;
+  onHistory: (category: CategoryListRow) => void;
 }
 
 function StatusIcon({ active }: { active: boolean }) {
@@ -74,8 +76,10 @@ export function CategoriesList({
   onDeactivate,
   onActivate,
   onDelete,
+  onHistory,
 }: CategoriesListProps) {
   const t = useTranslations("categories");
+  const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
 
@@ -129,6 +133,7 @@ export function CategoriesList({
           {categories.map((category) => {
             const hasItems = category.itemCount > 0;
             const actions: RowActionItem[] = [
+              historyRowAction(tAudit("viewHistory"), () => onHistory(category)),
               {
                 id: "edit",
                 label: t("edit"),
@@ -189,11 +194,13 @@ export function CategoriesList({
                     )}
                   </Badge>
                 </td>
-                <td className="px-4 py-3 text-text-secondary">{category.itemCount}</td>
-                <td className="px-4 py-3 whitespace-nowrap text-text-muted">
+                <td className="px-4 py-3 font-medium text-text-primary">
+                  {category.itemCount}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap text-text-secondary">
                   {formatInvoiceDate(category.createdAt, locale)}
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-text-muted">
+                <td className="px-4 py-3 whitespace-nowrap text-text-secondary">
                   {formatInvoiceDate(category.updatedAt, locale)}
                 </td>
                 <td className="px-4 py-3 text-center">

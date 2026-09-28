@@ -86,51 +86,15 @@ export interface InventoryValuation {
   categories: CategoryValuation[];
 }
 
-export interface StockAdjustmentUser {
-  id: string;
-  username: string;
-}
-
-export interface StockAdjustmentItem {
-  id: string;
-  code: string;
-  name: string;
-}
-
-export interface StockAdjustment {
-  id: string;
-  itemId: string;
-  item: StockAdjustmentItem | null;
-  oldQuantity: number;
-  newQuantity: number;
-  diffQuantity: number;
-  reason: string;
-  adjustedBy: string;
-  adjuster: StockAdjustmentUser | null;
-  createdAt: string;
-}
-
-export interface StockAdjustmentListMeta {
-  page: number;
-  limit: number;
-  total: number;
-}
-
-export interface StockAdjustmentListResponse {
-  items: StockAdjustment[];
-  meta: StockAdjustmentListMeta;
-}
-
 export interface CreateStockAdjustmentInput {
   itemId: string;
   newQuantity: number;
   reason: string;
 }
 
-export interface ListAdjustmentsFilters {
-  itemId?: string;
-  period?: "DAY" | "WEEK" | "MONTH" | "YEAR";
-  date?: string;
-  page?: number;
-  limit?: number;
+export interface AdjustStockResult {
+  itemId: string;
+  oldQuantity: number;
+  newQuantity: number;
+  reason: string;
 }

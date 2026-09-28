@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import type { Category, Item } from "@/app/modules/items/types/items.types";
 import { formatMoney } from "@/app/modules/items/utils/format-money";
 import {
+  historyRowAction,
   RowActionsMenu,
   type RowActionItem,
 } from "@/app/modules/shared/components/row-actions-menu";
@@ -14,6 +15,7 @@ interface CategoryItemsTableProps {
   onEdit: (itemId: string) => void;
   onPriceHistory: (itemId: string) => void;
   onDelete: (item: Item) => void;
+  onHistory: (item: Item) => void;
 }
 
 function pricingModeLabel(
@@ -29,8 +31,10 @@ export function CategoryItemsTable({
   onEdit,
   onPriceHistory,
   onDelete,
+  onHistory,
 }: CategoryItemsTableProps) {
   const t = useTranslations("items");
+  const tAudit = useTranslations("audit");
   const locale = useLocale();
   const cell = "px-3.5 py-2.5";
 
@@ -50,7 +54,7 @@ export function CategoryItemsTable({
       </div>
 
       <div className="w-full overflow-x-auto">
-        <table className="w-full min-w-[36rem] table-fixed border-collapse text-sm">
+        <table className="w-full min-w-[36rem] table-fixed border-collapse text-sm lg:text-base">
           <colgroup>
             <col className="w-[38%]" />
             <col className="w-[16%]" />
@@ -60,19 +64,19 @@ export function CategoryItemsTable({
           </colgroup>
           <thead>
             <tr className="border-b border-border bg-surface dark:bg-surface">
-              <th className={`${cell} text-start text-xs font-semibold tracking-wide text-text-secondary`}>
+              <th className={`${cell} text-start font-medium text-text-secondary`}>
                 {t("colItem")}
               </th>
-              <th className={`${cell} text-start text-xs font-semibold tracking-wide text-text-secondary`}>
+              <th className={`${cell} text-start font-medium text-text-secondary`}>
                 {t("colUnit")}
               </th>
-              <th className={`${cell} text-end pe-6 text-xs font-semibold tracking-wide text-text-secondary`}>
+              <th className={`${cell} text-end pe-6 font-medium text-text-secondary`}>
                 {t("colPrice")}
               </th>
-              <th className={`${cell} text-end pe-6 text-xs font-semibold tracking-wide text-text-secondary`}>
+              <th className={`${cell} text-end pe-6 font-medium text-text-secondary`}>
                 {t("colCost")}
               </th>
-              <th className={`${cell} text-center text-xs font-semibold tracking-wide text-text-secondary`}>
+              <th className={`${cell} text-center font-medium text-text-secondary`}>
                 {t("colActions")}
               </th>
             </tr>
@@ -80,6 +84,7 @@ export function CategoryItemsTable({
           <tbody className="divide-y divide-border/60">
             {items.map((item) => {
               const actions: RowActionItem[] = [
+                historyRowAction(tAudit("viewHistory"), () => onHistory(item)),
                 {
                   id: "edit",
                   label: t("edit"),
@@ -105,14 +110,11 @@ export function CategoryItemsTable({
                 >
                   <td className={`${cell} align-middle text-text-primary`}>
                     <div className="truncate font-semibold text-text-primary">{item.name}</div>
-                    <div className="mt-0.5 inline-block truncate rounded bg-surface-muted/60 px-1.5 py-0.5 font-mono text-xs text-text-muted">
-                      {item.code}
-                    </div>
                   </td>
                   <td className={`${cell} align-middle text-text-secondary`}>
                     {pricingModeLabel(item.pricingMode, t)}
                   </td>
-                  <td className={`${cell} align-middle text-end pe-6 font-semibold tabular-nums text-text-primary`}>
+                  <td className={`${cell} align-middle text-end pe-6 font-medium tabular-nums text-text-primary`}>
                     {formatMoney(item.unitPrice, locale)}
                   </td>
                   <td className={`${cell} align-middle text-end pe-6 tabular-nums text-text-secondary`}>
