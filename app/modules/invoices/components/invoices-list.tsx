@@ -21,6 +21,7 @@ interface InvoicesListProps {
   status: "idle" | "loading" | "success" | "error";
   error: string | null;
   onRetry: () => void;
+  onEdit?: (invoice: SalesInvoice) => void;
   onPrint: (invoice: SalesInvoice) => void;
   onShare: (invoice: SalesInvoice) => void;
   onCancel: (invoice: SalesInvoice) => void;
@@ -52,6 +53,7 @@ export function InvoicesList({
   status,
   error,
   onRetry,
+  onEdit,
   onPrint,
   onShare,
   onCancel,
@@ -135,6 +137,13 @@ export function InvoicesList({
               },
             ];
             if (invoice.status === "saved") {
+              if (onEdit) {
+                actions.push({
+                  id: "edit",
+                  label: t("edit"),
+                  onSelect: () => onEdit(invoice),
+                });
+              }
               actions.push({
                 id: "cancel",
                 label: t("cancel"),

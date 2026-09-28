@@ -6,9 +6,8 @@ import { useTranslations } from "next-intl";
 import { getItem } from "@/app/modules/items/services/items.service";
 import type { Item } from "@/app/modules/items/types/items.types";
 import {
-  downloadPdfBlob,
+  downloadInvoicePdf,
   getSalesInvoice,
-  getSalesInvoicePdfBlob,
 } from "@/app/modules/invoices/services/invoices.service";
 import type { SalesInvoice } from "@/app/modules/invoices/types/invoices.types";
 import { Button } from "@/app/modules/shared/components/button";
@@ -18,9 +17,15 @@ interface InvoicePreviewModalProps {
   open: boolean;
   onClose: () => void;
   invoiceId: string | null;
-  /** Optional initial invoice data if already loaded */
   initialInvoice?: SalesInvoice | null;
   customerName?: string | null;
+  autoPrint?: boolean;
+}
+
+function isCompleteInvoice(
+  inv: SalesInvoice | null | undefined,
+): inv is SalesInvoice {
+  return Boolean(inv && Array.isArray(inv.lines));
 }
 
 export function InvoicePreviewModal({
@@ -29,12 +34,13 @@ export function InvoicePreviewModal({
   invoiceId,
   initialInvoice,
   customerName: initialCustomerName,
+  autoPrint = false,
 }: InvoicePreviewModalProps) {
   const t = useTranslations("invoices");
   const tShared = useTranslations("shared");
 
-  const [invoice, setInvoice] = useState<SalesInvoice | null>(
-    initialInvoice ?? null,
+  const [invoice, setInvoice] = useState<SalesInvoice | null>(() =>
+    isCompleteInvoice(initialInvoice) ? initialInvoice : null,
   );
   const [customerName, setCustomerName] = useState<string | null>(
     initialCustomerName ?? null,
@@ -43,11 +49,20 @@ export function InvoicePreviewModal({
   const [isLoading, setIsLoading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const didAutoPrint = useRef(false);
 
   const printAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!open || !invoiceId) return;
+    if (!open) {
+      setInvoice(null);
+      setLoadError(null);
+      setItemsById({});
+      didAutoPrint.current = false;
+      return;
+    }
+
+    if (!invoiceId) return;
 
     let cancelled = false;
     const controller = new AbortController();
@@ -58,8 +73,11 @@ export function InvoicePreviewModal({
       setIsLoading(true);
       setLoadError(null);
       try {
-        let inv = initialInvoice;
-        if (!inv || inv.id !== currentId) {
+        let inv =
+          isCompleteInvoice(initialInvoice) && initialInvoice.id === currentId
+            ? initialInvoice
+            : null;
+        if (!inv) {
           inv = await getSalesInvoice(currentId, controller.signal);
         }
         if (cancelled) return;
@@ -67,7 +85,7 @@ export function InvoicePreviewModal({
 
         // Fetch items metadata for labels & dimensions
         const uniqueItemIds = Array.from(
-          new Set(inv.lines.map((l) => l.itemId)),
+          new Set((inv.lines ?? []).map((l) => l.itemId)),
         );
         const fetchedItems = await Promise.all(
           uniqueItemIds.map(async (id) => {
@@ -98,6 +116,7 @@ export function InvoicePreviewModal({
     return () => {
       cancelled = true;
       controller.abort();
+      didAutoPrint.current = false;
     };
   }, [open, invoiceId, initialInvoice]);
 
@@ -107,16 +126,29 @@ export function InvoicePreviewModal({
     }
   }, [initialCustomerName]);
 
+  useEffect(() => {
+    if (
+      autoPrint &&
+      !isLoading &&
+      invoice &&
+      Array.isArray(invoice.lines) &&
+      !didAutoPrint.current
+    ) {
+      didAutoPrint.current = true;
+      const t = window.setTimeout(() => window.print(), 400);
+      return () => window.clearTimeout(t);
+    }
+  }, [autoPrint, isLoading, invoice]);
+
   if (!open) return null;
 
   async function handleDownloadPdf() {
     if (!invoice) return;
     setIsDownloading(true);
     try {
-      const blob = await getSalesInvoicePdfBlob(invoice.id);
-      downloadPdfBlob(blob, `فاتورة-${invoice.invoiceNumber}.pdf`);
+      await downloadInvoicePdf("printable-invoice-sheet", invoice.invoiceNumber);
     } catch {
-      // Fallback
+      // Non-blocking: download failed silently
     } finally {
       setIsDownloading(false);
     }
@@ -144,8 +176,10 @@ export function InvoicePreviewModal({
     return `${amount} ج.م`;
   }
 
-  const hasDimensions = invoice?.lines.some(
-    (l) => l.thickness != null || l.width != null || l.length != null,
+  const hasDimensions = Boolean(
+    invoice?.lines?.some(
+      (l) => l.thickness != null || l.width != null || l.length != null,
+    ),
   );
 
   return (
@@ -178,7 +212,7 @@ export function InvoicePreviewModal({
             >
               {t("previewTitle")}
             </h2>
-            {invoice && (
+            {invoice?.invoiceNumber && (
               <span
                 dir="ltr"
                 className="rounded-md bg-surface-muted px-2 py-0.5 font-mono text-xs font-semibold text-text-secondary"
@@ -194,7 +228,7 @@ export function InvoicePreviewModal({
               variant="primary"
               size="sm"
               onClick={handlePrint}
-              disabled={isLoading || !invoice}
+              disabled={isLoading || !invoice || !invoice.lines}
               className="gap-1.5"
             >
               <PrinterIcon />
@@ -206,7 +240,7 @@ export function InvoicePreviewModal({
               variant="secondary"
               size="sm"
               onClick={() => void handleDownloadPdf()}
-              disabled={isLoading || isDownloading || !invoice}
+              disabled={isLoading || isDownloading || !invoice || !invoice.lines}
               className="gap-1.5"
             >
               <DownloadIcon />
@@ -226,11 +260,11 @@ export function InvoicePreviewModal({
 
         {/* Scrollable Preview Area */}
         <div className="min-h-0 flex-1 overflow-y-auto bg-background p-4 sm:p-6">
-          {isLoading ? (
+          {isLoading || (!invoice && !loadError) || (invoice && !invoice.lines && !loadError) ? (
             <div className="py-16">
               <LoadingState message={tShared("loading")} />
             </div>
-          ) : loadError || !invoice ? (
+          ) : loadError || !invoice || !invoice.lines ? (
             <div className="p-8 text-center text-sm text-danger">
               {loadError ?? t("detailError")}
             </div>
@@ -258,25 +292,33 @@ export function InvoicePreviewModal({
                   </div>
                 </div>
 
-                {/* Header Brand (left, ltr layout matching PDF) */}
-                <div className="text-left" dir="ltr">
-                  <div className="flex items-center gap-2.5 justify-end">
-                    <span className="text-[22px] font-bold text-[#1a1a1a] tracking-tight">
+                {/* Header Brand */}
+                <div className="flex items-center gap-2.5" dir="rtl">
+                  <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-white">
+                    <Image
+                      src="/images/icon-mark.png"
+                      alt="Logo"
+                      width={36}
+                      height={36}
+                      className="h-full w-full object-contain"
+                      priority
+                    />
+                  </div>
+                  <div className="flex flex-col text-right" dir="rtl">
+                    <span
+                      dir="rtl"
+                      className="text-[22px] font-bold text-[#1a1a1a] leading-tight"
+                      style={{ letterSpacing: "0px" }}
+                    >
                       المحمدية
                     </span>
-                    <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-white">
-                      <Image
-                        src="/images/icon-mark.png"
-                        alt="Logo"
-                        width={36}
-                        height={36}
-                        className="h-full w-full object-contain"
-                        priority
-                      />
-                    </div>
-                  </div>
-                  <div className="mt-0.5 text-[11px] text-[#777] text-right" dir="rtl">
-                    تجارة الأخشاب والألواح
+                    <span
+                      dir="rtl"
+                      className="mt-0.5 text-[11px] text-[#777]"
+                      style={{ letterSpacing: "0px" }}
+                    >
+                      تجارة الأخشاب والألواح
+                    </span>
                   </div>
                 </div>
               </div>

@@ -25,10 +25,11 @@ export function InvoicesPage() {
   const router = useRouter();
   const history = useAuditHistory({ entityType: "SalesInvoice" });
   const searchParams = useSearchParams();
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [previewInvoice, setPreviewInvoice] = useState<SalesInvoice | null>(
     null,
   );
+  const [autoPrintOnOpen, setAutoPrintOnOpen] = useState(false);
   const form = useInvoiceForm();
 
   const {
@@ -65,42 +66,52 @@ export function InvoicesPage() {
 
   useEffect(() => {
     if (searchParams.get("new") === "1") {
-      setIsCreateOpen(true);
+      form.resetForm();
+      setIsFormOpen(true);
     }
-  }, [searchParams]);
+  }, [searchParams, form]);
 
   function openCreate() {
-    setIsCreateOpen(true);
+    form.resetForm();
+    setIsFormOpen(true);
   }
 
-  function closeCreate() {
-    setIsCreateOpen(false);
+  function handleEdit(invoice: SalesInvoice) {
+    form.initializeForEdit(invoice);
+    setIsFormOpen(true);
+  }
+
+  function closeForm() {
+    setIsFormOpen(false);
     form.resetForm();
     if (searchParams.get("new") === "1") {
       router.replace("/invoices");
     }
   }
 
-  function handleCreateSuccess(createdId: string, printed: boolean) {
-    setIsCreateOpen(false);
+  function handleFormSuccess(id: string, printed: boolean) {
+    const isEdit = form.isEdit;
+    setIsFormOpen(false);
     form.resetForm();
     if (searchParams.get("new") === "1") {
       router.replace("/invoices");
     }
-    showToast({ kind: "created", variant: "success" });
+    showToast({ kind: isEdit ? "updated" : "created", variant: "success" });
     refresh();
     if (printed) {
-      // Find or set previewInvoice ID so preview modal opens immediately
-      setPreviewInvoice({ id: createdId } as SalesInvoice);
+      setAutoPrintOnOpen(true);
+      setPreviewInvoice({ id } as SalesInvoice);
     }
   }
 
   const toastMessage =
     toast?.kind === "cancelled"
       ? t("cancelSuccess")
-      : toast?.kind === "created"
-        ? t("createSuccess")
-        : "";
+      : toast?.kind === "updated"
+        ? t("updateSuccess")
+        : toast?.kind === "created"
+          ? t("createSuccess")
+          : "";
 
   return (
     <AppShell
@@ -124,16 +135,20 @@ export function InvoicesPage() {
     >
       {history.modal}
       <InvoiceFormModal
-        open={isCreateOpen}
-        onClose={closeCreate}
+        open={isFormOpen}
+        onClose={closeForm}
         form={form}
-        onSuccess={handleCreateSuccess}
+        onSuccess={handleFormSuccess}
       />
       <InvoicePreviewModal
         open={previewInvoice !== null}
-        onClose={() => setPreviewInvoice(null)}
+        onClose={() => {
+          setPreviewInvoice(null);
+          setAutoPrintOnOpen(false);
+        }}
         invoiceId={previewInvoice?.id ?? null}
         initialInvoice={previewInvoice}
+        autoPrint={autoPrintOnOpen}
         customerName={
           previewInvoice?.customerId
             ? customerNames[previewInvoice.customerId]
@@ -212,6 +227,7 @@ export function InvoicesPage() {
           status={listStatus}
           error={listError}
           onRetry={refresh}
+          onEdit={handleEdit}
           onPrint={(invoice) => setPreviewInvoice(invoice)}
           onShare={(invoice) => void shareInvoice(invoice)}
           onCancel={openCancelConfirm}
