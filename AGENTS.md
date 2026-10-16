@@ -272,7 +272,7 @@ Canonical mapping: [`UI/README.md`](UI/README.md).
 | `Home-Dashboard/Audit Log - …png` | `audit` | `/audit` |
 | `Home-Dashboard/Access Denied - …png` | access denied | (AuthGuard) |
 | `Items & Prices/Items & Prices - …png` | `items` (list) | `/items` |
-| `Items & Prices/Add Item - …png` | `items` (add/edit modal) | overlay on `/items` |
+| `Items & Prices/Add Item - …png` | `items` (add/edit pages) | `/items/new`, `/items/[id]/edit` |
 | `Items & Prices/Price History - …png` | `items` (price history modal) | overlay on `/items` |
 | — | `items` (categories list, Users-like) | `/categories` |
 | `Users/Users - …png` | `auth` (user management) | `/users` |

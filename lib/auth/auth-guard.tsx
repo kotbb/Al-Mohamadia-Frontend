@@ -25,20 +25,8 @@ export function AuthGuard({ children, roles }: AuthGuardProps) {
     }
   }, [status, router]);
 
-  if (status === "loading") {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <LoadingState message={t("loading")} />
-      </div>
-    );
-  }
-
-  if (status === "unauthenticated" || !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <LoadingState message={t("loading")} />
-      </div>
-    );
+  if (status === "loading" || status === "unauthenticated" || !user) {
+    return <LoadingState fullScreen message={t("loading")} />;
   }
 
   if (roles && roles.length > 0 && !roles.includes(user.role)) {

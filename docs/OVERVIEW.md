@@ -83,14 +83,14 @@ flowchart LR
 2. **Sell** — Create cash or customer invoice, multi-line items (piece or
    m³), discount, paid/remaining → save / save & print → A4 PDF or A5-width PNG; share PDF via a URL-only WhatsApp message using the existing public receipt link, or share PNG through the system share sheet or WhatsApp paste/download fallback.
 3. **Collect** — Record standalone payments against existing customer debt.
-4. **Restock** — Purchase invoices from suppliers (modal creation, view details); stock up, amount owed up.
+4. **Restock** — Purchase invoices from suppliers (dedicated creation page, view details); stock up, amount owed up.
 5. **Settle** — Record standalone debt payments to suppliers.
 6. **Control** — Manual جرد adjustments, low-stock flags, price history,
    read-only audit log.
 
 > **Note:** Build is phased (vertical slices). See [`PHASES.md`](./PHASES.md)
 > for what exists vs planned. **Phases 0–9 are complete** on both apps.
-> Phase 10 (Polish & Hardening) is next.
+> Phase 10 implementation is recorded in PHASES.md; manual checks remain explicit.
 
 ---
 
@@ -128,7 +128,7 @@ flowchart LR
 | Concern | Behavior |
 |---------|----------|
 | Language | `en` (RTL, default) and `ar` (RTL), runtime switchable |
-| Theme | Light & dark via tokens in [`Design-System.md`](./Design-System.md) |
+| Theme | Light & dark via tokens in [`DESIGN-SYSTEM.md`](./DESIGN-SYSTEM.md) |
 | Soft delete | Master data soft-deleted; history/audit append-only |
 
 ---
@@ -136,7 +136,7 @@ flowchart LR
 ## Architecture (frontend)
 
 ```text
-app/[locale]/…/page.tsx     → thin URL routes (re-export only)
+app/[locale]/…/page.tsx     → thin URL routes (params/locale setup and feature-page composition)
 app/modules/{domain}/       → feature code (UI, hooks, services)
 app/layout/                 → App shell, sidebar, auth guard
 lib/                        → API client, auth helpers, env
@@ -162,7 +162,7 @@ Detail views (`/customers/[id]`, `/suppliers/[id]`) accept `?from=...` to contex
 
 - **HTTP:** native `fetch` via a shared client under `lib/api/` — Bearer
   access token, refresh on 401, base URL from `NEXT_PUBLIC_API_URL`.
-- **Theme:** CSS variables from [`Design-System.md`](./Design-System.md) + `.dark`.
+- **Theme:** CSS variables from [`DESIGN-SYSTEM.md`](./DESIGN-SYSTEM.md) + `.dark`.
 - **Engineering rules for agents and contributors:** see
   [`AGENTS.md`](../AGENTS.md).
 
@@ -262,7 +262,7 @@ API route table: [Backend PHASES.md — Phase 2](../../Al-Mohamadia-Backend/docs
 ### Manual verification (Phase 8 — Dashboard)
 
 1. Log in → Home `/` shows the dashboard (not the old Foundation health page).
-2. Today KPIs and debt strip match invoices/payments/customer balances for Cairo today.
+2. Today KPIs and debt KPI match invoices/payments/customer balances for Cairo today.
 3. Change period (day/week/month/year/custom) and date range → chart buckets and top sellers update; today/debt stay the same.
 4. **New Invoice** (page header) opens `/invoices/new`.
 5. Debt strip **View debtors** opens Customers with the Has debt filter selected (`?hasDebt=1`).
@@ -292,8 +292,8 @@ Sales create/edit and purchase create use compact desktop line rows, a second ro
 | Doc | Purpose |
 |-----|---------|
 | [`AGENTS.md`](../AGENTS.md) | Engineering standards, folder structure, security, UX |
-| [`Design-System.md`](./Design-System.md) | Quiet Ledger design system — tokens, typography, UX rules |
-| [`UI/`](../UI/) | Screen mockups — **layout/structure** source of truth (re-skin with Design-System.md) |
+| [`DESIGN-SYSTEM.md`](./DESIGN-SYSTEM.md) | Quiet Ledger design system — tokens, typography, UX rules |
+| [`UI/`](../UI/) | Screen mockups — **layout/structure** source of truth (re-skin with DESIGN-SYSTEM.md) |
 | [`PHASES.md`](./PHASES.md) | Phased build plan and status |
 | [`../../Al-Mohamadia-Backend/docs/DATABASE.md`](../../Al-Mohamadia-Backend/docs/DATABASE.md) | Data model source of truth |
 | [`../README.md`](../README.md) | Public GitHub project README |
@@ -337,4 +337,12 @@ all business logic or ownership decisions correct.
 
 Sales create/edit and purchase create offer a dropdown for every dimension, including empty and single presets. The final Add value action saves a positive meter value for future invoices through POST /items/:id/dimension-defaults; custom typing stays local. Successful additions select the current value and merge sorted choices across the form. Late responses cannot update switched or removed lines.
 
-Inventory retains eight columns and its existing actions inside compact category tables. Counts describe the loaded page. See docs/INVENTORY-ITEM-PRESETS-VERIFICATION.md for manual checks.
+Inventory retains eight columns and its existing actions inside compact category tables. Counts describe the loaded page. See [Manual verification](./MANUAL-VERIFICATION.md) for manual checks.
+
+## Current export, loading and expense flows
+
+Invoice editing uses `/invoices/:id/edit`; Save opens details and Save & Print opens `/invoices/:id/export`. Export starts with PNG A5, with PDF A4, price visibility, print and download controls. PNG sharing uses supported browser file sharing or copy/download fallback; PDF sharing sends the public receipt link.
+
+Route/auth loading uses shared loading surfaces. Localized/global fallback pages cover errors and unknown routes. Shared numeric inputs prevent mouse-wheel value changes while focused.
+
+Operating expenses are already-paid entries with category management, date/method/category/search filtering, paginated rows and full-filter active summaries. Dashboard figures show paid expenses and estimated net profit for today and the selected period. Recurring dues and email reminders are planned only; see [the proposed design](../../Al-Mohamadia-Backend/docs/RECURRING-EXPENSES.md).

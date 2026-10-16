@@ -368,3 +368,16 @@ A second accent color of any kind. Solid-filled status badges. Fully rounded pil
 Inventory category tables use muted headers, a brown accent, count pill, rounded border and restrained row dividers. Keep horizontal scrolling and 44px action targets. DashedAddButton is the shared plus-button primitive for invoice Add line and dimension Add value. Item forms use compact cards and header Back links. DimensionInput keeps its Add value action after all presets inside the scrollable list, with inline input, hint, validation and saving state.
 
 Inventory KPI cards keep four desktop columns, 12px padding and 20px figures. Desktop cards have a 144px minimum height and grow naturally for wrapped alert labels; mobile cards have no minimum height. Alert filter badges share a horizontal wrapping row with 44px targets. Preserve the existing values, semantic colors and filter actions.
+
+### Current export, loading and expense surfaces
+
+The dedicated invoice export page initially selects PNG A5; PDF A4 remains an
+option. Keep format and price visibility controls together, with Print, Download
+and WhatsApp actions. Reuse invoice receipt presentation for exports and sharing.
+Numeric shared inputs ignore wheel changes while focused. In the preset editor,
+Add value appears above Cancel with clear saving/error feedback.
+
+Shared loading screens cover route and authentication transitions. Localized and
+global fallback screens keep recovery actions visible. Paid expense tables and
+forms reuse existing card, filter, money and confirmation patterns. Recurring
+Due/Overdue sections are planned and must not be presented as implemented UI.

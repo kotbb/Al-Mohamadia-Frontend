@@ -247,6 +247,37 @@ select:disabled {
   animation: toast-out 240ms ease-in both;
 }
 
+@keyframes brand-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.03);
+    opacity: 0.94;
+  }
+}
+
+@keyframes progress-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(35%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+.animate-brand-pulse {
+  animation: brand-pulse 2.8s ease-in-out infinite;
+}
+
+.animate-progress-slide {
+  animation: progress-slide 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *:not([data-allow-motion]),
   *:not([data-allow-motion])::before,

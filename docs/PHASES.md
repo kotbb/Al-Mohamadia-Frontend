@@ -11,7 +11,7 @@ backend, before the next phase starts. Do not build "the whole backend"
 then "the whole frontend" — and do not silently expand a phase's scope.
 
 Update this file's checkboxes/status as phases complete (in both copies),
-and update `docs/DATABASE.md` (backend) / `docs/Design-System.md` (frontend) /
+and update `docs/DATABASE.md` (backend) / `docs/DESIGN-SYSTEM.md` (frontend) /
 `docs/OVERVIEW.md` in the same PR whenever a phase changes the
 schema or business rules.
 
@@ -28,7 +28,7 @@ No business feature yet; this unblocks every later phase.
 - API versioning under `/api/v1`, health check endpoint
 
 **Frontend**
-- Tailwind theme tokens wired from `docs/Design-System.md` (light/dark CSS variables)
+- Tailwind theme tokens wired from `docs/DESIGN-SYSTEM.md` (light/dark CSS variables)
 - i18n setup: `ar` (default, RTL) / `en` (LTR) routing + dictionaries
 - Root layout with `dir` + theme toggle + language toggle
 - Shared API client wrapper (base URL from `NEXT_PUBLIC_API_URL`)
@@ -320,17 +320,17 @@ Module: `src/modules/inventory`.
 **Backend** — *Done*
 
 - [x] Aggregation endpoint `GET /dashboard`: today's sales (net) / estimated profit / invoice count / collected
-- [x] Live customer debt strip: `totalDebt` + `debtorCount` (`balance > 0`)
+- [x] Live customer debt KPI: `totalDebt` + `debtorCount` (`balance > 0`)
 - [x] Period-filterable `salesSeries` (day / week / month / year, Cairo, zero-filled buckets) + top 5 selling items by revenue
 - [x] Defaults to current Cairo month when `period`/`date` omitted; pair-validation matches other list endpoints
 - [x] Unit tests for formulas, defaults, validation, and bucket counts
 
 **Frontend** — *Done*
 
-- [x] Dashboard page on `/`: today KPIs, debt strip, period chart + top sellers
+- [x] Dashboard page on `/`: today KPIs, debt KPI, period chart + top sellers
 - [x] `GET /dashboard` via `app/modules/dashboard` (service + hook); period `day|week|month|year` + date picker
 - [x] Recharts bar chart (lazy-loaded); top sellers by revenue; EmptyState when none
-- [x] "New Invoice" AppShell action → `/invoices/new`; debt strip → `/customers?hasDebt=1`
+- [x] "New Invoice" AppShell action → `/invoices/new`; debt KPI → `/customers?hasDebt=1`
 - [x] Removed Phase 0 Foundation home page
 
 **Done when:** dashboard numbers match what you'd compute manually from the
@@ -395,7 +395,7 @@ Module: `src/modules/audit` (backend); `app/modules/audit` (frontend).
 ## Phase 10 — Polish & Hardening
 
 - Full i18n pass (no missed/hardcoded strings in either language)
-- Full light/dark pass against `docs/Design-System.md` tokens
+- Full light/dark pass against `docs/DESIGN-SYSTEM.md` tokens
 - Responsive/mobile pass
 - Loading / error / empty states everywhere
 - API hardening: rate limiting, input validation edge cases, consistent
@@ -418,7 +418,7 @@ Module: `src/modules/audit` (backend); `app/modules/audit` (frontend).
 | 7 — Inventory Management | Done | Done |
 | 8 — Dashboard | Done | Done |
 | 9 — Audit Log UI | Done | Done |
-| 10 — Polish & Hardening | Not started | Done |
+| 10 — Polish & Hardening | Done | Done |
 
 ### Compact inventory and invoice dimension additions
 
@@ -427,3 +427,14 @@ Module: `src/modules/audit` (backend); `app/modules/audit` (frontend).
 - [x] Shared dashed Add line/Add value buttons and invoice preset addition for sales create/edit and purchase create.
 - [x] POST /api/v1/items/:id/dimension-defaults appends positive meter defaults transactionally with item-edit auditing; duplicates are no-ops.
 - [ ] Manual visual/interaction checks in both languages and on mobile (browser access intentionally skipped).
+
+## Current workflow additions
+
+- [x] Invoice export page defaults to PNG A5; PDF A4, price visibility, printing and sharing remain available.
+- [x] Shared loading screen for route/auth transitions; global/localized error and not-found surfaces.
+- [x] Root AGENTS.md is the single instruction file in each repository; architecture checks run before builds.
+- [ ] Manual English/Arabic, light/dark and mobile verification remains separate from automated checks.
+
+## Planned: recurring operating expenses
+
+Not implemented: configurable repeat intervals, first/optional end dates, due/overdue occurrences, one full payment per occurrence, skip reasons, pause/resume/stop, and dashboard due counts. Only confirmed payments will enter the existing paid ledger. Email reminders and partial payments are deferred. No recurrence collections, endpoints or scheduler exist yet.

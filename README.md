@@ -1,6 +1,6 @@
 # Al-Mohamadia
 
-Next.js admin UI for a wood store. Shopkeepers sign in, sell wood, collect customer debt, restock from suppliers, watch stock, and review an audit trail. A **super admin** manages admin accounts. Users cannot self-register.
+Next.js admin UI for a wood store. Shopkeepers sign in, sell wood, collect customer debt, restock from suppliers, record operating expenses, watch stock, and review an audit trail. A **super admin** manages admin accounts. Users cannot self-register.
 
 The UI is English (LTR, default) or Arabic (RTL), with light and dark themes. It talks only to the [Al-Mohamadia backend](https://github.com/kotbb/Al-Mohamadia-Backend) under `/api/v1`.
 
@@ -21,6 +21,7 @@ app/
     suppliers/
     purchases/
     supplier-payments/
+    operating-expenses/
     inventory/
     items/
     audit/
@@ -40,13 +41,15 @@ lib/
 - Sign in with username and password
 - Access token on each request; refresh on 401
 - Logout clears the session and returns to login
-- Unauthenticated visits redirect to login
+- Unauthenticated visits to protected screens redirect to login
+- Shared loading screens cover route transitions, authentication, and login
+- Localized and global error/not-found pages handle invalid or unsupported routes
 
 ### Dashboard (`/`)
 
-- Today's sales, profit, collected amount, and invoice count
+- Today's sales, estimated gross profit, operating expenses, estimated net profit, collections, and invoice count
 - Outstanding customer debt
-- Period chart (day, week, month, year) and top-selling items
+- Period financial summaries, chart, and top-selling items with day/week/month/year or custom dates
 
 ### Customers (`/customers`)
 
@@ -54,15 +57,23 @@ lib/
 - Create, edit, and soft-delete customers
 - Customer detail with balance (مديونية)
 - Merge duplicate customers
+- Optional phone numbers, including clearing an existing phone
 
 ### Sales invoices (`/invoices`)
 
 - Create and update invoices with real-time stock and customer debt reconciliation
 - Cash or customer sale, with piece or cubic-meter lines
 - Discount, paid, and remaining
-- Preview, Arabic PDF, and WhatsApp share
+- Dedicated creation and editing pages with compact rows and category-grouped item choices
+- Meter dimensions for piece and cubic items; single defaults auto-fill, multiple defaults offer editable choices
+- Save a new dimension preset inline or type a custom value without saving it
+- Saving presets preserves other line fields; failed entries remain available for retry
+- Focused shared numeric inputs ignore wheel changes; typing and arrow controls remain available
+- Dedicated export page defaults to PNG A5; PDF A4, price visibility, print, and download remain available
+- PNG file sharing where supported, with copy/download fallbacks; PDF sharing sends a public receipt link
 - Cancel an invoice
-- Invoice detail
+- Invoice detail with previous/next navigation for the same customer
+- Existing results stay visible while filters refresh; stale row actions are disabled
 
 ### Customer payments (`/payments`)
 
@@ -75,10 +86,12 @@ lib/
 - Create, edit, and soft-delete suppliers
 - Supplier detail with amount owed
 - Merge duplicate suppliers
+- Optional nullable phone numbers
 
 ### Purchases (`/purchases`)
 
-- Restock from a supplier (stock and amount owed go up)
+- Create purchases on a dedicated page (stock and amount owed go up)
+- Category-grouped items, meter dimensions, and inline saved dimension defaults
 - Purchase list and detail
 - Cancel a purchase
 
@@ -92,6 +105,8 @@ lib/
 - Live stock, low-stock and negative-stock flags
 - Valuation at cost and selling price
 - Manual stock adjustment (جرد) with a reason
+- Compact category tables retaining eight columns, collapse controls, pagination, and history actions
+- Compact valuation/profit/alert KPI cards; category counts describe the loaded page
 
 ### Items and categories (`/items`, `/categories`)
 
@@ -99,6 +114,15 @@ lib/
 - Items: piece or per-cubic-meter pricing, cost and selling price
 - Price history
 - Edit and soft-delete items
+- Dedicated Add/Edit pages with multiple dimension defaults per axis
+
+### Operating expenses (`/operating-expenses`)
+
+- Record paid expenses with category, amount, Cairo date, method, optional payee and notes
+- Manage expense categories; view, edit, and soft-delete expenses with confirmation
+- Current Cairo month by default, date/category/method/search filters, paginated ledger, and filtered summaries
+- Paid expenses appear in dashboard expense and estimated net profit figures
+- Recurring schedules and due/overdue reminders are planned; no recurrence or email reminders exist yet
 
 ### Audit log (`/audit`)
 
@@ -132,7 +156,7 @@ lib/
 npm install
 ```
 
-1. Copy the example environment file:
+2. Copy the example environment file:
 
 ```bash
 cp .env.example .env.local
@@ -144,13 +168,15 @@ On Windows:
 copy .env.example .env.local
 ```
 
-1. Edit `.env.local` if the API is not on the default host.
+3. Edit `.env.local` if the API is not on the default host.
 
 ### Environment variables
 
 | Variable              | Description                                                                |
 | --------------------- | -------------------------------------------------------------------------- |
 | `NEXT_PUBLIC_API_URL` | API base URL, including `/api/v1` (default `http://localhost:3000/api/v1`) |
+
+`NEXT_PUBLIC_API_URL` is embedded at build time; rebuild after changing the API origin.
 
 Use `http://` for local development. `https://localhost` fails without a local TLS certificate. Do not commit real credentials.
 
@@ -183,32 +209,36 @@ npx next start -p 3001
 
 Locales are prefixed: `/en/...` and `/ar/...`. English is the default. Paths below omit that prefix.
 
-Unauthenticated users are sent to `/login`. The **Users** screen is `super_admin` only. Every other screen below is available to `admin` and `super_admin`.
+Unauthenticated users are sent to `/login`. The **Users** screen is `super_admin` only. Other protected screens below are available to `admin` and `super_admin`. The shared receipt is public and does not require sign-in.
 
-| Path                       | Who         | Screen                |
-| -------------------------- | ----------- | --------------------- |
-| `/login`                   | Public      | Sign in               |
-| `/`                        | Both        | Dashboard             |
-| `/customers`               | Both        | Customer list         |
-| `/customers/:id`           | Both        | Customer detail       |
-| `/invoices`                | Both        | Invoice list          |
-| `/invoices/new`            | Both        | New invoice           |
-| `/invoices/:id`            | Both        | Invoice detail        |
-| `/payments`                | Both        | Customer payments     |
-| `/suppliers`               | Both        | Supplier list         |
-| `/suppliers/:id`           | Both        | Supplier detail       |
-| `/purchases`               | Both        | Purchase list         |
-| `/purchases/new`           | Both        | New purchase          |
-| `/purchases/:id`           | Both        | Purchase detail       |
-| `/supplier-payments`       | Both        | Supplier payments     |
-| `/inventory`               | Both        | Stock levels          |
-| `/items`                   | Both        | Item list             |
-| `/items/new`               | Both        | New item              |
-| `/items/:id/edit`          | Both        | Edit item             |
-| `/items/:id/price-history` | Both        | Price history         |
-| `/categories`              | Both        | Categories            |
-| `/audit`                   | Both        | Audit log             |
-| `/users`                   | Super admin | User management       |
+| Path                       | Who         | Screen              |
+| -------------------------- | ----------- | ------------------- |
+| `/login`                   | Public      | Sign in             |
+| `/`                        | Both        | Dashboard           |
+| `/customers`               | Both        | Customer list       |
+| `/customers/:id`           | Both        | Customer detail     |
+| `/invoices`                | Both        | Invoice list        |
+| `/invoices/new`            | Both        | New invoice         |
+| `/invoices/:id`            | Both        | Invoice detail      |
+| `/invoices/:id/edit`       | Both        | Edit invoice        |
+| `/invoices/:id/export`     | Both        | PNG/PDF export      |
+| `/invoices/public/:token`  | Public      | Shared receipt      |
+| `/payments`                | Both        | Customer payments   |
+| `/suppliers`               | Both        | Supplier list       |
+| `/suppliers/:id`           | Both        | Supplier detail     |
+| `/purchases`               | Both        | Purchase list       |
+| `/purchases/new`           | Both        | New purchase        |
+| `/purchases/:id`           | Both        | Purchase detail     |
+| `/supplier-payments`       | Both        | Supplier payments   |
+| `/inventory`               | Both        | Stock levels        |
+| `/operating-expenses`      | Both        | Paid expense ledger |
+| `/items`                   | Both        | Item list           |
+| `/items/new`               | Both        | New item            |
+| `/items/:id/edit`          | Both        | Edit item           |
+| `/items/:id/price-history` | Both        | Price history       |
+| `/categories`              | Both        | Categories          |
+| `/audit`                   | Both        | Audit log           |
+| `/users`                   | Super admin | User management     |
 
 The sidebar groups those screens into three hubs:
 
@@ -216,14 +246,14 @@ The sidebar groups those screens into three hubs:
 2. **Procurement** - suppliers, purchases, supplier payments
 3. **Inventory** - stock, items, categories
 
-Dashboard, audit, and users sit outside those hubs.
+Dashboard, Finance / Operating Expenses, audit, and users sit outside those hubs.
 
 ## Roles
 
-| Role        | Value         | Notes                                                                                    |
-| ----------- | ------------- | ---------------------------------------------------------------------------------------- |
-| Admin       | `admin`       | Shop screens: dashboard, sales, procurement, inventory, audit. The Users item is hidden. |
-| Super admin | `super_admin` | Everything an admin sees, plus Users.                                                    |
+| Role        | Value         | Notes                                                                                              |
+| ----------- | ------------- | -------------------------------------------------------------------------------------------------- |
+| Admin       | `admin`       | Shop screens: dashboard, sales, procurement, inventory, expenses, audit. The Users item is hidden. |
+| Super admin | `super_admin` | Everything an admin sees, plus Users.                                                              |
 
 The API is the authority. Hiding a nav item does not grant access.
 
@@ -231,6 +261,25 @@ The API is the authority. Hiding a nav item does not grant access.
 
 ```bash
 npm run lint
+npm run check:architecture
+npm run test:architecture
+npm run test:forms
+npx tsc --noEmit
+npm run build
 ```
 
-This app has no `npm run test` script. API behavior is covered by the backend test suite.
+There is no generic `npm run test` script. `test:forms` (also available as
+`test:dimensions`) runs focused form/calculation tests. Backend tests cover API
+behavior. Architecture validation also runs automatically before builds.
+
+Visual verification is manual unless explicitly requested: check English/Arabic,
+mobile, numeric inputs, dimension presets, item/invoice pages, export/sharing,
+and Save & Print. See [the overview](docs/OVERVIEW.md).
+
+## Contributor documentation
+
+- [AGENTS.md](AGENTS.md): complete repository instructions and architecture placement rules
+- [Overview](docs/OVERVIEW.md): user flows and current capabilities
+- [Design system](docs/DESIGN-SYSTEM.md): colors, spacing, responsive and accessibility rules
+- [Phases](docs/PHASES.md): implementation status and planned work
+- [Backend database contracts](../Al-Mohamadia-Backend/docs/DATABASE.md)

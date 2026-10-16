@@ -66,11 +66,7 @@ export function DashboardTodayKpis({ today, debt }: DashboardTodayKpisProps) {
           <div className="mt-3 flex items-baseline gap-1.5">
             <span
               className={`text-2xl font-bold tracking-tight tabular-nums ${
-                today.estimatedProfit > 0
-                  ? "text-success"
-                  : today.estimatedProfit < 0
-                    ? "text-danger"
-                    : "text-text-primary"
+                today.estimatedProfit < 0 ? "text-danger" : "text-success"
               }`}
             >
               {formatMoney(today.estimatedProfit, locale)}

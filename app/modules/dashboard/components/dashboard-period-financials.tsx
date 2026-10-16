@@ -15,7 +15,7 @@ export function DashboardPeriodFinancials({ financials }: { financials: Dashboar
       ["periodNetProfit", financials.estimatedNetProfit],
     ] as const).map(([key, value]) => <SurfaceCard key={key} padding="none" className="p-4">
       <p className="text-sm font-medium text-text-secondary">{t(key)}</p>
-      <p className={`mt-1 text-xl font-bold tabular-nums ${value < 0 ? "text-danger" : "text-text-primary"}`}>{formatMoney(value, locale)} <span className="text-xs text-text-muted">{t("currency")}</span></p>
+      <p className={`mt-1 text-xl font-bold tabular-nums ${value < 0 ? "text-danger" : key === "periodSales" ? "text-text-primary" : "text-success"}`}>{formatMoney(value, locale)} <span className="text-xs text-text-muted">{t("currency")}</span></p>
     </SurfaceCard>)}
   </div>;
 }

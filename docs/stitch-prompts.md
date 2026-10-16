@@ -1,7 +1,7 @@
 # Al-Mohamadia — Google Stitch prompts
 
 Ready-to-paste prompts for the **full Al-Mohamadia MVP** (Quiet Ledger design system).  
-Design system: [Design-System.md](./Design-System.md)  
+Design system: [DESIGN-SYSTEM.md](./DESIGN-SYSTEM.md)
 Build phases: [PHASES.md](./PHASES.md)  
 Layout reference mockups: [UI/README.md](../UI/README.md) (structure only — remap colors to Quiet Ledger). Legacy Stitch `.jpg` names in prompts below are deprecated.
 
@@ -92,7 +92,7 @@ Use **§1 Dashboard** as the **master** shell frame, then **Duplicate** it for e
 
 | # | Screen | App shell? | Reference image |
 |---|---|---|---|
-| — | Theme setup — Quiet Ledger | — | Design-System.md |
+| — | Theme setup — Quiet Ledger | — | DESIGN-SYSTEM.md |
 | 1 | Dashboard (shell master) | **Build master** | **Image HM** |
 | 2 | Login | No shell | — |
 | 3 | New Invoice | Duplicate §1; nav **فاتورة جديدة** | **Image NI** |
@@ -120,7 +120,7 @@ Use **§1 Dashboard** as the **master** shell frame, then **Duplicate** it for e
 | 25 | Invoice List — empty state | Duplicate §4 | **Image IV** |
 | 26 | Invoice PDF / Print preview | Overlay on §5 | Image ID = §5 |
 | 27 | WhatsApp share sheet | Overlay on §5 | Image ID = §5 |
-| 28 | Dark mode second-pass checklist | — | Design-System.md §2 |
+| 28 | Dark mode second-pass checklist | — | DESIGN-SYSTEM.md §2 |
 
 **Order note:** Finish §1 before all authenticated screens. Finish §4 before §5; §7 before §8–§10; §13 before §14; §15 before §16–§17; §18 before §19–§20; §22 before §23; §5 before §6, §26, §27.
 
@@ -1064,7 +1064,7 @@ Output: ONE frame with share sheet.
 **Not a Stitch generate prompt** — use after all light-mode §1–§27 are signed off.
 
 ```
-Al-Mohamadia dark mode — Quiet Ledger derived tokens (Design-System.md §2):
+Al-Mohamadia dark mode — Quiet Ledger derived tokens (DESIGN-SYSTEM.md §2):
 
 Duplicate each signed-off light frame → apply dark tokens:
 - background #171410 · surface #211D17 · surface-muted #1C1812 · border #3A3226
