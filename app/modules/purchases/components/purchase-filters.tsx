@@ -3,11 +3,12 @@
 import { useTranslations } from "next-intl";
 import { Input } from "@/app/modules/shared/components/input";
 import { PeriodDatePicker } from "@/app/modules/invoices/components/period-date-picker";
+import { CustomDateRangePicker } from "@/app/modules/shared/components/custom-date-range-picker";
 import { SegmentedControl } from "@/app/modules/shared/components/segmented-control";
 import type {
   PurchasePeriodFilterOption,
   PurchaseStatusFilterOption,
-} from "@/app/modules/purchases/hooks/use-purchases";
+} from "@/app/modules/purchases/types/use-purchases.types";
 
 interface PurchaseFiltersProps {
   searchInput: string;
@@ -17,6 +18,8 @@ interface PurchaseFiltersProps {
   periodFilter: PurchasePeriodFilterOption;
   onPeriodChange: (value: PurchasePeriodFilterOption) => void;
   periodDate: string;
+  customRange: { from: string; to: string };
+  onCustomRangeChange: (from: string, to: string) => void;
   onPeriodDateChange: (value: string) => void;
 }
 
@@ -28,6 +31,8 @@ export function PurchaseFilters({
   periodFilter,
   onPeriodChange,
   periodDate,
+  customRange,
+  onCustomRangeChange,
   onPeriodDateChange,
 }: PurchaseFiltersProps) {
   const t = useTranslations("purchases");
@@ -69,10 +74,11 @@ export function PurchaseFilters({
               { value: "week", label: t("filterPeriodWeek") },
               { value: "month", label: t("filterPeriodMonth") },
               { value: "year", label: t("filterPeriodYear") },
+              { value: "custom", label: t("filterPeriodCustom") },
             ]}
           />
         </div>
-        {periodFilter !== "off" ? (
+        {periodFilter === "custom" ? <CustomDateRangePicker {...customRange} onChange={onCustomRangeChange} fromLabel={t("filterFrom")} toLabel={t("filterTo")} /> : periodFilter !== "off" ? (
           <div className="w-full flex-1 sm:max-w-md md:max-w-lg">
             <PeriodDatePicker
               period={periodFilter}

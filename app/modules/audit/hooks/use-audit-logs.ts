@@ -1,4 +1,9 @@
 "use client";
+
+import type {
+  ListStatus,
+  UseAuditLogsOptions,
+} from "../types/use-audit-logs.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
@@ -7,15 +12,7 @@ import { listAuditLogs } from "@/app/modules/audit/services/audit.service";
 import type { AuditLog } from "@/app/modules/audit/types/audit.types";
 import { actionsForViewer } from "@/app/modules/audit/utils/audit-catalog";
 
-type ListStatus = "idle" | "loading" | "success" | "error";
-
 const PAGE_SIZE = 10;
-
-export interface UseAuditLogsOptions {
-  lockedEntityType?: string;
-  entityId?: string;
-  initialAction?: string;
-}
 
 export function useAuditLogs({
   lockedEntityType,
@@ -75,7 +72,9 @@ export function useAuditLogs({
       setEntityTypeState(value);
       setActionState((current) => {
         if (!current || !value) return current;
-        return actionsForViewer(value, isSuperAdmin).includes(current) ? current : "";
+        return actionsForViewer(value, isSuperAdmin).includes(current)
+          ? current
+          : "";
       });
       resetPage();
     },
@@ -132,8 +131,7 @@ export function useAuditLogs({
       })
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
-        const message =
-          describeError(err, "Failed to load audit logs");
+        const message = describeError(err, "Failed to load audit logs");
         setListStatus("error");
         setListError(message);
       });
@@ -152,7 +150,12 @@ export function useAuditLogs({
   ]);
 
   const hasActiveFilters = Boolean(
-    userId || action || entityId || (!lockedEntityType && entityType) || from || to,
+    userId ||
+    action ||
+    entityId ||
+    (!lockedEntityType && entityType) ||
+    from ||
+    to,
   );
 
   return {

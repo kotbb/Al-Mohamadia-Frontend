@@ -1,7 +1,20 @@
 "use client";
+
+import type {
+  LoadStatus,
+  ItemFormValues,
+  UseItemFormResult,
+} from "../types/use-item-form.types";
+import { parseOptionalNumber } from "../utils/item-form-parsing";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import {
+  dimensionDefaultsForForm,
+  parseDimensionDefaults,
+} from "@/app/modules/items/utils/dimension-defaults";
+
 import { listCategories } from "@/app/modules/items/services/categories.service";
 import {
   createItem,
@@ -15,25 +28,11 @@ import type {
   Category,
   CreateItemInput,
   Item,
-  PricingMode,
   UpdateItemInput,
 } from "@/app/modules/items/types/items.types";
 
-type LoadStatus = "idle" | "loading" | "success" | "error";
-
-export interface ItemFormValues {
-  code: string;
-  name: string;
-  categoryId: string;
-  pricingMode: PricingMode;
-  unitPrice: string;
-  cost: string;
-  reorderThreshold: string;
-  stockQuantity: string;
-  isActive: boolean;
-}
-
 const emptyFormValues: ItemFormValues = {
+  dimensionDefaults: dimensionDefaultsForForm(),
   code: "",
   name: "",
   categoryId: "",
@@ -45,33 +44,9 @@ const emptyFormValues: ItemFormValues = {
   isActive: true,
 };
 
-export interface UseItemFormResult {
-  categories: Category[];
-  categoriesStatus: LoadStatus;
-  item: Item | null;
-  itemStatus: LoadStatus;
-  itemError: string | null;
-  values: ItemFormValues;
-  setField: <K extends keyof ItemFormValues>(
-    key: K,
-    value: ItemFormValues[K],
-  ) => void;
-  /** True when the code was last set by the user (stop auto-updating). */
-  codeIsManual: boolean;
-  isSubmitting: boolean;
-  submitError: string | null;
-  submit: () => Promise<boolean>;
-}
-
-function parseOptionalNumber(value: string): number | undefined {
-  const trimmed = value.trim();
-  if (!trimmed) return undefined;
-  const parsed = Number(trimmed);
-  return Number.isNaN(parsed) ? undefined : parsed;
-}
-
 export function useItemForm(itemId?: string): UseItemFormResult {
   const describeError = useApiErrorMessage();
+  const t = useTranslations("items");
   const isEdit = Boolean(itemId);
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesStatus, setCategoriesStatus] =
@@ -84,7 +59,10 @@ export function useItemForm(itemId?: string): UseItemFormResult {
   const [itemError, setItemError] = useState<string | null>(null);
   const [values, setValues] = useState<ItemFormValues>(emptyFormValues);
   const [codeIsManual, setCodeIsManual] = useState(false);
-  const [initialPricing, setInitialPricing] = useState({ unitPrice: 0, cost: 0 });
+  const [initialPricing, setInitialPricing] = useState({
+    unitPrice: 0,
+    cost: 0,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -129,6 +107,7 @@ export function useItemForm(itemId?: string): UseItemFormResult {
       .then((loaded) => {
         setItem(loaded);
         setValues({
+          dimensionDefaults: dimensionDefaultsForForm(loaded.dimensionDefaults),
           code: loaded.code,
           name: loaded.name,
           categoryId: loaded.category.id,
@@ -147,8 +126,7 @@ export function useItemForm(itemId?: string): UseItemFormResult {
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
-        const message =
-          describeError(error, "Request failed");
+        const message = describeError(error, "Request failed");
         setItem(null);
         setItemStatus("error");
         setItemError(message);
@@ -194,13 +172,17 @@ export function useItemForm(itemId?: string): UseItemFormResult {
 
     setValues((current) => {
       if (!current.name.trim() && !current.categoryId) return current;
-      const category = categories.find((entry) => entry.id === current.categoryId);
+      const category = categories.find(
+        (entry) => entry.id === current.categoryId,
+      );
       const nextCode = generateItemCode(
         category?.name ?? "",
         current.name,
         existingCodes,
       );
-      return current.code === nextCode ? current : { ...current, code: nextCode };
+      return current.code === nextCode
+        ? current
+        : { ...current, code: nextCode };
     });
   }, [isEdit, codeIsManual, existingCodes, categories]);
 
@@ -214,13 +196,23 @@ export function useItemForm(itemId?: string): UseItemFormResult {
     const stockQuantity = parseOptionalNumber(values.stockQuantity);
 
     try {
+      const dimensionDefaults = parseDimensionDefaults(
+        values.dimensionDefaults,
+      );
+      if (!dimensionDefaults) {
+        setSubmitError(t("validationDimensionDefaults"));
+        return false;
+      }
       if (!isEdit) {
-        const category = categories.find((entry) => entry.id === values.categoryId);
+        const category = categories.find(
+          (entry) => entry.id === values.categoryId,
+        );
         const code =
           values.code.trim() ||
           generateItemCode(category?.name ?? "", values.name, existingCodes);
 
         const input: CreateItemInput = {
+          dimensionDefaults,
           code,
           name: values.name.trim(),
           categoryId: values.categoryId,
@@ -238,6 +230,7 @@ export function useItemForm(itemId?: string): UseItemFormResult {
       if (!itemId) return false;
 
       const masterInput: UpdateItemInput = {
+        dimensionDefaults,
         code: values.code.trim(),
         name: values.name.trim(),
         categoryId: values.categoryId,
@@ -262,8 +255,7 @@ export function useItemForm(itemId?: string): UseItemFormResult {
 
       return true;
     } catch (error: unknown) {
-      const message =
-        describeError(error, "Save failed");
+      const message = describeError(error, "Save failed");
       setSubmitError(message);
       return false;
     } finally {
@@ -276,6 +268,8 @@ export function useItemForm(itemId?: string): UseItemFormResult {
     initialPricing,
     categories,
     existingCodes,
+    describeError,
+    t,
   ]);
 
   return {

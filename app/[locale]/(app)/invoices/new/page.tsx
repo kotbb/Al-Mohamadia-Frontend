@@ -1,12 +1,17 @@
-import { redirect } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
+import { AuthGuard } from "@/lib/auth/auth-guard";
+import { NewInvoicePage } from "@/app/modules/invoices/pages/new-invoice-page";
 
-interface PageProps {
+export default async function NewInvoiceRoutePage({
+  params,
+}: {
   params: Promise<{ locale: string }>;
-}
-
-export default async function NewInvoiceRoutePage({ params }: PageProps) {
+}) {
   const { locale } = await params;
   setRequestLocale(locale);
-  redirect(`/${locale}/invoices?new=1`);
+  return (
+    <AuthGuard roles={["admin", "super_admin"]}>
+      <NewInvoicePage />
+    </AuthGuard>
+  );
 }

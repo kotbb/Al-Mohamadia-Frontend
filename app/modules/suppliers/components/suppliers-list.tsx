@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { Supplier } from "@/app/modules/suppliers/types/suppliers.types";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { Badge } from "@/app/modules/shared/components/badge";
 import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
@@ -118,7 +118,9 @@ export function SuppliersList({
         <tbody>
           {suppliers.map((supplier) => {
             const actions: RowActionItem[] = [
-              historyRowAction(tAudit("viewHistory"), () => onHistory(supplier)),
+              historyRowAction(tAudit("viewHistory"), () =>
+                onHistory(supplier),
+              ),
               {
                 id: "edit",
                 label: t("edit"),

@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { PaymentMethodBadge } from "@/app/modules/payments/components/payment-method-badge";
 import type { SupplierPayment } from "@/app/modules/supplier-payments/types/supplier-payments.types";
 import { Badge } from "@/app/modules/shared/components/badge";
@@ -60,10 +60,7 @@ export function SupplierPaymentsTable({
 
   if (payments.length === 0) {
     return (
-      <EmptyState
-        title={t("emptyTitle")}
-        description={t("emptyDescription")}
-      />
+      <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />
     );
   }
 
@@ -152,12 +149,17 @@ export function SupplierPaymentsTable({
                 <td className="px-4 py-3 whitespace-nowrap">
                   <PaymentMethodBadge method={payment.method} />
                 </td>
-                <td className="max-w-[14rem] truncate px-4 py-3 text-text-secondary" title={payment.notes ?? ""}>
+                <td
+                  className="max-w-[14rem] truncate px-4 py-3 text-text-secondary"
+                  title={payment.notes ?? ""}
+                >
                   {payment.notes?.trim() ? payment.notes : "-"}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
                   <Badge variant={payment.isReversed ? "danger" : "success"}>
-                    {payment.isReversed ? t("statusCancelled") : t("statusActive")}
+                    {payment.isReversed
+                      ? t("statusCancelled")
+                      : t("statusActive")}
                   </Badge>
                 </td>
                 <td className="px-4 py-3 text-center">

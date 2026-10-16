@@ -1,4 +1,6 @@
 "use client";
+
+import type { ListStatus } from "../types/use-supplier-account-payments.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
@@ -7,8 +9,6 @@ import {
   listSupplierPayments,
 } from "@/app/modules/supplier-payments/services/supplier-payments.service";
 import type { SupplierPayment } from "@/app/modules/supplier-payments/types/supplier-payments.types";
-
-type ListStatus = "idle" | "loading" | "success" | "error";
 
 const PAGE_SIZE = 10;
 
@@ -21,7 +21,9 @@ export function useSupplierAccountPayments(supplierId: string) {
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
 
-  const [confirmPayment, setConfirmPayment] = useState<SupplierPayment | null>(null);
+  const [confirmPayment, setConfirmPayment] = useState<SupplierPayment | null>(
+    null,
+  );
   const [isCancelling, setIsCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
 
@@ -55,8 +57,7 @@ export function useSupplierAccountPayments(supplierId: string) {
       })
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
-        const message =
-          describeError(err, "Failed to load supplier payments");
+        const message = describeError(err, "Failed to load supplier payments");
         setStatus("error");
         setError(message);
       });
@@ -88,8 +89,7 @@ export function useSupplierAccountPayments(supplierId: string) {
       refresh();
       onSuccess?.();
     } catch (err: unknown) {
-      const message =
-        describeError(err, "Failed to cancel supplier payment");
+      const message = describeError(err, "Failed to cancel supplier payment");
       setCancelError(message);
     } finally {
       setIsCancelling(false);

@@ -13,3 +13,8 @@ export function roundMoneyAmount(raw: string): number | null {
   if (!Number.isFinite(value)) return null;
   return Math.round(value * 100) / 100;
 }
+
+export function moneyFieldString(raw: string): string {
+  const rounded = roundMoneyAmount(raw);
+  return rounded === null ? raw : String(rounded);
+}

@@ -2,14 +2,17 @@
 
 import { useTranslations } from "next-intl";
 import { PeriodDatePicker } from "@/app/modules/invoices/components/period-date-picker";
+import { CustomDateRangePicker } from "@/app/modules/shared/components/custom-date-range-picker";
 import type { SalesInvoicePeriod } from "@/app/modules/dashboard/types/dashboard.types";
 import { SegmentedControl } from "@/app/modules/shared/components/segmented-control";
 
 interface DashboardPeriodControlsProps {
-  period: SalesInvoicePeriod;
-  onPeriodChange: (value: SalesInvoicePeriod) => void;
+  period: SalesInvoicePeriod | "custom";
+  onPeriodChange: (value: SalesInvoicePeriod | "custom") => void;
   periodDate: string;
   onPeriodDateChange: (value: string) => void;
+  customRange: { from: string; to: string };
+  onCustomRangeChange: (from: string, to: string) => void;
 }
 
 export function DashboardPeriodControls({
@@ -17,6 +20,8 @@ export function DashboardPeriodControls({
   onPeriodChange,
   periodDate,
   onPeriodDateChange,
+  customRange,
+  onCustomRangeChange,
 }: DashboardPeriodControlsProps) {
   const t = useTranslations("invoices");
   const tDash = useTranslations("dashboard");
@@ -41,15 +46,16 @@ export function DashboardPeriodControls({
               { value: "week", label: t("filterPeriodWeek") },
               { value: "month", label: t("filterPeriodMonth") },
               { value: "year", label: t("filterPeriodYear") },
+              { value: "custom", label: t("filterPeriodCustom") },
             ]}
           />
         </div>
         <div className="w-full flex-1 sm:max-w-md md:max-w-lg">
-          <PeriodDatePicker
+          {period === "custom" ? <CustomDateRangePicker {...customRange} onChange={onCustomRangeChange} fromLabel={t("filterFrom")} toLabel={t("filterTo")} /> : <PeriodDatePicker
             period={period}
             value={periodDate}
             onChange={onPeriodDateChange}
-          />
+          />}
         </div>
       </div>
     </div>

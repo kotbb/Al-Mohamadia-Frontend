@@ -36,14 +36,14 @@ export interface ListSuppliersFilters {
 
 export interface CreateSupplierInput {
   name: string;
-  phone?: string;
+  phone?: string | null;
   address?: string;
   amountOwed?: number;
 }
 
 export interface UpdateSupplierInput {
   name?: string;
-  phone?: string;
+  phone?: string | null;
   address?: string;
   isActive?: boolean;
 }
@@ -52,5 +52,5 @@ export interface MergeSuppliersInput {
   targetId: string;
   sourceIds: string[];
   name?: string;
-  phone?: string;
+  phone?: string | null;
 }

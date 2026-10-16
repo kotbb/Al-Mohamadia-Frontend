@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { CategoryValuation } from "@/app/modules/inventory/types/inventory.types";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 
 interface CategoryValuationModalProps {
   isOpen: boolean;
@@ -69,15 +69,23 @@ export function CategoryValuationModal({
                 <th className="py-3 px-3 text-start">{t("colCategory")}</th>
                 <th className="py-3 px-3 text-center">{t("colItemsCount")}</th>
                 <th className="py-3 px-3 text-end">{t("colValuationCost")}</th>
-                <th className="py-3 px-3 text-end">{t("colValuationSelling")}</th>
-                <th className="py-3 px-3 text-end">{t("colPotentialProfit")}</th>
+                <th className="py-3 px-3 text-end">
+                  {t("colValuationSelling")}
+                </th>
+                <th className="py-3 px-3 text-end">
+                  {t("colPotentialProfit")}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
               {categories.map((cat) => {
-                const profit = cat.valuationAtSellingPrice - cat.valuationAtCost;
+                const profit =
+                  cat.valuationAtSellingPrice - cat.valuationAtCost;
                 return (
-                  <tr key={cat.categoryId} className="hover:bg-surface-muted/50 transition-colors">
+                  <tr
+                    key={cat.categoryId}
+                    className="hover:bg-surface-muted/50 transition-colors"
+                  >
                     <td className="py-3 px-3 font-semibold text-text-primary">
                       {cat.categoryName}
                     </td>
@@ -88,7 +96,8 @@ export function CategoryValuationModal({
                       {formatMoney(cat.valuationAtCost, locale)} {t("currency")}
                     </td>
                     <td className="py-3 px-3 text-end tabular-nums font-medium text-text-primary">
-                      {formatMoney(cat.valuationAtSellingPrice, locale)} {t("currency")}
+                      {formatMoney(cat.valuationAtSellingPrice, locale)}{" "}
+                      {t("currency")}
                     </td>
                     <td
                       className={`py-3 px-3 text-end tabular-nums font-semibold ${
@@ -102,7 +111,10 @@ export function CategoryValuationModal({
               })}
               {categories.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-text-secondary">
+                  <td
+                    colSpan={5}
+                    className="py-8 text-center text-text-secondary"
+                  >
                     {t("emptyStockTitle")}
                   </td>
                 </tr>
@@ -128,7 +140,15 @@ export function CategoryValuationModal({
 
 function LayersIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z" />
       <path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65" />
       <path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65" />
@@ -138,7 +158,15 @@ function LayersIcon({ className }: { className?: string }) {
 
 function CloseIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>

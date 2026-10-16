@@ -1,7 +1,7 @@
 export interface Customer {
   id: string;
   name: string;
-  phone: string;
+  phone: string | null;
   address: string | null;
   balance: number;
   isActive: boolean;
@@ -36,14 +36,14 @@ export interface ListCustomersFilters {
 
 export interface CreateCustomerInput {
   name: string;
-  phone: string;
+  phone?: string | null;
   address?: string;
   balance?: number;
 }
 
 export interface UpdateCustomerInput {
   name?: string;
-  phone?: string;
+  phone?: string | null;
   address?: string;
   isActive?: boolean;
 }
@@ -52,5 +52,5 @@ export interface MergeCustomersInput {
   targetId: string;
   sourceIds: string[];
   name?: string;
-  phone?: string;
+  phone?: string | null;
 }

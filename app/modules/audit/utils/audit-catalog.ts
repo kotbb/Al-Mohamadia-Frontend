@@ -10,6 +10,8 @@ export const AUDIT_ENTITY_TYPES = [
   "SupplierPayment",
   "Item",
   "Category",
+  "ExpenseCategory",
+  "OperatingExpense",
 ] as const;
 
 export type AuditEntityType = (typeof AUDIT_ENTITY_TYPES)[number];
@@ -40,6 +42,8 @@ export const AUDIT_ACTIONS_BY_ENTITY: Record<AuditEntityType, readonly string[]>
     "stock_adjusted",
   ],
   Category: ["category_created", "category_edited", "category_deleted"],
+  ExpenseCategory: ["expense_category_created", "expense_category_updated"],
+  OperatingExpense: ["operating_expense_created", "operating_expense_updated", "operating_expense_voided", "operating_expense_deleted"],
 };
 
 export const AUDIT_ACTIONS: readonly string[] = AUDIT_ENTITY_TYPES.flatMap(
@@ -105,6 +109,12 @@ export const AUDIT_FIELD_KEYS = [
   "reason",
   "isWood",
   "reorderThreshold",
+  "expenseDate",
+  "payee",
+  "receiptReference",
+  "notes",
+  "voidedAt",
+  "voidedBy",
 ] as const;
 
 export function isAuditEntityType(value: string): value is AuditEntityType {
@@ -120,7 +130,7 @@ export function auditActionTone(action: string): BadgeVariant {
   if (action.endsWith("_created") || action.endsWith("_recorded")) {
     return "success";
   }
-  if (action.endsWith("_deleted") || action.endsWith("_cancelled")) {
+  if (action.endsWith("_deleted") || action.endsWith("_cancelled") || action.endsWith("_voided")) {
     return "danger";
   }
   if (

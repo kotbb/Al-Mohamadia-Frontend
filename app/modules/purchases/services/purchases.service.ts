@@ -15,6 +15,10 @@ function buildPurchasesQuery(filters?: ListPurchasesFilters): string {
     params.set("period", filters.period);
     params.set("date", filters.date);
   }
+  if (filters.from && filters.to) {
+    params.set("from", filters.from);
+    params.set("to", filters.to);
+  }
   if (filters.q?.trim()) params.set("q", filters.q.trim());
   if (filters.page !== undefined) params.set("page", String(filters.page));
   if (filters.limit !== undefined) params.set("limit", String(filters.limit));

@@ -1,17 +1,17 @@
-export type PricingMode = "per_piece" | "per_cubic_meter";
+import type { PricingMode } from "@/app/modules/items/types/items.types";
 
 /** Rounds a monetary value to 2 decimal places (EGP) — mirrors backend. */
 export function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
-/** thickness × width × length in cm → m³, 6 decimal places — mirrors backend. */
-export function cmToCubicMeters(
-  thicknessCm: number,
-  widthCm: number,
-  lengthCm: number,
+/** thickness × width × length in meters → m³, 6 decimal places — mirrors backend. */
+export function metersToCubicMeters(
+  thicknessM: number,
+  widthM: number,
+  lengthM: number,
 ): number {
-  const volume = (thicknessCm * widthCm * lengthCm) / 1_000_000;
+  const volume = thicknessM * widthM * lengthM;
   return Math.round(volume * 1_000_000) / 1_000_000;
 }
 
@@ -23,18 +23,18 @@ export function lineTotalForPricing(params: {
   pricingMode: PricingMode;
   quantity: number;
   piecePrice: number;
-  thicknessCm?: number | null;
-  widthCm?: number | null;
-  lengthCm?: number | null;
+  thicknessM?: number | null;
+  widthM?: number | null;
+  lengthM?: number | null;
 }): number {
   if (params.pricingMode === "per_piece") {
     return params.quantity * params.piecePrice;
   }
 
-  const thickness = params.thicknessCm ?? 0;
-  const width = params.widthCm ?? 0;
-  const length = params.lengthCm ?? 0;
-  const volume = cmToCubicMeters(thickness, width, length);
+  const thickness = params.thicknessM ?? 0;
+  const width = params.widthM ?? 0;
+  const length = params.lengthM ?? 0;
+  const volume = metersToCubicMeters(thickness, width, length);
   return params.quantity * volume * params.piecePrice;
 }
 
@@ -42,7 +42,13 @@ export function computeInvoiceTotals(params: {
   lineTotals: number[];
   discount: number;
   paid: number;
-}): { total: number; discount: number; paid: number; remaining: number; net: number } {
+}): {
+  total: number;
+  discount: number;
+  paid: number;
+  remaining: number;
+  net: number;
+} {
   const total = roundMoney(params.lineTotals.reduce((sum, n) => sum + n, 0));
   const discount = roundMoney(params.discount);
   const paid = roundMoney(params.paid);

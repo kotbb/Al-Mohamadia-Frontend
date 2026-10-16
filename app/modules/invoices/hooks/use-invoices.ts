@@ -1,29 +1,21 @@
 "use client";
+
+import type {
+  ListStatus,
+  StatusFilter,
+  PeriodFilter,
+  InvoicesToastState,
+} from "../types/use-invoices.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
 import { getCustomer } from "@/app/modules/customers/services/customers.service";
 import {
   cancelSalesInvoice,
-  getSalesInvoiceShare,
   listSalesInvoices,
 } from "@/app/modules/invoices/services/invoices.service";
-import type {
-  SalesInvoice,
-  SalesInvoicePeriod,
-  SalesInvoiceStatus,
-} from "@/app/modules/invoices/types/invoices.types";
+import type { SalesInvoice } from "@/app/modules/invoices/types/invoices.types";
 import { todayIsoDate } from "@/app/modules/invoices/utils/format-invoice-date";
-
-type ListStatus = "idle" | "loading" | "success" | "error";
-export type StatusFilter = "all" | SalesInvoiceStatus;
-export type PeriodFilter = "off" | SalesInvoicePeriod;
-export type InvoicesToastKind = "cancelled" | "created" | "updated";
-
-export interface InvoicesToastState {
-  kind: InvoicesToastKind;
-  variant: "success" | "danger";
-}
 
 const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
@@ -37,6 +29,7 @@ export function useInvoices() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("off");
   const [periodDate, setPeriodDate] = useState(todayIsoDate());
+  const [customRange, setCustomRange] = useState(() => { const today = todayIsoDate(); return { from: `${today.slice(0, 7)}-01`, to: today }; });
   const [searchInput, setSearchInput] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
   const [listStatus, setListStatus] = useState<ListStatus>("loading");
@@ -51,7 +44,21 @@ export function useInvoices() {
   );
   const [isConfirming, setIsConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
+  const [loadedRequestKey, setLoadedRequestKey] = useState<string | null>(null);
+  const requestKey = JSON.stringify([
+    debouncedQ,
+    statusFilter,
+    periodFilter,
+    periodDate,
+    customRange.from,
+    customRange.to,
+    page,
+    tick,
+  ]);
+  const hasLoaded = loadedRequestKey !== null;
+  const actionsDisabled =
+    loadedRequestKey !== requestKey || listStatus !== "success";
+  const isRefreshing = hasLoaded && listStatus !== "error" && actionsDisabled;
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -70,35 +77,49 @@ export function useInvoices() {
   useEffect(() => {
     const controller = new AbortController();
     setListStatus("loading");
+    setListError(null);
 
     listSalesInvoices(
       {
         q: debouncedQ || undefined,
         status: statusFilter === "all" ? undefined : statusFilter,
-        period: periodFilter === "off" ? undefined : periodFilter,
-        date: periodFilter === "off" ? undefined : periodDate,
+        period: periodFilter !== "off" && periodFilter !== "custom" ? periodFilter : undefined,
+        date: periodFilter !== "off" && periodFilter !== "custom" ? periodDate : undefined,
+        from: periodFilter === "custom" ? customRange.from : undefined,
+        to: periodFilter === "custom" ? customRange.to : undefined,
         page,
         limit: PAGE_SIZE,
       },
       controller.signal,
     )
       .then((result) => {
+        if (controller.signal.aborted) return;
         setInvoices(result.items);
         setTotal(result.meta.total);
         setSummaryTotalAmount(result.summary?.totalAmount ?? 0);
         setListStatus("success");
+        setLoadedRequestKey(requestKey);
         setListError(null);
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
-        const message =
-          describeError(error, "Failed to load invoices");
+        const message = describeError(error, "Failed to load invoices");
         setListStatus("error");
         setListError(message);
       });
 
     return () => controller.abort();
-  }, [debouncedQ, statusFilter, periodFilter, periodDate, page, tick]);
+  }, [
+    debouncedQ,
+    statusFilter,
+    periodFilter,
+    periodDate,
+    customRange,
+    page,
+    tick,
+    requestKey,
+    describeError,
+  ]);
 
   useEffect(() => {
     const ids = [
@@ -160,23 +181,10 @@ export function useInvoices() {
       setToast({ kind: "cancelled", variant: "success" });
       refresh();
     } catch (error: unknown) {
-      const message =
-        describeError(error, "Cancel failed");
+      const message = describeError(error, "Cancel failed");
       setConfirmError(message);
     } finally {
       setIsConfirming(false);
-    }
-  }
-
-  async function shareInvoice(invoice: SalesInvoice) {
-    setActionError(null);
-    try {
-      const payload = await getSalesInvoiceShare(invoice.id);
-      window.open(payload.whatsappUrl, "_blank", "noopener,noreferrer");
-    } catch (error: unknown) {
-      const message =
-        describeError(error, "Share failed");
-      setActionError(message);
     }
   }
 
@@ -198,6 +206,8 @@ export function useInvoices() {
       setPage(1);
     },
     periodDate,
+    customRange,
+    setCustomRange: (from: string, to: string) => { setCustomRange({ from, to }); setPage(1); },
     setPeriodDate: (value: string) => {
       setPeriodDate(value);
       setPage(1);
@@ -205,6 +215,9 @@ export function useInvoices() {
     searchInput,
     setSearchInput,
     listStatus,
+    hasLoaded,
+    isRefreshing,
+    actionsDisabled,
     listError,
     refresh,
     toast,
@@ -216,8 +229,5 @@ export function useInvoices() {
     submitCancel,
     isConfirming,
     confirmError,
-    shareInvoice,
-    actionError,
-    clearActionError: () => setActionError(null),
   };
 }

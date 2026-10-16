@@ -1,4 +1,6 @@
 "use client";
+
+import type { AsyncStatus } from "../types/use-inventory.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
@@ -17,9 +19,7 @@ import type {
 import { listCategories } from "@/app/modules/items/services/categories.service";
 import type { Category } from "@/app/modules/items/types/items.types";
 
-type AsyncStatus = "idle" | "loading" | "success" | "error";
-
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 25;
 const SEARCH_DEBOUNCE_MS = 300;
 
 export function useInventory() {
@@ -49,7 +49,8 @@ export function useInventory() {
 
   // Valuation state
   const [valuation, setValuation] = useState<InventoryValuation | null>(null);
-  const [valuationStatus, setValuationStatus] = useState<AsyncStatus>("loading");
+  const [valuationStatus, setValuationStatus] =
+    useState<AsyncStatus>("loading");
   const [valuationError, setValuationError] = useState<string | null>(null);
 
   // Categories list for dropdown
@@ -92,9 +93,7 @@ export function useInventory() {
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
         setValuationStatus("error");
-        setValuationError(
-          describeError(err, "Failed to load valuation"),
-        );
+        setValuationError(describeError(err, "Failed to load valuation"));
       });
 
     return () => controller.abort();
@@ -133,9 +132,7 @@ export function useInventory() {
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
         setListStatus("error");
-        setListError(
-          describeError(err, "Failed to load stock list"),
-        );
+        setListError(describeError(err, "Failed to load stock list"));
       });
 
     return () => controller.abort();

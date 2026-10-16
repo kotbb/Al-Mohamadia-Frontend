@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import {
   formatMoney,
   roundMoneyAmount,
-} from "@/app/modules/items/utils/format-money";
+} from "@/app/modules/shared/utils/format-money";
 import { listSuppliers } from "@/app/modules/suppliers/services/suppliers.service";
 import type { Supplier } from "@/app/modules/suppliers/types/suppliers.types";
 import type { PaymentMethod } from "@/app/modules/supplier-payments/types/supplier-payments.types";
@@ -76,7 +76,10 @@ export function RecordSupplierPaymentModal({
 
     const controller = new AbortController();
     setIsLoadingDebtors(true);
-    listSuppliers({ isActive: true, hasDebt: true, page: 1, limit: 100 }, controller.signal)
+    listSuppliers(
+      { isActive: true, hasDebt: true, page: 1, limit: 100 },
+      controller.signal,
+    )
       .then((res) => {
         setDebtorSuppliers(res.items);
       })
@@ -102,7 +105,10 @@ export function RecordSupplierPaymentModal({
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
       setIsSearching(true);
-      listSuppliers({ q, isActive: true, hasDebt: true, page: 1, limit: 10 }, controller.signal)
+      listSuppliers(
+        { q, isActive: true, hasDebt: true, page: 1, limit: 10 },
+        controller.signal,
+      )
         .then((res) => {
           setSearchResults(res.items);
         })
@@ -149,11 +155,7 @@ export function RecordSupplierPaymentModal({
       size="md"
       footer={
         <div className="flex w-full items-center justify-end gap-3">
-          <Button
-            variant="secondary"
-            onClick={onClose}
-            disabled={isSubmitting}
-          >
+          <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
             {t("modalCancel")}
           </Button>
           <Button
@@ -211,7 +213,9 @@ export function RecordSupplierPaymentModal({
                   className="ds-focus-input min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm text-text-primary"
                   value=""
                   onChange={(e) => {
-                    const found = debtorSuppliers.find((s) => s.id === e.target.value);
+                    const found = debtorSuppliers.find(
+                      (s) => s.id === e.target.value,
+                    );
                     if (found && onSelectSupplier) {
                       onSelectSupplier({
                         id: found.id,
@@ -251,7 +255,9 @@ export function RecordSupplierPaymentModal({
                 {searchQuery.trim() ? (
                   <ul className="absolute z-30 mt-1 max-h-52 w-full overflow-auto rounded-xl border border-border bg-surface shadow-lg">
                     {isSearching ? (
-                      <li className="px-4 py-3 text-sm text-text-secondary">…</li>
+                      <li className="px-4 py-3 text-sm text-text-secondary">
+                        …
+                      </li>
                     ) : searchResults.length === 0 ? (
                       <li className="px-4 py-3 text-sm text-text-secondary">
                         {t("noSuppliersWithDebt")}
@@ -308,7 +314,11 @@ export function RecordSupplierPaymentModal({
             type="number"
             step="any"
             min="0.01"
-            max={supplier && supplier.amountOwed > 0 ? String(supplier.amountOwed) : undefined}
+            max={
+              supplier && supplier.amountOwed > 0
+                ? String(supplier.amountOwed)
+                : undefined
+            }
             label={t("fieldAmount", { currency })}
             value={amount}
             onChange={(e) => onAmountChange(e.target.value)}

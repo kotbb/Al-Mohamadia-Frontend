@@ -3,11 +3,12 @@
 import { useTranslations } from "next-intl";
 import type { Supplier } from "@/app/modules/suppliers/types/suppliers.types";
 import { PeriodDatePicker } from "@/app/modules/invoices/components/period-date-picker";
+import { CustomDateRangePicker } from "@/app/modules/shared/components/custom-date-range-picker";
 import type {
   PaymentMethodFilterOption,
   PaymentPeriodFilterOption,
   PaymentStatusFilterOption,
-} from "@/app/modules/supplier-payments/hooks/use-supplier-payments";
+} from "@/app/modules/supplier-payments/types/use-supplier-payments.types";
 import { Input } from "@/app/modules/shared/components/input";
 import { SegmentedControl } from "@/app/modules/shared/components/segmented-control";
 
@@ -19,6 +20,8 @@ interface SupplierPaymentsFiltersProps {
   periodFilter: PaymentPeriodFilterOption;
   onPeriodChange: (period: PaymentPeriodFilterOption) => void;
   periodDate: string;
+  customRange: { from: string; to: string };
+  onCustomRangeChange: (from: string, to: string) => void;
   onPeriodDateChange: (date: string) => void;
   supplierSearch: string;
   onSupplierSearchChange: (search: string) => void;
@@ -37,6 +40,8 @@ export function SupplierPaymentsFilters({
   periodFilter,
   onPeriodChange,
   periodDate,
+  customRange,
+  onCustomRangeChange,
   onPeriodDateChange,
   supplierSearch,
   onSupplierSearchChange,
@@ -141,8 +146,12 @@ export function SupplierPaymentsFilters({
                   onClick={() => onSelectSupplier(s)}
                   className="ds-focus-ring flex w-full items-center justify-between px-4 py-2 text-start text-sm hover:bg-surface-muted"
                 >
-                  <span className="font-medium text-text-primary">{s.name}</span>
-                  <span className="text-xs text-text-secondary">{s.phone || ""}</span>
+                  <span className="font-medium text-text-primary">
+                    {s.name}
+                  </span>
+                  <span className="text-xs text-text-secondary">
+                    {s.phone || ""}
+                  </span>
                 </button>
               ))}
             </div>
@@ -162,10 +171,11 @@ export function SupplierPaymentsFilters({
               { value: "week", label: t("filterPeriodWeek") },
               { value: "month", label: t("filterPeriodMonth") },
               { value: "year", label: t("filterPeriodYear") },
+              { value: "custom", label: t("filterPeriodCustom") },
             ]}
           />
         </div>
-        {periodFilter !== "off" ? (
+        {periodFilter === "custom" ? <CustomDateRangePicker {...customRange} onChange={onCustomRangeChange} fromLabel={t("filterFrom")} toLabel={t("filterTo")} /> : periodFilter !== "off" ? (
           <div className="w-full lg:w-auto">
             <PeriodDatePicker
               period={periodFilter}

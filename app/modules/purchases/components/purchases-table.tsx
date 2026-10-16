@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import type { PurchaseInvoice } from "@/app/modules/purchases/types/purchases.types";
 import { Badge } from "@/app/modules/shared/components/badge";
 import { EmptyState } from "@/app/modules/shared/components/empty-state";
@@ -28,18 +28,19 @@ interface PurchasesTableProps {
 
 function PurchaseBagIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
       <path
         d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4H6Z"
         stroke="currentColor"
         strokeWidth="1.75"
         strokeLinejoin="round"
       />
-      <path
-        d="M3 6h18"
-        stroke="currentColor"
-        strokeWidth="1.75"
-      />
+      <path d="M3 6h18" stroke="currentColor" strokeWidth="1.75" />
       <path
         d="M16 10a4 4 0 0 1-8 0"
         stroke="currentColor"
@@ -83,10 +84,7 @@ export function PurchasesTable({
 
   if (purchases.length === 0) {
     return (
-      <EmptyState
-        title={t("emptyTitle")}
-        description={t("emptyDescription")}
-      />
+      <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />
     );
   }
 
@@ -127,7 +125,9 @@ export function PurchasesTable({
               : "-";
 
             const actions: RowActionItem[] = [
-              historyRowAction(tAudit("viewHistory"), () => onHistory(purchase)),
+              historyRowAction(tAudit("viewHistory"), () =>
+                onHistory(purchase),
+              ),
             ];
 
             if (purchase.status === "saved" && onCancel) {

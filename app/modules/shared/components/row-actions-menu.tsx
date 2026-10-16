@@ -32,6 +32,8 @@ export function historyRowAction(
 interface RowActionsMenuProps {
   label: string;
   items: RowActionItem[];
+  disabled?: boolean;
+  size?: "sm" | "default";
 }
 
 interface MenuPosition {
@@ -39,7 +41,12 @@ interface MenuPosition {
   left: number;
 }
 
-export function RowActionsMenu({ label, items }: RowActionsMenuProps) {
+export function RowActionsMenu({
+  label,
+  items,
+  disabled = false,
+  size = "sm",
+}: RowActionsMenuProps) {
   const menuId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -122,7 +129,8 @@ export function RowActionsMenu({ label, items }: RowActionsMenuProps) {
       <button
         ref={triggerRef}
         type="button"
-        className={`ds-focus-ring inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary ${
+        disabled={disabled}
+        className={`ds-focus-ring inline-flex ${size === "default" ? "h-11 w-11" : "h-8 w-8"} cursor-pointer items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary ${
           open ? "bg-surface-muted text-text-primary" : ""
         }`}
         aria-label={label}
@@ -154,7 +162,7 @@ export function RowActionsMenu({ label, items }: RowActionsMenuProps) {
                   role="menuitem"
                   title={item.title}
                   disabled={item.disabled}
-                  className={`ds-focus-ring flex w-full cursor-pointer items-center px-4 py-2.5 text-start text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                  className={`ds-focus-ring flex ${size === "default" ? "min-h-11" : ""} w-full cursor-pointer items-center px-4 py-2.5 text-start text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                     item.tone === "danger"
                       ? "text-danger hover:bg-danger/10"
                       : "text-text-primary hover:bg-surface-muted"

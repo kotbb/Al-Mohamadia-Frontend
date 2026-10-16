@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import type { CategoryListRow } from "@/app/modules/items/hooks/use-categories";
+import type { CategoryListRow } from "@/app/modules/items/types/use-categories.types";
 import { Badge } from "@/app/modules/shared/components/badge";
 import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
@@ -56,7 +56,12 @@ function StatusIcon({ active }: { active: boolean }) {
 
 function CategoryFolderIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
       <path
         d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2Z"
         stroke="currentColor"
@@ -133,7 +138,9 @@ export function CategoriesList({
           {categories.map((category) => {
             const hasItems = category.itemCount > 0;
             const actions: RowActionItem[] = [
-              historyRowAction(tAudit("viewHistory"), () => onHistory(category)),
+              historyRowAction(tAudit("viewHistory"), () =>
+                onHistory(category),
+              ),
               {
                 id: "edit",
                 label: t("edit"),

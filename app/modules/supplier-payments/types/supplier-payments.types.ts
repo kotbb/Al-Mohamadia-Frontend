@@ -43,6 +43,8 @@ export interface ListSupplierPaymentsFilters {
   method?: PaymentMethod;
   period?: PaymentPeriod;
   date?: string;
+  from?: string;
+  to?: string;
   page?: number;
   limit?: number;
 }

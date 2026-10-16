@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { AppShell } from "@/app/layout/app-shell";
 import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { PaymentsFilters } from "@/app/modules/payments/components/payments-filters";
 import { PaymentsTable } from "@/app/modules/payments/components/payments-table";
 import { RecordPaymentModal } from "@/app/modules/payments/components/record-payment-modal";
@@ -36,6 +36,8 @@ export function PaymentsPage() {
     periodFilter,
     setPeriodFilter,
     periodDate,
+    customRange,
+    setCustomRange,
     setPeriodDate,
     customerSearch,
     setCustomerSearch,
@@ -164,6 +166,8 @@ export function PaymentsPage() {
           periodFilter={periodFilter}
           onPeriodChange={setPeriodFilter}
           periodDate={periodDate}
+          customRange={customRange}
+          onCustomRangeChange={setCustomRange}
           onPeriodDateChange={setPeriodDate}
           customerSearch={customerSearch}
           onCustomerSearchChange={setCustomerSearch}

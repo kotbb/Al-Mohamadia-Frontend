@@ -6,8 +6,13 @@ import type {
 
 function buildDashboardQuery(query: GetDashboardQuery): string {
   const params = new URLSearchParams();
-  params.set("period", query.period);
-  params.set("date", query.date);
+  if (query.from && query.to) {
+    params.set("from", query.from);
+    params.set("to", query.to);
+  } else if (query.period && query.date) {
+    params.set("period", query.period);
+    params.set("date", query.date);
+  }
   return `/dashboard?${params.toString()}`;
 }
 

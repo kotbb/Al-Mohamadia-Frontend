@@ -1,29 +1,26 @@
 "use client";
+
+import type {
+  ListStatus,
+  PaymentStatusFilterOption,
+  PaymentMethodFilterOption,
+  PaymentPeriodFilterOption,
+  SupplierPaymentsToastState,
+} from "../types/use-supplier-payments.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
-import { getSupplier, listSuppliers } from "@/app/modules/suppliers/services/suppliers.service";
+import {
+  getSupplier,
+  listSuppliers,
+} from "@/app/modules/suppliers/services/suppliers.service";
 import type { Supplier } from "@/app/modules/suppliers/types/suppliers.types";
 import { todayIsoDate } from "@/app/modules/invoices/utils/format-invoice-date";
 import {
   cancelSupplierPayment,
   listSupplierPayments,
 } from "@/app/modules/supplier-payments/services/supplier-payments.service";
-import type {
-  SupplierPayment,
-  PaymentMethod,
-  PaymentPeriod,
-} from "@/app/modules/supplier-payments/types/supplier-payments.types";
-
-type ListStatus = "idle" | "loading" | "success" | "error";
-export type PaymentStatusFilterOption = "all" | "active" | "reversed";
-export type PaymentMethodFilterOption = "all" | PaymentMethod;
-export type PaymentPeriodFilterOption = "off" | PaymentPeriod;
-
-export interface SupplierPaymentsToastState {
-  kind: "cancelled";
-  variant: "success" | "danger";
-}
+import type { SupplierPayment } from "@/app/modules/supplier-payments/types/supplier-payments.types";
 
 const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
@@ -42,6 +39,7 @@ export function useSupplierPayments() {
   const [periodFilter, setPeriodFilter] =
     useState<PaymentPeriodFilterOption>("off");
   const [periodDate, setPeriodDate] = useState(todayIsoDate());
+  const [customRange, setCustomRange] = useState(() => { const today = todayIsoDate(); return { from: `${today.slice(0, 7)}-01`, to: today }; });
 
   // Supplier filter state
   const [supplierSearch, setSupplierSearch] = useState("");
@@ -49,17 +47,23 @@ export function useSupplierPayments() {
     id: string;
     name: string;
   } | null>(null);
-  const [supplierSuggestions, setSupplierSuggestions] = useState<Supplier[]>([]);
+  const [supplierSuggestions, setSupplierSuggestions] = useState<Supplier[]>(
+    [],
+  );
   const [isSearchingSuppliers, setIsSearchingSuppliers] = useState(false);
 
   const [listStatus, setListStatus] = useState<ListStatus>("loading");
   const [listError, setListError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
 
-  const [supplierNames, setSupplierNames] = useState<Record<string, string>>({});
+  const [supplierNames, setSupplierNames] = useState<Record<string, string>>(
+    {},
+  );
 
   // Cancel flow
-  const [confirmPayment, setConfirmPayment] = useState<SupplierPayment | null>(null);
+  const [confirmPayment, setConfirmPayment] = useState<SupplierPayment | null>(
+    null,
+  );
   const [isCancelling, setIsCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
   const [toast, setToast] = useState<SupplierPaymentsToastState | null>(null);
@@ -112,8 +116,10 @@ export function useSupplierPayments() {
         supplierId: selectedSupplier ? selectedSupplier.id : undefined,
         status: statusFilter,
         method: methodFilter === "all" ? undefined : methodFilter,
-        period: periodFilter === "off" ? undefined : periodFilter,
-        date: periodFilter === "off" ? undefined : periodDate,
+        period: periodFilter !== "off" && periodFilter !== "custom" ? periodFilter : undefined,
+        date: periodFilter !== "off" && periodFilter !== "custom" ? periodDate : undefined,
+        from: periodFilter === "custom" ? customRange.from : undefined,
+        to: periodFilter === "custom" ? customRange.to : undefined,
         page,
         limit: PAGE_SIZE,
       },
@@ -128,8 +134,7 @@ export function useSupplierPayments() {
       })
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
-        const message =
-          describeError(err, "Failed to load supplier payments");
+        const message = describeError(err, "Failed to load supplier payments");
         setListStatus("error");
         setListError(message);
       });
@@ -141,6 +146,7 @@ export function useSupplierPayments() {
     methodFilter,
     periodFilter,
     periodDate,
+    customRange,
     page,
     tick,
   ]);
@@ -217,8 +223,7 @@ export function useSupplierPayments() {
       setToast({ kind: "cancelled", variant: "success" });
       refresh();
     } catch (err: unknown) {
-      const message =
-        describeError(err, "Failed to cancel supplier payment");
+      const message = describeError(err, "Failed to cancel supplier payment");
       setCancelError(message);
     } finally {
       setIsCancelling(false);
@@ -252,6 +257,8 @@ export function useSupplierPayments() {
       setPage(1);
     },
     periodDate,
+    customRange,
+    setCustomRange: (from: string, to: string) => { setCustomRange({ from, to }); setPage(1); },
     setPeriodDate: (val: string) => {
       setPeriodDate(val);
       setPage(1);

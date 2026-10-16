@@ -3,6 +3,7 @@ export type PurchaseInvoiceStatus = "saved" | "cancelled";
 export interface PurchaseInvoiceLine {
   itemId: string;
   quantity: number;
+  pricingModeSnapshot?: "per_piece" | "per_cubic_meter";
   width: number | null;
   length: number | null;
   thickness: number | null;
@@ -47,6 +48,8 @@ export interface ListPurchasesFilters {
   status?: PurchaseInvoiceStatus;
   period?: "day" | "week" | "month" | "year";
   date?: string;
+  from?: string;
+  to?: string;
   q?: string;
   page?: number;
   limit?: number;
@@ -66,6 +69,7 @@ export interface CreatePurchaseInvoiceInput {
   supplierId: string;
   lines: CreatePurchaseInvoiceLineInput[];
   paid?: number;
+  existingDebtPayment?: number;
   notes?: string;
 }
 
@@ -74,8 +78,8 @@ export interface PurchaseLineFormState {
   itemId: string;
   quantity: string;
   unitCost: string;
-  widthCm: string;
-  lengthCm: string;
-  thicknessCm: string;
+  widthM: string;
+  lengthM: string;
+  thicknessM: string;
   note: string;
 }

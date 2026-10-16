@@ -1,17 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { AppShell } from "@/app/layout/app-shell";
 import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { PurchaseFilters } from "@/app/modules/purchases/components/purchase-filters";
-import { PurchaseFormModal } from "@/app/modules/purchases/components/purchase-form-modal";
 import { PurchasesTable } from "@/app/modules/purchases/components/purchases-table";
-import { usePurchaseForm } from "@/app/modules/purchases/hooks/use-purchase-form";
 import { usePurchases } from "@/app/modules/purchases/hooks/use-purchases";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { Button } from "@/app/modules/shared/components/button";
 import { ConfirmDialog } from "@/app/modules/shared/components/row-actions-menu";
 import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
@@ -24,12 +22,6 @@ export function PurchasesPage() {
   const history = useAuditHistory({ entityType: "PurchaseInvoice" });
   const router = useRouter();
   const searchParams = useSearchParams();
-  const isNewFromUrl = searchParams.get("new") === "1";
-  const [isCreateOpenManual, setIsCreateOpenManual] = useState(false);
-  const isCreateOpen = isNewFromUrl || isCreateOpenManual;
-
-  const initialSupplierId = searchParams.get("supplierId");
-  const form = usePurchaseForm({ initialSupplierId });
 
   const {
     purchases,
@@ -43,6 +35,8 @@ export function PurchasesPage() {
     periodFilter,
     setPeriodFilter,
     periodDate,
+    customRange,
+    setCustomRange,
     setPeriodDate,
     searchInput,
     setSearchInput,
@@ -50,7 +44,6 @@ export function PurchasesPage() {
     listError,
     refresh,
     toast,
-    showToast,
     clearToast,
     confirmPurchase,
     openCancelConfirm,
@@ -62,26 +55,19 @@ export function PurchasesPage() {
     clearActionError,
   } = usePurchases();
 
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      const supplierId = searchParams.get("supplierId");
+      router.replace(
+        supplierId
+          ? `/purchases/new?supplierId=${encodeURIComponent(supplierId)}`
+          : "/purchases/new",
+      );
+    }
+  }, [searchParams, router]);
+
   function openCreate() {
-    setIsCreateOpenManual(true);
-  }
-
-  function closeCreate() {
-    setIsCreateOpenManual(false);
-    form.resetForm();
-    if (searchParams.get("new") === "1") {
-      router.replace("/purchases");
-    }
-  }
-
-  function handleCreateSuccess() {
-    setIsCreateOpenManual(false);
-    form.resetForm();
-    if (searchParams.get("new") === "1") {
-      router.replace("/purchases");
-    }
-    showToast({ kind: "created", variant: "success" });
-    refresh();
+    router.push("/purchases/new");
   }
 
   const toastMessage =
@@ -112,12 +98,6 @@ export function PurchasesPage() {
       }
     >
       {history.modal}
-      <PurchaseFormModal
-        open={isCreateOpen}
-        onClose={closeCreate}
-        form={form}
-        onSuccess={handleCreateSuccess}
-      />
       <Toast
         open={toast !== null}
         message={toastMessage}
@@ -182,6 +162,8 @@ export function PurchasesPage() {
           periodFilter={periodFilter}
           onPeriodChange={setPeriodFilter}
           periodDate={periodDate}
+          customRange={customRange}
+          onCustomRangeChange={setCustomRange}
           onPeriodDateChange={setPeriodDate}
         />
 

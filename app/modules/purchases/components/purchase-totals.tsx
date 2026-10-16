@@ -4,14 +4,17 @@ import { useLocale, useTranslations } from "next-intl";
 import {
   formatMoney,
   roundMoneyAmount,
-} from "@/app/modules/items/utils/format-money";
+} from "@/app/modules/shared/utils/format-money";
 import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
+import { roundMoney } from "@/app/modules/shared/utils/invoice-math";
 
 interface PurchaseTotalsProps {
   total: number;
   paidInput: string;
   onPaidChange: (value: string) => void;
   remaining: number;
+  totalDue: number;
+  supplierBalance?: number;
 }
 
 export function PurchaseTotals({
@@ -19,9 +22,14 @@ export function PurchaseTotals({
   paidInput,
   onPaidChange,
   remaining,
+  totalDue,
+  supplierBalance,
 }: PurchaseTotalsProps) {
   const t = useTranslations("purchases");
   const locale = useLocale();
+  const paid = Number(paidInput) || 0;
+  const priorDebtPayment = Math.max(0, paid - total);
+  const priorDebtRemaining = Math.max(0, (supplierBalance ?? 0) - priorDebtPayment);
 
   return (
     <SurfaceCard>
@@ -53,10 +61,13 @@ export function PurchaseTotals({
                 name="paid"
                 type="number"
                 min={0}
-                max={total}
+                max={totalDue}
                 step="any"
                 value={paidInput}
-                onChange={(e) => onPaidChange(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  onPaidChange(value !== "" && Number(value) > totalDue ? String(totalDue) : value);
+                }}
                 onBlur={() => {
                   const rounded = roundMoneyAmount(paidInput);
                   if (rounded === null) return;
@@ -84,6 +95,17 @@ export function PurchaseTotals({
             </p>
           </div>
         </div>
+        {supplierBalance !== undefined ? (
+          <div className="rounded-xl border border-border bg-surface-muted p-4">
+            <div className="text-sm text-text-secondary">
+              <span>{t("priorDebtRemaining")}: {formatMoney(priorDebtRemaining, locale)} {t("currency")}</span>
+            </div>
+            <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2 border-t border-border pt-3">
+              <span className="font-semibold text-text-primary">{t("supplierTotalDue")}</span>
+              <strong className="text-xl tabular-nums text-danger">{formatMoney(roundMoney(priorDebtRemaining + remaining), locale)} {t("currency")}</strong>
+            </div>
+          </div>
+        ) : null}
       </div>
     </SurfaceCard>
   );

@@ -8,7 +8,7 @@ Your responsibility is NOT to generate code quickly.
 Your responsibility is correct, maintainable, secure, and performant
 implementation that matches this project's architecture and docs.
 
-Read before coding: `docs/OVERVIEW.md`, `docs/Design-System.md`, `docs/PHASES.md`,
+Read before coding: `docs/OVERVIEW.md`, `docs/DESIGN-SYSTEM.md`, `docs/PHASES.md`,
 `UI/` screen mockups, and `../Al-Mohamadia-Backend/docs/DATABASE.md`. Do not
 ask the user to re-explain the domain.
 
@@ -16,11 +16,11 @@ ask the user to re-explain the domain.
 
 | Concern | Source | Rule |
 |---------|--------|------|
-| Screen **structure** | `UI/*.jpg` mockups | Layout, sections, sidebar/nav, component hierarchy, density, Arabic RTL composition |
-| **Design system** | `docs/Design-System.md` | Tokens, focus, elevation, density, balance semantics, chart rules, typography. Never copy navy/orange hexes from mockups |
+| Screen **structure** | `UI/*.png` mockups | Layout, sections, sidebar/nav, component hierarchy, density, Arabic RTL composition |
+| **Design system** | `docs/DESIGN-SYSTEM.md` | Tokens, focus, elevation, density, balance semantics, chart rules, typography. Never copy navy/orange hexes from mockups |
 
 The mockups use a different palette (deep navy + bright orange). Treat them as
-**wireframes with real structure**, then re-skin with `docs/Design-System.md` tokens.
+**wireframes with real structure**, then re-skin with `docs/DESIGN-SYSTEM.md` tokens.
 Do not invent a new layout or a new palette unless asked.
 
 Product behavior: follow `docs/PHASES.md` (vertical slices) and the business
@@ -59,7 +59,7 @@ Target layout as features are built (Phase 0+). Route files stay thin;
 features own UI, hooks, and services.
 
 ```text
-app/[locale]/…/page.tsx          → thin route re-exports only
+app/[locale]/…/page.tsx          → params, locale, metadata, thin feature-page wrapper
 app/modules/{domain}/             → feature ownership
 app/layout/                       → app shell, sidebar, auth guard
 lib/                              → API client, auth helpers, env
@@ -101,7 +101,7 @@ Domains (map to MVP modules):
 
 ## Rules
 
-1. Route files under `app/` must stay thin: re-export the feature page. No
+1. Route files under `app/` must stay thin: compose the feature page. No
    business logic in route files.
 2. Put API calls in `services/*.service.ts`. Hooks orchestrate UI state;
    components render.
@@ -120,7 +120,7 @@ Domains (map to MVP modules):
 | Concern | Location |
 |---------|----------|
 | Screen layout / structure | `UI/` mockups (see Design System) |
-| Design tokens (colors, focus, elevation) | `docs/Design-System.md` → `app/globals.css` |
+| Design tokens (colors, focus, elevation) | `docs/DESIGN-SYSTEM.md` → `app/globals.css` |
 | Build order / status | `docs/PHASES.md` |
 | Data model / enums | `../Al-Mohamadia-Backend/docs/DATABASE.md` |
 | API client | `lib/api/` (create in Phase 0) |
@@ -131,6 +131,32 @@ Domains (map to MVP modules):
 
 # CLEAN CODE
 
+## Responsibility and placement rules
+
+| Concern | Location | Responsibility |
+|---|---|---|
+| Framework routing | `app/[locale]/...` | Route params, locale setup, metadata, compose the feature page |
+| Feature screen | feature `pages/` | Compose sections and connect hooks |
+| Presentation | feature `components/` | Render UI and handle local interactions |
+| React orchestration | feature `hooks/` | State, effects, lifecycle, user actions |
+| HTTP operations | feature `services/` | API client requests and query-string construction |
+| Exported contracts | feature `types/` | Forms, hook results, filters, toast states, domain/API types |
+| Pure calculations | feature `utils/` | Parsing, form factories, totals, formatting |
+| Browser operations | explicitly named feature utility | PDF/DOM/print operations; keep separate from HTTP services |
+| Cross-feature behavior/UI | `app/modules/shared/` | Established reuse, including sales/purchase pricing math |
+| Infrastructure | `lib/` | API client, auth transport, environment configuration |
+
+- Hooks must not export type aliases/interfaces or declare standalone non-hook helpers. Put exported contracts in `types/` and import their types there, never from a hook. Non-exported implementation-only types and local constants may remain.
+- Route files must not contain feature UI, client-state hooks, or raw HTTP calls. Keep public receipts under the invoice feature too. Framework metadata/locale setup and thin page wrappers are allowed.
+- HTTP services must not access `document`/`window` or import PDF renderers. Browser utilities may do so and must be named by purpose.
+- Component-local props and event handlers may remain beside their component. Small private orchestration helpers, HTTP query builders, and local constants do not need separate files solely because of their size.
+- Keep feature-specific behavior in its feature. Reuse shared code when actual cross-feature callers establish ownership. Do not import sales implementation details from purchases for shared pricing rules.
+- No generic dumping grounds, circular imports, unnecessary barrel exports, pass-through layers, test-only production exports, or duplicated domain types.
+- Preserve loading/error/abort behavior, form defaults, saved dimensions, money rounding, print behavior, localization, and legacy contracts during extraction.
+- `npm run build` automatically runs the architecture placement check through `prebuild`.
+- Before finishing, run `npm run check:architecture` and `npm run test:architecture`, then build, relevant behavior tests, and lint. Report pre-existing failures separately. Never disable a placement rule to make a failing refactor pass.
+
+
 - Small, typed, composable, accessible components. Split large pages into
   section components (especially the new-invoice form).
 - No `any`. No ignored TypeScript errors. Prefer interfaces for props.
@@ -140,8 +166,8 @@ Domains (map to MVP modules):
 - No dead code. No commented-out blocks. No unexplained TODOs for core flows.
 - Reuse before create: search `app/modules/shared/` and the current feature.
 - Match neighboring file style. Do not drive-by refactor unrelated files.
-- Prefer Tailwind utilities and CSS variables from `docs/Design-System.md`. Never
-  hardcode hex colors or invent new tokens without updating `docs/Design-System.md`.
+- Prefer Tailwind utilities and CSS variables from `docs/DESIGN-SYSTEM.md`. Never
+  hardcode hex colors or invent new tokens without updating `docs/DESIGN-SYSTEM.md`.
 
 ------------------------------------------------------------
 
@@ -230,15 +256,15 @@ Every interactive surface must consider:
 
 | Source | Owns | Does **not** own |
 |--------|------|------------------|
-| `UI/*.jpg` | Layout, shell, page sections, forms/tables density, nav labels/order, CTA placement, Arabic RTL composition | Colors, dark-mode tokens |
-| `docs/Design-System.md` | Light/dark CSS tokens, focus rings, elevation, density rules, balance semantics, semantic status colors, typography guidance | Inventing a different page structure |
+| `UI/*.png` | Layout, shell, page sections, forms/tables density, nav labels/order, CTA placement, Arabic RTL composition | Colors, dark-mode tokens |
+| `docs/DESIGN-SYSTEM.md` | Light/dark CSS tokens, focus rings, elevation, density rules, balance semantics, semantic status colors, typography guidance | Inventing a different page structure |
 
 Wire tokens into `app/globals.css` / `@theme`. Theme (light/dark) and locale
 (ar/en) are independent — 4 combinations, one component set.
 
 ### Mockup inventory → features
 
-Canonical mapping: [`UI/README.md`](../UI/README.md).
+Canonical mapping: [`UI/README.md`](UI/README.md).
 
 | File in `UI/` | Feature / screen | Route |
 |---------------|------------------|-------|
@@ -268,7 +294,7 @@ new visual language.
   rounded surface cards with clear section labels.
 - **Dashboard:** page-header "New Invoice" CTA, KPI card row,
   debt summary strip, monthly chart + top sellers.
-- **New invoice (modal):** customer search + cash-sale toggle; line-item row
+- **New invoice (page):** customer search + cash-sale toggle; line-item row
   (item, qty, thickness/width/length, piece price, note); dashed "add row";
   totals row (total / remaining / paid / discount); Save + Save & Print.
 - **Lists:** search, filter chips (e.g. all / today / has debt), primary
@@ -282,7 +308,7 @@ new visual language.
 
 The mockups' navy/orange are **not** project colors. Map visually:
 
-| Mockup look | Use token from `docs/Design-System.md` |
+| Mockup look | Use token from `docs/DESIGN-SYSTEM.md` |
 |-------------|----------------------------------|
 | Deep navy sidebar / dark banners | `surface` + `border` (neutral sidebar — no dark ink/navy) |
 | Bright orange active nav / main CTAs | `primary` (e.g. "فاتورة جديدة", Save & Print) |
@@ -295,11 +321,11 @@ The mockups' navy/orange are **not** project colors. Map visually:
 | Attention-tier balance / low stock / pending | `warning` |
 
 Never hardcode mockup hex values (`#0A1628`-style navy, pure `#FF6A00`-style
-orange, etc.). Never invent extra brand colors. Update `docs/Design-System.md` if
+orange, etc.). Never invent extra brand colors. Update `docs/DESIGN-SYSTEM.md` if
 a new token is truly required.
 
 In dark mode, sidebar and surfaces use the warm neutral token scale from
-`docs/Design-System.md` — not cool navy.
+`docs/DESIGN-SYSTEM.md` — not cool navy.
 
 ## Reuse before create
 
@@ -309,10 +335,10 @@ etc. Only create a new primitive when none fits.
 
 ## Implementation order
 
-1. Open the matching `UI/*.jpg` (or closest neighbor) — note structure only.
-2. Map colors to `docs/Design-System.md` tokens (table above).
+1. Open the matching `UI/*.png` (or closest neighbor) — note structure only.
+2. Map colors to `docs/DESIGN-SYSTEM.md` tokens (table above).
 3. Shell / layout → shared primitives → feature sections → interactions →
-   responsive → polish: structure vs mockup, colors vs `docs/Design-System.md`.
+   responsive → polish: structure vs mockup, colors vs `docs/DESIGN-SYSTEM.md`.
 
 Do not "improve" the mockup layout or the Quiet Ledger palette unless asked.
 
@@ -334,8 +360,9 @@ is never surprised:
 - Saving a purchase invoice increases stock and supplier amount owed.
 - Price/cost edits are logged (price history), never silent.
 - Manual stock corrections require a reason and are logged.
-- Show dimensions (thickness × width × length) only when pricing mode is
-  `per_cubic_meter`.
+- Show meter dimensions for both pricing modes. Piece dimensions are optional
+  and descriptive; cubic lines require all three. Single defaults auto-fill,
+  multiple defaults offer editable choices, and custom values remain allowed.
 
 API returns enum codes (`saved`, `cancelled`, `cash_sale`, …) — localize in
 the UI; do not expect translated strings from the API.
@@ -349,7 +376,7 @@ the UI; do not expect translated strings from the API.
 3. Open the matching screen in `UI/` (table above) — copy **structure**, not
    mockup colors.
 4. Check existing services, hooks, types, and shared components.
-5. Map every color to `docs/Design-System.md` tokens before writing Tailwind classes.
+5. Map every color to `docs/DESIGN-SYSTEM.md` tokens before writing Tailwind classes.
 6. Plan loading, empty, and error states before the happy path.
 7. Keep routes thin; put logic in hooks/services.
 
@@ -357,12 +384,13 @@ the UI; do not expect translated strings from the API.
 
 # SELF-CHECK (BEFORE FINISHING)
 
+- [ ] `npm run check:architecture` and `npm run test:architecture` pass
 - [ ] Primary shopkeeper goal is obvious within a few seconds
-- [ ] Layout matches the relevant `UI/*.jpg` structure (shell, sections, CTAs)
-- [ ] No mockup navy/orange hexes — only `docs/Design-System.md` token variables
+- [ ] Layout matches the relevant `UI/*.png` structure (shell, sections, CTAs)
+- [ ] No mockup navy/orange hexes — only `docs/DESIGN-SYSTEM.md` token variables
 - [ ] Loading / empty / error handled
-- [ ] Works in `en` (default, RTL) and `ar` (RTL); no hardcoded strings
-- [ ] Light and dark both use token variables from `docs/Design-System.md`
+- [ ] Works in `en` (default, LTR) and `ar` (RTL); no hardcoded strings
+- [ ] Light and dark both use token variables from `docs/DESIGN-SYSTEM.md`
 - [ ] Focus and keyboard path are sane
 - [ ] Motion has a reason and a reduced-motion path
 - [ ] Code lives in the correct feature module; routes stay thin
@@ -370,7 +398,7 @@ the UI; do not expect translated strings from the API.
 - [ ] Money/stock/debt UI matches the business rules above
 - [ ] No secrets, no `any`, no dead code
 - [ ] Docs updated if the phase, tokens, or flow changed (`docs/OVERVIEW.md`,
-      `docs/Design-System.md`, `docs/PHASES.md`; flag backend docs if the API
+      `docs/DESIGN-SYSTEM.md`, `docs/PHASES.md`; flag backend docs if the API
       contract changed)
 
 ------------------------------------------------------------
@@ -378,18 +406,27 @@ the UI; do not expect translated strings from the API.
 # DOCS MAINTENANCE
 
 Whenever a phase changes a page/flow or tokens, update `docs/OVERVIEW.md`,
-`docs/Design-System.md`, and/or `docs/PHASES.md` in the same change. Keep
+`docs/DESIGN-SYSTEM.md`, and/or `docs/PHASES.md` in the same change. Keep
 `docs/PHASES.md` in sync with `../Al-Mohamadia-Backend/docs/PHASES.md`. If
 the change depends on an API/schema change, flag
-`../Al-Mohamadia-Backend/docs/AGENTS.md` and
+`../Al-Mohamadia-Backend/AGENTS.md` and
 `../Al-Mohamadia-Backend/docs/DATABASE.md`.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `../node_modules/next/dist/docs/` (resolved from this file's directory in `docs/`; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this repository root; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## Local verification preference
+
+Do not access the frontend through a browser for verification unless the user explicitly changes this preference. Run static checks and focused tests; provide a short manual visual/interaction checklist instead.
+
+## Workspace change constraints
+
+Keep requested refactors behavior-preserving. Do not change database records or indexes,
+commit, push, or deploy unless the user explicitly requests those actions.

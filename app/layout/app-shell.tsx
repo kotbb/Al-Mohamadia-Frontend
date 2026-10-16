@@ -14,6 +14,7 @@ interface AppShellProps {
   actions?: ReactNode;
   hubTabs?: ReactNode | false;
   contentWidth?: "dashboard" | "comfortable";
+  density?: "default" | "compact";
 }
 
 export function AppShell({
@@ -23,6 +24,7 @@ export function AppShell({
   actions,
   hubTabs,
   contentWidth = "dashboard",
+  density = "default",
 }: AppShellProps) {
   const contentClass =
     contentWidth === "comfortable"
@@ -68,16 +70,22 @@ export function AppShell({
             <GlobalHeader onOpenNav={() => setOpenPath(pathname)} />
           </div>
 
-          <div className={`${contentClass} pb-8 pt-8`}>
+          <div
+            className={`${contentClass} pb-8 ${density === "compact" ? "pt-4" : "pt-8"}`}
+          >
             {hubTabs === false ? null : hubTabs !== undefined ? (
-              <div className="mb-6">{hubTabs}</div>
+              <div className={density === "compact" ? "mb-4" : "mb-6"}>
+                {hubTabs}
+              </div>
             ) : (
-              <div className="mb-6">
+              <div className={density === "compact" ? "mb-4" : "mb-6"}>
                 <HubNavigation />
               </div>
             )}
 
-            <header className="mb-5 flex flex-wrap items-start justify-between gap-3">
+            <header
+              className={`${density === "compact" ? "mb-3" : "mb-5"} flex flex-wrap items-start justify-between gap-3`}
+            >
               <div className="min-w-0">
                 <h1 className="text-xl font-bold leading-tight tracking-tight text-text-primary">
                   {title}

@@ -7,13 +7,11 @@ import { useRouter } from "@/i18n/navigation";
 import { AppShell } from "@/app/layout/app-shell";
 import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { InvoiceFilters } from "@/app/modules/invoices/components/invoice-filters";
-import { InvoiceFormModal } from "@/app/modules/invoices/components/invoice-form-modal";
-import { InvoicePreviewModal } from "@/app/modules/invoices/components/invoice-preview-modal";
+import { InvoiceShareModal } from "@/app/modules/invoices/components/invoice-share-modal";
 import { InvoicesList } from "@/app/modules/invoices/components/invoices-list";
-import { useInvoiceForm } from "@/app/modules/invoices/hooks/use-invoice-form";
 import { useInvoices } from "@/app/modules/invoices/hooks/use-invoices";
 import type { SalesInvoice } from "@/app/modules/invoices/types/invoices.types";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { Button } from "@/app/modules/shared/components/button";
 import { ConfirmDialog } from "@/app/modules/shared/components/row-actions-menu";
 import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
@@ -25,12 +23,9 @@ export function InvoicesPage() {
   const router = useRouter();
   const history = useAuditHistory({ entityType: "SalesInvoice" });
   const searchParams = useSearchParams();
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [previewInvoice, setPreviewInvoice] = useState<SalesInvoice | null>(
+  const [shareInvoiceTarget, setShareInvoiceTarget] = useState<SalesInvoice | null>(
     null,
   );
-  const [autoPrintOnOpen, setAutoPrintOnOpen] = useState(false);
-  const form = useInvoiceForm();
 
   const {
     invoices,
@@ -44,64 +39,39 @@ export function InvoicesPage() {
     periodFilter,
     setPeriodFilter,
     periodDate,
+    customRange,
+    setCustomRange,
     setPeriodDate,
     searchInput,
     setSearchInput,
     listStatus,
+    hasLoaded,
+    isRefreshing,
+    actionsDisabled,
     listError,
     refresh,
     toast,
     clearToast,
-    showToast,
     confirmInvoice,
     openCancelConfirm,
     closeCancelConfirm,
     submitCancel,
     isConfirming,
     confirmError,
-    shareInvoice,
-    actionError,
-    clearActionError,
   } = useInvoices();
 
   useEffect(() => {
     if (searchParams.get("new") === "1") {
-      form.resetForm();
-      setIsFormOpen(true);
+      router.replace("/invoices/new");
     }
-  }, [searchParams, form]);
+  }, [searchParams, router]);
 
   function openCreate() {
-    form.resetForm();
-    setIsFormOpen(true);
+    router.push("/invoices/new");
   }
 
   function handleEdit(invoice: SalesInvoice) {
-    form.initializeForEdit(invoice);
-    setIsFormOpen(true);
-  }
-
-  function closeForm() {
-    setIsFormOpen(false);
-    form.resetForm();
-    if (searchParams.get("new") === "1") {
-      router.replace("/invoices");
-    }
-  }
-
-  function handleFormSuccess(id: string, printed: boolean) {
-    const isEdit = form.isEdit;
-    setIsFormOpen(false);
-    form.resetForm();
-    if (searchParams.get("new") === "1") {
-      router.replace("/invoices");
-    }
-    showToast({ kind: isEdit ? "updated" : "created", variant: "success" });
-    refresh();
-    if (printed) {
-      setAutoPrintOnOpen(true);
-      setPreviewInvoice({ id } as SalesInvoice);
-    }
+    router.push(`/invoices/${invoice.id}/edit`);
   }
 
   const toastMessage =
@@ -134,27 +104,7 @@ export function InvoicesPage() {
       }
     >
       {history.modal}
-      <InvoiceFormModal
-        open={isFormOpen}
-        onClose={closeForm}
-        form={form}
-        onSuccess={handleFormSuccess}
-      />
-      <InvoicePreviewModal
-        open={previewInvoice !== null}
-        onClose={() => {
-          setPreviewInvoice(null);
-          setAutoPrintOnOpen(false);
-        }}
-        invoiceId={previewInvoice?.id ?? null}
-        initialInvoice={previewInvoice}
-        autoPrint={autoPrintOnOpen}
-        customerName={
-          previewInvoice?.customerId
-            ? customerNames[previewInvoice.customerId]
-            : null
-        }
-      />
+      {shareInvoiceTarget && <InvoiceShareModal invoiceId={shareInvoiceTarget.id} onClose={() => setShareInvoiceTarget(null)} />}
       <Toast
         open={toast !== null}
         message={toastMessage}
@@ -162,12 +112,6 @@ export function InvoicesPage() {
         onClose={clearToast}
       />
 
-      <Toast
-        open={actionError !== null}
-        message={actionError ?? ""}
-        variant="danger"
-        onClose={clearActionError}
-      />
 
       <ConfirmDialog
         open={confirmInvoice !== null}
@@ -195,7 +139,7 @@ export function InvoicesPage() {
       />
 
       <div className="flex flex-col gap-4">
-        {listStatus === "success" ? (
+        {hasLoaded ? (
           <SurfaceCard padding="sm">
             <div className="flex flex-wrap items-center justify-between gap-4 px-2 py-1">
               <div>
@@ -218,31 +162,67 @@ export function InvoicesPage() {
           periodFilter={periodFilter}
           onPeriodChange={setPeriodFilter}
           periodDate={periodDate}
+          customRange={customRange}
+          onCustomRangeChange={setCustomRange}
           onPeriodDateChange={setPeriodDate}
         />
 
-        <InvoicesList
-          invoices={invoices}
-          customerNames={customerNames}
-          status={listStatus}
-          error={listError}
-          onRetry={refresh}
-          onEdit={handleEdit}
-          onPrint={(invoice) => setPreviewInvoice(invoice)}
-          onShare={(invoice) => void shareInvoice(invoice)}
-          onCancel={openCancelConfirm}
-          onHistory={(invoice) =>
-            history.openRecord(invoice.id, invoice.invoiceNumber)
-          }
-        />
+        <div aria-busy={isRefreshing}>
+          {hasLoaded ? (
+            <div
+              className="mb-2 flex min-h-6 items-center gap-2 text-sm text-text-secondary"
+              role="status"
+            >
+              {isRefreshing ? (
+                <>
+                  <span
+                    className="h-4 w-4 animate-spin rounded-full border-2 border-border border-t-primary motion-reduce:animate-none"
+                    aria-hidden="true"
+                  />
+                  {t("updatingList")}
+                </>
+              ) : listStatus === "error" ? (
+                <div
+                  className="flex flex-wrap items-center gap-2 text-danger"
+                  role="alert"
+                >
+                  <span>{listError ?? t("listError")}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={refresh}
+                  >
+                    {t("retry")}
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+          <InvoicesList
+            invoices={invoices}
+            customerNames={customerNames}
+            status={hasLoaded ? "success" : listStatus}
+            actionsDisabled={actionsDisabled}
+            error={listError}
+            onRetry={refresh}
+            onEdit={handleEdit}
+            onPrint={(invoice) => router.push(`/invoices/${invoice.id}/export`)}
+            onShare={(invoice) => setShareInvoiceTarget(invoice)}
+            onCancel={openCancelConfirm}
+            onHistory={(invoice) =>
+              history.openRecord(invoice.id, invoice.invoiceNumber)
+            }
+          />
+        </div>
 
-        {listStatus === "success" && totalPages > 1 ? (
+        {hasLoaded && totalPages > 1 ? (
           <div className="flex items-center justify-center gap-3">
             <Button
               type="button"
               variant="secondary"
               size="sm"
-              disabled={page <= 1}
+              disabled={actionsDisabled || page <= 1}
               onClick={() => setPage(page - 1)}
             >
               {t("prevPage")}
@@ -254,7 +234,7 @@ export function InvoicesPage() {
               type="button"
               variant="secondary"
               size="sm"
-              disabled={page >= totalPages}
+              disabled={actionsDisabled || page >= totalPages}
               onClick={() => setPage(page + 1)}
             >
               {t("nextPage")}

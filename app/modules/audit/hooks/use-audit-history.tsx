@@ -1,15 +1,12 @@
 "use client";
 
+import type { AuditHistoryRequest } from "../types/use-audit-history.types";
+
 import { useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
 import { AuditHistoryModal } from "@/app/modules/audit/components/audit-history-modal";
 import type { AuditEntityType } from "@/app/modules/audit/utils/audit-catalog";
 import { Button } from "@/app/modules/shared/components/button";
-
-interface AuditHistoryRequest {
-  entityId?: string;
-  recordLabel?: string;
-}
 
 export function useAuditHistory(options: {
   entityType: AuditEntityType;

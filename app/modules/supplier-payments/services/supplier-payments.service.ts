@@ -18,6 +18,10 @@ function buildSupplierPaymentsQuery(filters?: ListSupplierPaymentsFilters): stri
     params.set("period", filters.period);
     if (filters.date) params.set("date", filters.date);
   }
+  if (filters.from && filters.to) {
+    params.set("from", filters.from);
+    params.set("to", filters.to);
+  }
   if (filters.page !== undefined) params.set("page", String(filters.page));
   if (filters.limit !== undefined) params.set("limit", String(filters.limit));
   const query = params.toString();

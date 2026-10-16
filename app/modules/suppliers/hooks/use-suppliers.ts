@@ -1,4 +1,11 @@
 "use client";
+
+import type {
+  ListStatus,
+  DebtFilter,
+  SuppliersToastState,
+  SuppliersConfirmKind,
+} from "../types/use-suppliers.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
@@ -10,24 +17,6 @@ import {
   updateSupplier,
 } from "@/app/modules/suppliers/services/suppliers.service";
 import type { Supplier } from "@/app/modules/suppliers/types/suppliers.types";
-
-type ListStatus = "idle" | "loading" | "success" | "error";
-export type DebtFilter = "all" | "hasDebt";
-
-export type SuppliersToastKind =
-  | "created"
-  | "updated"
-  | "activated"
-  | "deactivated"
-  | "deleted"
-  | "merged";
-
-export interface SuppliersToastState {
-  kind: SuppliersToastKind;
-  variant: "success" | "danger";
-}
-
-export type SuppliersConfirmKind = "deactivate" | "activate" | "delete" | null;
 
 const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
@@ -104,8 +93,7 @@ export function useSuppliers() {
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
-        const message =
-          describeError(error, "Request failed");
+        const message = describeError(error, "Request failed");
         setSuppliers([]);
         setTotal(0);
         setTotalOwed(0);
@@ -177,7 +165,7 @@ export function useSuppliers() {
         }
         await createSupplier({
           name,
-          phone: phone || undefined,
+          phone: phone || null,
           address: address || undefined,
           amountOwed,
         });
@@ -185,7 +173,7 @@ export function useSuppliers() {
       } else if (editingId) {
         await updateSupplier(editingId, {
           name,
-          phone: phone || undefined,
+          phone: phone || null,
           address: address,
         });
         setToast({ kind: "updated", variant: "success" });
@@ -194,8 +182,7 @@ export function useSuppliers() {
       resetForm();
       refresh();
     } catch (error: unknown) {
-      const message =
-        describeError(error, "Save failed");
+      const message = describeError(error, "Save failed");
       setFormError(message);
     } finally {
       setIsSaving(false);
@@ -211,23 +198,19 @@ export function useSuppliers() {
     resetForm,
   ]);
 
-  const openMerge = useCallback(
-    async (preselectedTargetId?: string) => {
-      setMergeError(null);
-      setMergeSourceIds([]);
-      setMergeTargetId(preselectedTargetId ?? "");
-      setIsMergeOpen(true);
-      try {
-        const result = await listSuppliers({ page: 1, limit: 100 });
-        setMergeOptions(result.items);
-      } catch (error: unknown) {
-        const message =
-          describeError(error, "Could not load suppliers");
-        setMergeError(message);
-      }
-    },
-    [],
-  );
+  const openMerge = useCallback(async (preselectedTargetId?: string) => {
+    setMergeError(null);
+    setMergeSourceIds([]);
+    setMergeTargetId(preselectedTargetId ?? "");
+    setIsMergeOpen(true);
+    try {
+      const result = await listSuppliers({ page: 1, limit: 100 });
+      setMergeOptions(result.items);
+    } catch (error: unknown) {
+      const message = describeError(error, "Could not load suppliers");
+      setMergeError(message);
+    }
+  }, []);
 
   const closeMerge = useCallback(() => {
     if (isMerging) return;
@@ -243,36 +226,39 @@ export function useSuppliers() {
     );
   }, []);
 
-  const submitMerge = useCallback(async () => {
-    if (!mergeTargetId || mergeSourceIds.length === 0) {
-      setMergeError("Select a main supplier and at least one duplicate");
-      return;
-    }
-    if (mergeSourceIds.includes(mergeTargetId)) {
-      setMergeError("Main supplier cannot be in the duplicates list");
-      return;
-    }
+  const submitMerge = useCallback(
+    async (phone?: string | null) => {
+      if (!mergeTargetId || mergeSourceIds.length === 0) {
+        setMergeError("Select a main supplier and at least one duplicate");
+        return;
+      }
+      if (mergeSourceIds.includes(mergeTargetId)) {
+        setMergeError("Main supplier cannot be in the duplicates list");
+        return;
+      }
 
-    setIsMerging(true);
-    setMergeError(null);
-    try {
-      await mergeSuppliers({
-        targetId: mergeTargetId,
-        sourceIds: mergeSourceIds,
-      });
-      setToast({ kind: "merged", variant: "success" });
-      setIsMergeOpen(false);
-      setMergeTargetId("");
-      setMergeSourceIds([]);
-      refresh();
-    } catch (error: unknown) {
-      const message =
-        describeError(error, "Merge failed");
-      setMergeError(message);
-    } finally {
-      setIsMerging(false);
-    }
-  }, [mergeTargetId, mergeSourceIds, refresh]);
+      setIsMerging(true);
+      setMergeError(null);
+      try {
+        await mergeSuppliers({
+          targetId: mergeTargetId,
+          sourceIds: mergeSourceIds,
+          phone,
+        });
+        setToast({ kind: "merged", variant: "success" });
+        setIsMergeOpen(false);
+        setMergeTargetId("");
+        setMergeSourceIds([]);
+        refresh();
+      } catch (error: unknown) {
+        const message = describeError(error, "Merge failed");
+        setMergeError(message);
+      } finally {
+        setIsMerging(false);
+      }
+    },
+    [mergeTargetId, mergeSourceIds, refresh],
+  );
 
   const openDeactivateConfirm = useCallback((supplier: Supplier) => {
     setConfirmError(null);
@@ -320,8 +306,7 @@ export function useSuppliers() {
       setConfirmSupplier(null);
       refresh();
     } catch (error: unknown) {
-      const message =
-        describeError(error, "Action failed");
+      const message = describeError(error, "Action failed");
       setConfirmError(message);
     } finally {
       setIsConfirming(false);

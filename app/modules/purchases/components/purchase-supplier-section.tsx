@@ -4,7 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import type { Supplier } from "@/app/modules/suppliers/types/suppliers.types";
 import { Button } from "@/app/modules/shared/components/button";
 import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 
 interface PurchaseSupplierSectionProps {
   allSuppliers: Supplier[];
@@ -29,8 +29,8 @@ export function PurchaseSupplierSection({
   const locale = useLocale();
 
   return (
-    <SurfaceCard>
-      <div className="flex flex-col gap-4">
+    <SurfaceCard padding="sm">
+      <div className="grid gap-3 md:grid-cols-2 md:items-end">
         {selectedSupplier ? (
           <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-surface-muted px-4 py-3.5">
             <div>
@@ -105,7 +105,7 @@ export function PurchaseSupplierSection({
               maxLength={500}
               onChange={(e) => onNotesChange(e.target.value)}
               placeholder={t("fieldNotesPlaceholder")}
-              className="ds-focus-input min-h-10 w-full rounded-xl border border-border bg-surface px-3.5 text-sm text-text-primary placeholder:text-text-muted"
+              className="ds-focus-input min-h-11 w-full rounded-xl border border-border bg-surface px-3.5 text-sm text-text-primary placeholder:text-text-muted"
             />
           </label>
         </div>

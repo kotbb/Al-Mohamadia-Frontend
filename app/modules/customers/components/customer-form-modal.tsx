@@ -41,7 +41,7 @@ export function CustomerFormModal({
 }: CustomerFormModalProps) {
   const t = useTranslations("customers");
   const isEdit = mode === "edit";
-  const canSubmit = name.trim().length > 0 && phone.trim().length > 0;
+  const canSubmit = name.trim().length > 0;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -102,7 +102,6 @@ export function CustomerFormModal({
           label={t("fieldPhone")}
           value={phone}
           onChange={(event) => onPhoneChange(event.target.value)}
-          required
           disabled={isSubmitting}
           autoComplete="off"
         />
@@ -113,7 +112,6 @@ export function CustomerFormModal({
           onChange={(event) => onAddressChange(event.target.value)}
           disabled={isSubmitting}
           autoComplete="off"
-          hint={t("fieldAddressHint")}
         />
         {!isEdit ? (
           <Input
@@ -125,7 +123,6 @@ export function CustomerFormModal({
             value={balance}
             onChange={(event) => onBalanceChange(event.target.value)}
             disabled={isSubmitting}
-            hint={t("fieldOpeningBalanceHint")}
           />
         ) : null}
         {error ? (

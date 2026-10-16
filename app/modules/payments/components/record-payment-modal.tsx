@@ -7,7 +7,7 @@ import type { Customer } from "@/app/modules/customers/types/customers.types";
 import {
   formatMoney,
   roundMoneyAmount,
-} from "@/app/modules/items/utils/format-money";
+} from "@/app/modules/shared/utils/format-money";
 import type { PaymentMethod } from "@/app/modules/payments/types/payments.types";
 import { Button } from "@/app/modules/shared/components/button";
 import { Input } from "@/app/modules/shared/components/input";
@@ -20,7 +20,7 @@ export interface SelectedCustomerTarget {
   id: string;
   name: string;
   balance: number;
-  phone?: string;
+  phone?: string | null;
 }
 
 interface RecordPaymentModalProps {
@@ -76,7 +76,10 @@ export function RecordPaymentModal({
 
     const controller = new AbortController();
     setIsLoadingDebtors(true);
-    listCustomers({ isActive: true, hasDebt: true, page: 1, limit: 100 }, controller.signal)
+    listCustomers(
+      { isActive: true, hasDebt: true, page: 1, limit: 100 },
+      controller.signal,
+    )
       .then((res) => {
         setDebtorCustomers(res.items);
       })
@@ -102,7 +105,10 @@ export function RecordPaymentModal({
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
       setIsSearching(true);
-      listCustomers({ q, isActive: true, hasDebt: true, page: 1, limit: 10 }, controller.signal)
+      listCustomers(
+        { q, isActive: true, hasDebt: true, page: 1, limit: 10 },
+        controller.signal,
+      )
         .then((res) => {
           setSearchResults(res.items);
         })
@@ -149,11 +155,7 @@ export function RecordPaymentModal({
       size="md"
       footer={
         <div className="flex w-full items-center justify-end gap-3">
-          <Button
-            variant="secondary"
-            onClick={onClose}
-            disabled={isSubmitting}
-          >
+          <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
             {t("modalCancel")}
           </Button>
           <Button
@@ -211,7 +213,9 @@ export function RecordPaymentModal({
                   className="ds-focus-input min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm text-text-primary"
                   value=""
                   onChange={(e) => {
-                    const found = debtorCustomers.find((c) => c.id === e.target.value);
+                    const found = debtorCustomers.find(
+                      (c) => c.id === e.target.value,
+                    );
                     if (found && onSelectCustomer) {
                       onSelectCustomer({
                         id: found.id,
@@ -251,7 +255,9 @@ export function RecordPaymentModal({
                 {searchQuery.trim() ? (
                   <ul className="absolute z-30 mt-1 max-h-52 w-full overflow-auto rounded-xl border border-border bg-surface shadow-lg">
                     {isSearching ? (
-                      <li className="px-4 py-3 text-sm text-text-secondary">…</li>
+                      <li className="px-4 py-3 text-sm text-text-secondary">
+                        …
+                      </li>
                     ) : searchResults.length === 0 ? (
                       <li className="px-4 py-3 text-sm text-text-secondary">
                         {t("noCustomersWithDebt")}
@@ -308,7 +314,11 @@ export function RecordPaymentModal({
             type="number"
             step="any"
             min="0.01"
-            max={customer && customer.balance > 0 ? String(customer.balance) : undefined}
+            max={
+              customer && customer.balance > 0
+                ? String(customer.balance)
+                : undefined
+            }
             label={t("fieldAmount", { currency })}
             value={amount}
             onChange={(e) => onAmountChange(e.target.value)}

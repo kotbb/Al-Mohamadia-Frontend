@@ -4,7 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { AppShell } from "@/app/layout/app-shell";
 import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { usePurchaseDetail } from "@/app/modules/purchases/hooks/use-purchase-detail";
 import { Badge } from "@/app/modules/shared/components/badge";
 import { Button } from "@/app/modules/shared/components/button";
@@ -92,7 +92,9 @@ export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
             ) : null}
           </div>
         }
-        confirmLabel={isCancelling ? tShared("loading") : t("confirmCancelAction")}
+        confirmLabel={
+          isCancelling ? tShared("loading") : t("confirmCancelAction")
+        }
         cancelLabel={t("modalCancel")}
         confirming={isCancelling}
         tone="danger"
@@ -123,9 +125,7 @@ export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
               </Badge>
               {supplier ? (
                 <Link href={`/suppliers/${supplier.id}`}>
-                  <Badge variant="info">
-                    {supplier.name}
-                  </Badge>
+                  <Badge variant="info">{supplier.name}</Badge>
                 </Link>
               ) : (
                 <Badge variant="info">{t("supplierPurchase")}</Badge>
@@ -178,7 +178,7 @@ export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
                         line.thickness != null &&
                         line.width != null &&
                         line.length != null
-                          ? `${line.thickness} × ${line.width} × ${line.length} ${locale === "ar" ? "سم" : "cm"}`
+                          ? `${line.thickness} × ${line.width} × ${line.length} ${locale === "ar" ? "م" : "m"}`
                           : null;
                       return (
                         <tr
@@ -229,7 +229,7 @@ export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
                     <p className="text-xs font-medium text-text-secondary">
                       {t("total")}
                     </p>
-                    <p className="mt-1 text-lg font-bold text-text-primary">
+                    <p className="mt-1 text-lg font-bold text-danger">
                       {formatMoney(purchase.total, locale)} {currency}
                     </p>
                   </div>
@@ -237,7 +237,7 @@ export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
                     <p className="text-xs font-medium text-text-secondary">
                       {t("paid")}
                     </p>
-                    <p className="mt-1 text-lg font-bold text-text-primary">
+                    <p className="mt-1 text-lg font-bold text-danger">
                       {formatMoney(purchase.paid, locale)} {currency}
                     </p>
                   </div>
@@ -291,7 +291,12 @@ export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
 
 function CancelIcon() {
   return (
-    <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg
+      className="h-4 w-4 shrink-0"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden
+    >
       <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.75" />
       <path
         d="m9 9 6 6m0-6-6 6"
@@ -305,7 +310,16 @@ function CancelIcon() {
 
 function WarningIcon() {
   return (
-    <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg
+      className="h-5 w-5 shrink-0"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
       <circle cx="12" cy="12" r="10" />
       <line x1="12" y1="8" x2="12" y2="12" />
       <line x1="12" y1="16" x2="12.01" y2="16" />

@@ -1,5 +1,20 @@
 export type PricingMode = "per_piece" | "per_cubic_meter";
 
+export interface DimensionDefaults {
+  thickness: number[];
+  width: number[];
+  length: number[];
+}
+export type DimensionName = keyof DimensionDefaults;
+export interface AddDimensionDefaultInput {
+  dimension: DimensionName;
+  value: number;
+}
+export interface ItemDimensionDefaultsResponse {
+  itemId: string;
+  dimensionDefaults: DimensionDefaults;
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -30,6 +45,7 @@ export interface Item {
   category: ItemCategorySummary;
   isWood: boolean;
   pricingMode: PricingMode;
+  dimensionDefaults: DimensionDefaults;
   unitPrice: number;
   cost: number;
   stockQuantity: number;
@@ -51,6 +67,7 @@ export interface PriceHistoryEntry {
 }
 
 export interface CreateItemInput {
+  dimensionDefaults?: DimensionDefaults;
   code: string;
   name: string;
   categoryId: string;
@@ -64,6 +81,7 @@ export interface CreateItemInput {
 }
 
 export interface UpdateItemInput {
+  dimensionDefaults?: DimensionDefaults;
   code?: string;
   name?: string;
   categoryId?: string;

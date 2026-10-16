@@ -5,6 +5,8 @@ export type { SalesInvoicePeriod };
 export interface DashboardToday {
   sales: number;
   estimatedProfit: number;
+  operatingExpenses: number;
+  estimatedNetProfit: number;
   invoiceCount: number;
   collected: number;
 }
@@ -15,7 +17,7 @@ export interface DashboardDebt {
 }
 
 export interface DashboardPeriod {
-  period: SalesInvoicePeriod;
+  period: SalesInvoicePeriod | "custom";
   date: string;
   from: string;
   to: string;
@@ -36,6 +38,7 @@ export interface DashboardTopSellingItem {
 
 export interface DashboardResponse {
   today: DashboardToday;
+  periodFinancials: { sales: number; estimatedGrossProfit: number; operatingExpenses: number; estimatedNetProfit: number };
   debt: DashboardDebt;
   period: DashboardPeriod;
   salesSeries: DashboardSalesSeriesPoint[];
@@ -43,6 +46,8 @@ export interface DashboardResponse {
 }
 
 export interface GetDashboardQuery {
-  period: SalesInvoicePeriod;
-  date: string;
+  period?: SalesInvoicePeriod;
+  date?: string;
+  from?: string;
+  to?: string;
 }

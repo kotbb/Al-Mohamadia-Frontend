@@ -11,7 +11,7 @@ import { useRecordSupplierPayment } from "@/app/modules/supplier-payments/hooks/
 import { SupplierFormModal } from "@/app/modules/suppliers/components/supplier-form-modal";
 import { SupplierMergeModal } from "@/app/modules/suppliers/components/supplier-merge-modal";
 import { useSupplierDetail } from "@/app/modules/suppliers/hooks/use-supplier-detail";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { Button } from "@/app/modules/shared/components/button";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
@@ -33,7 +33,8 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
   const locale = useLocale();
   const searchParams = useSearchParams();
   const fromParam = searchParams.get("from");
-  const backHref = fromParam && fromParam.startsWith("/") ? fromParam : "/suppliers";
+  const backHref =
+    fromParam && fromParam.startsWith("/") ? fromParam : "/suppliers";
   const supplierPurchases = usePurchases({ supplierId, pageSize: 10 });
   const supplierPayments = useSupplierAccountPayments(supplierId);
   const purchaseHistory = useAuditHistory({ entityType: "PurchaseInvoice" });
@@ -161,7 +162,9 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
             variant="primary"
             size="sm"
             disabled={supplier.amountOwed <= 0 || !supplier.isActive}
-            title={supplier.amountOwed <= 0 ? t("recordPaymentDisabled") : undefined}
+            title={
+              supplier.amountOwed <= 0 ? t("recordPaymentDisabled") : undefined
+            }
             onClick={() =>
               recordPaymentHook.open({
                 id: supplier.id,
@@ -173,12 +176,17 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
             {t("recordPayment")}
           </Button>
           <Link
-            href={`/purchases?new=1&supplierId=${supplier.id}`}
+            href={`/purchases/new?supplierId=${supplier.id}`}
             className="ds-focus-ring inline-flex min-h-10 items-center rounded-lg border border-border bg-surface px-3.5 text-sm font-medium text-text-secondary hover:bg-surface-muted"
           >
             {t("newPurchase")}
           </Link>
-          <Button type="button" variant="secondary" size="sm" onClick={openEdit}>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={openEdit}
+          >
             {t("edit")}
           </Button>
         </div>
@@ -316,13 +324,13 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
               </h2>
               <dl className="mt-3 flex flex-col gap-3 text-base">
                 <div>
-                  <dt className="text-text-muted">{t("fieldPhone")}</dt>
+                  <dt className="text-text-muted">{t("detailPhone")}</dt>
                   <dd className="font-medium text-text-primary">
                     {supplier.phone ?? "-"}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-text-muted">{t("fieldAddress")}</dt>
+                  <dt className="text-text-muted">{t("detailAddress")}</dt>
                   <dd className="font-medium text-text-primary">
                     {supplier.address?.trim() ? supplier.address : "-"}
                   </dd>
@@ -330,8 +338,10 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
               </dl>
             </div>
             <div className="lg:text-end">
-              <p className="text-sm text-text-secondary">{t("currentAmountOwed")}</p>
-              <p className="mt-2 text-3xl font-bold text-text-primary">
+              <p className="text-sm text-text-secondary">
+                {t("currentAmountOwed")}
+              </p>
+              <p className={`mt-2 text-3xl font-bold ${supplier.amountOwed > 0 ? "text-danger" : "text-text-primary"}`}>
                 {formatMoney(supplier.amountOwed, locale)} {t("currency")}
               </p>
             </div>
@@ -346,7 +356,7 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
                 {t("purchaseHistoryTitle")}
               </h2>
               <Link
-                href={`/purchases?new=1&supplierId=${supplier.id}`}
+                href={`/purchases/new?supplierId=${supplier.id}`}
                 className="ds-focus-ring inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
               >
                 + {t("newPurchase")}

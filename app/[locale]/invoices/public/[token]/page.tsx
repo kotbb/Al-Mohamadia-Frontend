@@ -1,8 +1,9 @@
 import { setRequestLocale } from "next-intl/server";
-import { PublicInvoicePageClient } from "./public-invoice-page.client";
+import { PublicInvoicePageClient } from "@/app/modules/invoices/pages/public-invoice-page";
 
 interface PublicInvoicePageProps {
   params: Promise<{ locale: string; token: string }>;
+  searchParams: Promise<{ prices?: string }>;
 }
 
 export async function generateMetadata({
@@ -20,9 +21,11 @@ export async function generateMetadata({
 
 export default async function PublicInvoicePage({
   params,
+  searchParams,
 }: PublicInvoicePageProps) {
   const { locale, token } = await params;
+  const { prices } = await searchParams;
   setRequestLocale(locale);
 
-  return <PublicInvoicePageClient token={token} />;
+  return <PublicInvoicePageClient token={token} showPrices={prices !== "off"} />;
 }

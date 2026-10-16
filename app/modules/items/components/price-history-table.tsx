@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import type { PriceHistoryEntry } from "@/app/modules/items/types/items.types";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
 
 interface PriceHistoryTableProps {
@@ -19,11 +19,7 @@ function formatFieldLabel(
   return field;
 }
 
-function formatValue(
-  field: string,
-  value: unknown,
-  locale: string,
-): string {
+function formatValue(field: string, value: unknown, locale: string): string {
   if (value === null || value === undefined) return "-";
   if (field === "unitPrice" || field === "cost") {
     const numeric = typeof value === "number" ? value : Number(value);

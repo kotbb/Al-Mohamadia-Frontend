@@ -1,11 +1,10 @@
-import { redirect } from "next/navigation";
-
+import { setRequestLocale } from "next-intl/server";
+import { ItemFormPage } from "@/app/modules/items/pages/item-form-page";
 interface PageProps {
   params: Promise<{ locale: string }>;
 }
-
-/** Add item is a modal on `/items` — keep route for bookmarks. */
-export default async function NewItemRoutePage({ params }: PageProps) {
+export default async function Page({ params }: PageProps) {
   const { locale } = await params;
-  redirect(`/${locale}/items`);
+  setRequestLocale(locale);
+  return <ItemFormPage />;
 }

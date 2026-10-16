@@ -8,7 +8,7 @@ import { CustomersList } from "@/app/modules/customers/components/customers-list
 import { CustomerFormModal } from "@/app/modules/customers/components/customer-form-modal";
 import { CustomerMergeModal } from "@/app/modules/customers/components/customer-merge-modal";
 import { useCustomers } from "@/app/modules/customers/hooks/use-customers";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { Button } from "@/app/modules/shared/components/button";
 import { Input } from "@/app/modules/shared/components/input";
 import { SegmentedControl } from "@/app/modules/shared/components/segmented-control";
@@ -259,7 +259,9 @@ export function CustomersPage() {
           onDeactivate={openDeactivateConfirm}
           onActivate={openActivateConfirm}
           onDelete={openDeleteConfirm}
-          onHistory={(customer) => history.openRecord(customer.id, customer.name)}
+          onHistory={(customer) =>
+            history.openRecord(customer.id, customer.name)
+          }
         />
 
         {listStatus === "success" && totalPages > 1 ? (

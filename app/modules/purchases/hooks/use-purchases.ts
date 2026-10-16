@@ -1,4 +1,12 @@
 "use client";
+
+import type {
+  ListStatus,
+  PurchaseStatusFilterOption,
+  PurchasePeriodFilterOption,
+  PurchasesToastState,
+  UsePurchasesOptions,
+} from "../types/use-purchases.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
@@ -10,29 +18,14 @@ import {
 import type {
   ListPurchasesFilters,
   PurchaseInvoice,
-  PurchaseInvoiceStatus,
 } from "@/app/modules/purchases/types/purchases.types";
 import {
   getSupplier,
   listSuppliers,
 } from "@/app/modules/suppliers/services/suppliers.service";
 
-type ListStatus = "idle" | "loading" | "success" | "error";
-export type PurchaseStatusFilterOption = "all" | PurchaseInvoiceStatus;
-export type PurchasePeriodFilterOption = "off" | "day" | "week" | "month" | "year";
-
-export interface PurchasesToastState {
-  kind: "cancelled" | "created";
-  variant: "success" | "danger";
-}
-
 const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
-
-interface UsePurchasesOptions {
-  supplierId?: string;
-  pageSize?: number;
-}
 
 export function usePurchases(options?: UsePurchasesOptions) {
   const describeError = useApiErrorMessage();
@@ -50,6 +43,7 @@ export function usePurchases(options?: UsePurchasesOptions) {
   const [periodFilter, setPeriodFilter] =
     useState<PurchasePeriodFilterOption>("off");
   const [periodDate, setPeriodDate] = useState(todayIsoDate());
+  const [customRange, setCustomRange] = useState(() => { const today = todayIsoDate(); return { from: `${today.slice(0, 7)}-01`, to: today }; });
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
@@ -57,12 +51,13 @@ export function usePurchases(options?: UsePurchasesOptions) {
   const [listError, setListError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
 
-  const [supplierNames, setSupplierNames] = useState<Record<string, string>>({});
+  const [supplierNames, setSupplierNames] = useState<Record<string, string>>(
+    {},
+  );
 
   // Cancel invoice state
-  const [confirmPurchase, setConfirmPurchase] = useState<PurchaseInvoice | null>(
-    null,
-  );
+  const [confirmPurchase, setConfirmPurchase] =
+    useState<PurchaseInvoice | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [toast, setToast] = useState<PurchasesToastState | null>(null);
@@ -117,7 +112,10 @@ export function usePurchases(options?: UsePurchasesOptions) {
       filters.status = statusFilter;
     }
 
-    if (periodFilter !== "off") {
+    if (periodFilter === "custom") {
+      filters.from = customRange.from;
+      filters.to = customRange.to;
+    } else if (periodFilter !== "off") {
       filters.period = periodFilter;
       filters.date = periodDate;
     }
@@ -141,9 +139,7 @@ export function usePurchases(options?: UsePurchasesOptions) {
         if (missingIds.length > 0) {
           const uniqueMissing = [...new Set(missingIds)];
           Promise.all(
-            uniqueMissing.map((id) =>
-              getSupplier(id).catch(() => null),
-            ),
+            uniqueMissing.map((id) => getSupplier(id).catch(() => null)),
           ).then((results) => {
             const updates: Record<string, string> = {};
             for (const item of results) {
@@ -158,9 +154,7 @@ export function usePurchases(options?: UsePurchasesOptions) {
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
         setListStatus("error");
-        setListError(
-          describeError(err, "Failed to load purchases"),
-        );
+        setListError(describeError(err, "Failed to load purchases"));
       });
 
     return () => controller.abort();
@@ -171,6 +165,7 @@ export function usePurchases(options?: UsePurchasesOptions) {
     supplierIdFilter,
     periodFilter,
     periodDate,
+    customRange,
     debouncedSearch,
     options?.supplierId,
     tick,
@@ -199,9 +194,7 @@ export function usePurchases(options?: UsePurchasesOptions) {
       refresh();
       onSuccess?.();
     } catch (e: unknown) {
-      setConfirmError(
-        describeError(e, "Failed to cancel purchase"),
-      );
+      setConfirmError(describeError(e, "Failed to cancel purchase"));
     } finally {
       setIsConfirming(false);
     }
@@ -246,6 +239,8 @@ export function usePurchases(options?: UsePurchasesOptions) {
       setPage(1);
     },
     periodDate,
+    customRange,
+    setCustomRange: (from: string, to: string) => { setCustomRange({ from, to }); setPage(1); },
     setPeriodDate: (d: string) => {
       setPeriodDate(d);
       setPage(1);

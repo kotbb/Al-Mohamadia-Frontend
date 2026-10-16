@@ -38,8 +38,14 @@ export function ItemFormPage({ itemId }: ItemFormPageProps) {
   const isLoading =
     categoriesStatus === "loading" ||
     (isEdit && (itemStatus === "loading" || itemStatus === "idle"));
+  const cannotSave =
+    isLoading ||
+    isSubmitting ||
+    categoriesStatus !== "success" ||
+    (isEdit && itemStatus !== "success");
 
   async function handleSubmit() {
+    if (cannotSave) return;
     const success = await submit();
     if (success) {
       router.push("/items");
@@ -53,48 +59,52 @@ export function ItemFormPage({ itemId }: ItemFormPageProps) {
     <AppShell
       title={title}
       subtitle={subtitle}
+      density="compact"
       actions={
-        isEdit && itemId ? (
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            className="min-h-10 rounded-lg px-3.5 text-sm"
-            disabled={isLoading || !values.name.trim()}
-            onClick={() => history.openRecord(itemId, values.name.trim())}
+        <div className="flex flex-wrap items-center gap-3">
+          {isEdit && itemId ? (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="min-h-10 rounded-lg px-3.5 text-sm"
+              disabled={isLoading || !values.name.trim()}
+              onClick={() => history.openRecord(itemId, values.name.trim())}
+            >
+              {tAudit("viewHistory")}
+            </Button>
+          ) : null}
+          <Link
+            href="/items"
+            className="ds-focus-ring inline-flex w-fit items-center gap-2 text-sm font-medium text-primary underline-offset-2 hover:underline"
           >
-            {tAudit("viewHistory")}
-          </Button>
-        ) : undefined
+            <BackIcon />
+            {t("backToItems")}
+          </Link>
+        </div>
       }
     >
       {history.modal}
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-        <Link
-          href="/items"
-          className="ds-focus-ring inline-flex w-fit items-center gap-2 text-sm font-medium text-primary underline-offset-2 hover:underline"
-        >
-          <BackIcon />
-          {t("backToItems")}
-        </Link>
-
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
         {isLoading ? (
           <LoadingState message={tShared("loading")} />
-        ) : isEdit && itemStatus === "error" ? (
+        ) : categoriesStatus === "error" ||
+          (isEdit && itemStatus === "error") ? (
           <ErrorState title={t("loadError")} message={itemError ?? undefined} />
         ) : (
-          <SurfaceCard>
+          <SurfaceCard padding="sm">
             <ItemForm
               values={values}
               categories={categories}
               isEdit={isEdit}
-              isSubmitting={isSubmitting}
+              isSubmitting={cannotSave}
+              compact
               error={submitError}
               onFieldChange={setField}
               onSubmit={handleSubmit}
             />
 
-            <div className="mt-8 flex justify-end gap-3 border-t border-border pt-6">
+            <div className="mt-4 flex justify-end gap-3 border-t border-border pt-4">
               <Button
                 type="button"
                 variant="secondary"
@@ -107,7 +117,7 @@ export function ItemFormPage({ itemId }: ItemFormPageProps) {
                 type="submit"
                 form="item-form"
                 variant="primary"
-                disabled={isSubmitting}
+                disabled={cannotSave}
               >
                 {isSubmitting ? t("saving") : t("save")}
               </Button>

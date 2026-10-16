@@ -15,12 +15,12 @@ import type {
   DashboardSalesSeriesPoint,
   SalesInvoicePeriod,
 } from "@/app/modules/dashboard/types/dashboard.types";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
 
 interface DashboardSalesChartProps {
   series: DashboardSalesSeriesPoint[];
-  period: SalesInvoicePeriod;
+  period: SalesInvoicePeriod | "custom";
 }
 
 export function DashboardSalesChart({
@@ -101,7 +101,7 @@ export function DashboardSalesChart({
 
 function formatBucketLabel(
   bucketStart: string,
-  period: SalesInvoicePeriod,
+  period: SalesInvoicePeriod | "custom",
   locale: string,
 ): string {
   const resolvedLocale = locale === "ar" ? "ar-EG-u-nu-latn" : locale;
@@ -110,7 +110,7 @@ function formatBucketLabel(
   if (isYearBucket) {
     const [year, month] = bucketStart.split("-").map(Number);
     if (!year || !month) return bucketStart;
-    return new Intl.DateTimeFormat(resolvedLocale, { month: "short" }).format(
+    return new Intl.DateTimeFormat(resolvedLocale, { month: "short", ...(period === "custom" ? { year: "2-digit" } : {}) }).format(
       new Date(year, month - 1, 1),
     );
   }

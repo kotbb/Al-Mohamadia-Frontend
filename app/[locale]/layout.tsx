@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
-import { Noto_Sans, Noto_Sans_Arabic } from "next/font/google";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import {
   getMessages,
@@ -10,21 +9,8 @@ import {
 import { routing, type Locale } from "@/i18n/routing";
 import { ThemeProvider } from "@/lib/theme/theme-provider";
 import { AuthProvider } from "@/lib/auth/auth-provider";
+import { appFontsClassName } from "../fonts";
 import "../globals.css";
-
-const notoSansArabic = Noto_Sans_Arabic({
-  variable: "--font-noto-sans-arabic",
-  subsets: ["arabic"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const notoSans = Noto_Sans({
-  variable: "--font-noto-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
 
 interface LocaleLayoutProps {
   children: ReactNode;
@@ -41,6 +27,9 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  if (!hasLocale(routing.locales, locale)) {
+    return { title: "Page not found | المحمدية" };
+  }
   const t = await getTranslations({ locale, namespace: "app" });
   return {
     title: t("name"),
@@ -74,7 +63,7 @@ export default async function LocaleLayout({
       lang={locale as Locale}
       dir={dir}
       suppressHydrationWarning
-      className={`${notoSansArabic.variable} ${notoSans.variable} font-sans h-full`}
+      className={`${appFontsClassName} h-full`}
     >
       <body className="font-sans min-h-full antialiased">
         <ThemeProvider>

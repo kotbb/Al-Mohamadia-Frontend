@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { PaymentMethodBadge } from "@/app/modules/payments/components/payment-method-badge";
 import type { Payment } from "@/app/modules/payments/types/payments.types";
 import { Badge } from "@/app/modules/shared/components/badge";

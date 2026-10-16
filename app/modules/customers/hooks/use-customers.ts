@@ -1,4 +1,11 @@
 "use client";
+
+import type {
+  ListStatus,
+  DebtFilter,
+  CustomersToastState,
+  CustomersConfirmKind,
+} from "../types/use-customers.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
@@ -10,24 +17,6 @@ import {
   updateCustomer,
 } from "@/app/modules/customers/services/customers.service";
 import type { Customer } from "@/app/modules/customers/types/customers.types";
-
-type ListStatus = "idle" | "loading" | "success" | "error";
-export type DebtFilter = "all" | "hasDebt";
-
-export type CustomersToastKind =
-  | "created"
-  | "updated"
-  | "activated"
-  | "deactivated"
-  | "deleted"
-  | "merged";
-
-export interface CustomersToastState {
-  kind: CustomersToastKind;
-  variant: "success" | "danger";
-}
-
-export type CustomersConfirmKind = "deactivate" | "activate" | "delete" | null;
 
 const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
@@ -119,8 +108,7 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
-        const message =
-          describeError(error, "Request failed");
+        const message = describeError(error, "Request failed");
         setCustomers([]);
         setTotal(0);
         setTotalDebt(0);
@@ -153,7 +141,7 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
     setFormMode("edit");
     setEditingId(customer.id);
     setFormName(customer.name);
-    setFormPhone(customer.phone);
+    setFormPhone(customer.phone ?? "");
     setFormAddress(customer.address ?? "");
     setFormBalance("");
     setFormError(null);
@@ -169,8 +157,8 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
   const submitForm = useCallback(async () => {
     const name = formName.trim();
     const phone = formPhone.trim();
-    if (!name || !phone) {
-      setFormError("Name and phone are required");
+    if (!name) {
+      setFormError("Name is required");
       return;
     }
 
@@ -181,8 +169,7 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
       const address = formAddress.trim();
       if (formMode === "create") {
         const balanceRaw = formBalance.trim();
-        const balance =
-          balanceRaw === "" ? undefined : Number(balanceRaw);
+        const balance = balanceRaw === "" ? undefined : Number(balanceRaw);
         if (balance !== undefined && (Number.isNaN(balance) || balance < 0)) {
           setFormError("Opening balance must be a non-negative number");
           setIsSaving(false);
@@ -190,7 +177,7 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
         }
         await createCustomer({
           name,
-          phone,
+          phone: phone || null,
           address: address || undefined,
           balance,
         });
@@ -198,7 +185,7 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
       } else if (editingId) {
         await updateCustomer(editingId, {
           name,
-          phone,
+          phone: phone || null,
           address: address,
         });
         setToast({ kind: "updated", variant: "success" });
@@ -207,8 +194,7 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
       resetForm();
       refresh();
     } catch (error: unknown) {
-      const message =
-        describeError(error, "Save failed");
+      const message = describeError(error, "Save failed");
       setFormError(message);
     } finally {
       setIsSaving(false);
@@ -224,23 +210,19 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
     resetForm,
   ]);
 
-  const openMerge = useCallback(
-    async (preselectedTargetId?: string) => {
-      setMergeError(null);
-      setMergeSourceIds([]);
-      setMergeTargetId(preselectedTargetId ?? "");
-      setIsMergeOpen(true);
-      try {
-        const result = await listCustomers({ page: 1, limit: 100 });
-        setMergeOptions(result.items);
-      } catch (error: unknown) {
-        const message =
-          describeError(error, "Could not load customers");
-        setMergeError(message);
-      }
-    },
-    [],
-  );
+  const openMerge = useCallback(async (preselectedTargetId?: string) => {
+    setMergeError(null);
+    setMergeSourceIds([]);
+    setMergeTargetId(preselectedTargetId ?? "");
+    setIsMergeOpen(true);
+    try {
+      const result = await listCustomers({ page: 1, limit: 100 });
+      setMergeOptions(result.items);
+    } catch (error: unknown) {
+      const message = describeError(error, "Could not load customers");
+      setMergeError(message);
+    }
+  }, []);
 
   const closeMerge = useCallback(() => {
     if (isMerging) return;
@@ -256,36 +238,39 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
     );
   }, []);
 
-  const submitMerge = useCallback(async () => {
-    if (!mergeTargetId || mergeSourceIds.length === 0) {
-      setMergeError("Select a main customer and at least one duplicate");
-      return;
-    }
-    if (mergeSourceIds.includes(mergeTargetId)) {
-      setMergeError("Main customer cannot be in the duplicates list");
-      return;
-    }
+  const submitMerge = useCallback(
+    async (phone?: string | null) => {
+      if (!mergeTargetId || mergeSourceIds.length === 0) {
+        setMergeError("Select a main customer and at least one duplicate");
+        return;
+      }
+      if (mergeSourceIds.includes(mergeTargetId)) {
+        setMergeError("Main customer cannot be in the duplicates list");
+        return;
+      }
 
-    setIsMerging(true);
-    setMergeError(null);
-    try {
-      await mergeCustomers({
-        targetId: mergeTargetId,
-        sourceIds: mergeSourceIds,
-      });
-      setToast({ kind: "merged", variant: "success" });
-      setIsMergeOpen(false);
-      setMergeTargetId("");
-      setMergeSourceIds([]);
-      refresh();
-    } catch (error: unknown) {
-      const message =
-        describeError(error, "Merge failed");
-      setMergeError(message);
-    } finally {
-      setIsMerging(false);
-    }
-  }, [mergeTargetId, mergeSourceIds, refresh]);
+      setIsMerging(true);
+      setMergeError(null);
+      try {
+        await mergeCustomers({
+          targetId: mergeTargetId,
+          sourceIds: mergeSourceIds,
+          phone,
+        });
+        setToast({ kind: "merged", variant: "success" });
+        setIsMergeOpen(false);
+        setMergeTargetId("");
+        setMergeSourceIds([]);
+        refresh();
+      } catch (error: unknown) {
+        const message = describeError(error, "Merge failed");
+        setMergeError(message);
+      } finally {
+        setIsMerging(false);
+      }
+    },
+    [mergeTargetId, mergeSourceIds, refresh],
+  );
 
   const openDeactivateConfirm = useCallback((customer: Customer) => {
     setConfirmError(null);
@@ -333,8 +318,7 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
       setConfirmCustomer(null);
       refresh();
     } catch (error: unknown) {
-      const message =
-        describeError(error, "Action failed");
+      const message = describeError(error, "Action failed");
       setConfirmError(message);
     } finally {
       setIsConfirming(false);

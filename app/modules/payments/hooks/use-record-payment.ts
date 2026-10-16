@@ -1,17 +1,15 @@
 "use client";
 
+import type { CustomerTarget } from "../types/use-record-payment.types";
+
 import { useCallback, useState } from "react";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
-import { roundMoneyAmount } from "@/app/modules/items/utils/format-money";
+import { roundMoneyAmount } from "@/app/modules/shared/utils/format-money";
 import { recordPayment } from "@/app/modules/payments/services/payments.service";
-import type { Payment, PaymentMethod } from "@/app/modules/payments/types/payments.types";
-
-export interface CustomerTarget {
-  id: string;
-  name: string;
-  balance: number;
-  phone?: string;
-}
+import type {
+  Payment,
+  PaymentMethod,
+} from "@/app/modules/payments/types/payments.types";
 
 export function useRecordPayment() {
   const describeError = useApiErrorMessage();

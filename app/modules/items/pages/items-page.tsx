@@ -2,13 +2,12 @@
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useState } from "react";
+import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { AppShell } from "@/app/layout/app-shell";
 import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { CategoryItemsTable } from "@/app/modules/items/components/category-items-table";
-import { ItemFormModal } from "@/app/modules/items/components/item-form-modal";
 import { ItemsToolbar } from "@/app/modules/items/components/items-toolbar";
-import { PriceHistoryModal } from "@/app/modules/items/components/price-history-modal";
 import { useItemsPage } from "@/app/modules/items/hooks/use-items-page";
 import { deleteItem } from "@/app/modules/items/services/items.service";
 import type { Item } from "@/app/modules/items/types/items.types";
@@ -24,9 +23,7 @@ export function ItemsPage() {
   const t = useTranslations("items");
   const tShared = useTranslations("shared");
   const history = useAuditHistory({ entityType: "Item" });
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingItemId, setEditingItemId] = useState<string | null>(null);
-  const [historyItemId, setHistoryItemId] = useState<string | null>(null);
+  const router = useRouter();
   const [deleteTarget, setDeleteTarget] = useState<Item | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -44,24 +41,11 @@ export function ItemsPage() {
     setIsActive,
   } = useItemsPage();
 
-  function openCreateModal() {
-    setEditingItemId(null);
-    setModalOpen(true);
+  function openCreatePage() {
+    router.push("/items/new");
   }
-
-  function openEditModal(itemId: string) {
-    setEditingItemId(itemId);
-    setModalOpen(true);
-  }
-
-  function closeModal() {
-    setModalOpen(false);
-    setEditingItemId(null);
-  }
-
-  function handleModalSuccess() {
-    closeModal();
-    refresh();
+  function openEditPage(itemId: string) {
+    router.push(`/items/${itemId}/edit`);
   }
 
   async function handleDeleteConfirm() {
@@ -74,8 +58,7 @@ export function ItemsPage() {
       setToastOpen(true);
       refresh();
     } catch (error: unknown) {
-      const message =
-        describeError(error, "Delete failed");
+      const message = describeError(error, "Delete failed");
       setDeleteError(message);
     } finally {
       setIsDeleting(false);
@@ -94,7 +77,7 @@ export function ItemsPage() {
             variant="primary"
             size="sm"
             className="min-h-10 rounded-lg px-3.5 text-sm"
-            onClick={openCreateModal}
+            onClick={openCreatePage}
           >
             <PlusIcon />
             {t("addItem")}
@@ -108,21 +91,6 @@ export function ItemsPage() {
         message={t("deleteSuccess")}
         variant="danger"
         onClose={() => setToastOpen(false)}
-      />
-
-      <ItemFormModal
-        key={editingItemId ?? "new"}
-        open={modalOpen}
-        itemId={editingItemId}
-        onClose={closeModal}
-        onSuccess={handleModalSuccess}
-      />
-
-      <PriceHistoryModal
-        key={historyItemId ?? "history"}
-        open={historyItemId !== null}
-        itemId={historyItemId}
-        onClose={() => setHistoryItemId(null)}
       />
 
       <ConfirmDialog
@@ -173,7 +141,10 @@ export function ItemsPage() {
             onRetry={refresh}
           />
         ) : groupedItems.length === 0 ? (
-          <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />
+          <EmptyState
+            title={t("emptyTitle")}
+            description={t("emptyDescription")}
+          />
         ) : (
           <div className="flex flex-col gap-6 pb-2">
             {groupedItems.map(({ category, items }) => (
@@ -181,8 +152,7 @@ export function ItemsPage() {
                 key={category.id}
                 category={category}
                 items={items}
-                onEdit={openEditModal}
-                onPriceHistory={setHistoryItemId}
+                onEdit={openEditPage}
                 onDelete={setDeleteTarget}
                 onHistory={(item) => history.openRecord(item.id, item.name)}
               />

@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import type { Category } from "@/app/modules/items/types/items.types";
-import type { ItemsPageFilters } from "@/app/modules/items/hooks/use-items-page";
+import type { ItemsPageFilters } from "@/app/modules/items/types/use-items-page.types";
 
 interface ItemsToolbarProps {
   filters: ItemsPageFilters;

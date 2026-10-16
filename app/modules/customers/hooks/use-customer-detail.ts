@@ -1,4 +1,9 @@
 "use client";
+
+import type {
+  DetailStatus,
+  CustomerDetailToastKind,
+} from "../types/use-customer-detail.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
@@ -11,15 +16,6 @@ import {
   updateCustomer,
 } from "@/app/modules/customers/services/customers.service";
 import type { Customer } from "@/app/modules/customers/types/customers.types";
-
-type DetailStatus = "loading" | "success" | "error";
-
-export type CustomerDetailToastKind =
-  | "updated"
-  | "activated"
-  | "deactivated"
-  | "deleted"
-  | "merged";
 
 export function useCustomerDetail(id: string) {
   const describeError = useApiErrorMessage();
@@ -69,8 +65,7 @@ export function useCustomerDetail(id: string) {
       })
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
-        const message =
-          describeError(err, "Request failed");
+        const message = describeError(err, "Request failed");
         setCustomer(null);
         setError(message);
         setStatus("error");
@@ -81,7 +76,7 @@ export function useCustomerDetail(id: string) {
   const openEdit = useCallback(() => {
     if (!customer) return;
     setFormName(customer.name);
-    setFormPhone(customer.phone);
+    setFormPhone(customer.phone ?? "");
     setFormAddress(customer.address ?? "");
     setFormError(null);
     setIsFormOpen(true);
@@ -97,8 +92,8 @@ export function useCustomerDetail(id: string) {
     if (!customer) return;
     const name = formName.trim();
     const phone = formPhone.trim();
-    if (!name || !phone) {
-      setFormError("Name and phone are required");
+    if (!name) {
+      setFormError("Name is required");
       return;
     }
     setIsSaving(true);
@@ -106,15 +101,14 @@ export function useCustomerDetail(id: string) {
     try {
       const updated = await updateCustomer(customer.id, {
         name,
-        phone,
+        phone: phone || null,
         address: formAddress.trim(),
       });
       setCustomer(updated);
       setIsFormOpen(false);
       setToast({ kind: "updated", variant: "success" });
     } catch (err: unknown) {
-      const message =
-        describeError(err, "Save failed");
+      const message = describeError(err, "Save failed");
       setFormError(message);
     } finally {
       setIsSaving(false);
@@ -130,8 +124,7 @@ export function useCustomerDetail(id: string) {
       const result = await listCustomers({ page: 1, limit: 100 });
       setMergeOptions(result.items);
     } catch (err: unknown) {
-      const message =
-        describeError(err, "Could not load customers");
+      const message = describeError(err, "Could not load customers");
       setMergeError(message);
     }
   }, [id]);
@@ -150,33 +143,36 @@ export function useCustomerDetail(id: string) {
     );
   }, []);
 
-  const submitMerge = useCallback(async () => {
-    if (!mergeTargetId || mergeSourceIds.length === 0) {
-      setMergeError("Select a main customer and at least one duplicate");
-      return;
-    }
-    setIsMerging(true);
-    setMergeError(null);
-    try {
-      const kept = await mergeCustomers({
-        targetId: mergeTargetId,
-        sourceIds: mergeSourceIds,
-      });
-      setIsMergeOpen(false);
-      setToast({ kind: "merged", variant: "success" });
-      if (kept.id !== id) {
-        router.replace(`/customers/${kept.id}`);
-      } else {
-        refresh();
+  const submitMerge = useCallback(
+    async (phone?: string | null) => {
+      if (!mergeTargetId || mergeSourceIds.length === 0) {
+        setMergeError("Select a main customer and at least one duplicate");
+        return;
       }
-    } catch (err: unknown) {
-      const message =
-        describeError(err, "Merge failed");
-      setMergeError(message);
-    } finally {
-      setIsMerging(false);
-    }
-  }, [mergeTargetId, mergeSourceIds, id, router, refresh]);
+      setIsMerging(true);
+      setMergeError(null);
+      try {
+        const kept = await mergeCustomers({
+          targetId: mergeTargetId,
+          sourceIds: mergeSourceIds,
+          phone,
+        });
+        setIsMergeOpen(false);
+        setToast({ kind: "merged", variant: "success" });
+        if (kept.id !== id) {
+          router.replace(`/customers/${kept.id}`);
+        } else {
+          refresh();
+        }
+      } catch (err: unknown) {
+        const message = describeError(err, "Merge failed");
+        setMergeError(message);
+      } finally {
+        setIsMerging(false);
+      }
+    },
+    [mergeTargetId, mergeSourceIds, id, router, refresh],
+  );
 
   const openDeactivateConfirm = useCallback(() => {
     setConfirmError(null);
@@ -211,7 +207,9 @@ export function useCustomerDetail(id: string) {
         return;
       }
       const nextActive = confirmKind === "activate";
-      const updated = await updateCustomer(customer.id, { isActive: nextActive });
+      const updated = await updateCustomer(customer.id, {
+        isActive: nextActive,
+      });
       setCustomer(updated);
       setToast(
         nextActive
@@ -220,8 +218,7 @@ export function useCustomerDetail(id: string) {
       );
       setConfirmKind(null);
     } catch (err: unknown) {
-      const message =
-        describeError(err, "Action failed");
+      const message = describeError(err, "Action failed");
       setConfirmError(message);
     } finally {
       setIsConfirming(false);

@@ -1,4 +1,11 @@
 "use client";
+
+import type {
+  ListStatus,
+  UsersToastState,
+  UsersConfirmKind,
+  UseUsersResult,
+} from "../types/use-users.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
@@ -10,59 +17,6 @@ import {
   listUsers,
   updateUser,
 } from "@/app/modules/auth/services/users.service";
-
-type ListStatus = "idle" | "loading" | "success" | "error";
-
-export type UsersToastKind =
-  | "created"
-  | "updated"
-  | "activated"
-  | "deactivated"
-  | "deleted";
-
-export interface UsersToastState {
-  kind: UsersToastKind;
-  variant: "success" | "danger";
-}
-
-export type UsersConfirmKind = "deactivate" | "activate" | "delete" | null;
-
-interface UseUsersResult {
-  users: AuthUser[];
-  listStatus: ListStatus;
-  listError: string | null;
-  refresh: () => void;
-  formMode: "create" | "edit";
-  isFormOpen: boolean;
-  openCreate: () => void;
-  openEdit: (user: AuthUser) => void;
-  closeForm: () => void;
-  formFirstName: string;
-  formLastName: string;
-  formUsername: string;
-  formPassword: string;
-  formRole: UserRole;
-  setFormFirstName: (value: string) => void;
-  setFormLastName: (value: string) => void;
-  setFormUsername: (value: string) => void;
-  setFormPassword: (value: string) => void;
-  setFormRole: (value: UserRole) => void;
-  isSaving: boolean;
-  formError: string | null;
-  submitForm: () => Promise<void>;
-  toast: UsersToastState | null;
-  clearToast: () => void;
-  confirmKind: UsersConfirmKind;
-  confirmUser: AuthUser | null;
-  isConfirming: boolean;
-  confirmError: string | null;
-  openDeactivateConfirm: (user: AuthUser) => void;
-  openActivateConfirm: (user: AuthUser) => void;
-  openDeleteConfirm: (user: AuthUser) => void;
-  closeConfirm: () => void;
-  submitConfirm: () => Promise<void>;
-  roleLocked: boolean;
-}
 
 export function useUsers(): UseUsersResult {
   const describeError = useApiErrorMessage();
@@ -106,8 +60,7 @@ export function useUsers(): UseUsersResult {
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
-        const message =
-          describeError(error, "Request failed");
+        const message = describeError(error, "Request failed");
         setUsers([]);
         setListError(message);
         setListStatus("error");
@@ -179,8 +132,7 @@ export function useUsers(): UseUsersResult {
       resetForm();
       refresh();
     } catch (error: unknown) {
-      const message =
-        describeError(error, "Save failed");
+      const message = describeError(error, "Save failed");
       setFormError(message);
     } finally {
       setIsSaving(false);
@@ -244,13 +196,17 @@ export function useUsers(): UseUsersResult {
       }
 
       if (confirmKind === "delete") {
-        setUsers((current) => current.filter((item) => item.id !== confirmUser.id));
+        setUsers((current) =>
+          current.filter((item) => item.id !== confirmUser.id),
+        );
         setToast({ kind: "deleted", variant: "danger" });
       } else {
         const nextActive = confirmKind === "activate";
         setUsers((current) =>
           current.map((item) =>
-            item.id === confirmUser.id ? { ...item, isActive: nextActive } : item,
+            item.id === confirmUser.id
+              ? { ...item, isActive: nextActive }
+              : item,
           ),
         );
         setToast(
@@ -262,8 +218,7 @@ export function useUsers(): UseUsersResult {
       setConfirmKind(null);
       setConfirmUser(null);
     } catch (error: unknown) {
-      const message =
-        describeError(error, "Action failed");
+      const message = describeError(error, "Action failed");
       setConfirmError(message);
     } finally {
       setIsConfirming(false);

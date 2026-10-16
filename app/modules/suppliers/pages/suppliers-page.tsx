@@ -7,7 +7,7 @@ import { SuppliersList } from "@/app/modules/suppliers/components/suppliers-list
 import { SupplierFormModal } from "@/app/modules/suppliers/components/supplier-form-modal";
 import { SupplierMergeModal } from "@/app/modules/suppliers/components/supplier-merge-modal";
 import { useSuppliers } from "@/app/modules/suppliers/hooks/use-suppliers";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { Button } from "@/app/modules/shared/components/button";
 import { Input } from "@/app/modules/shared/components/input";
 import { SegmentedControl } from "@/app/modules/shared/components/segmented-control";
@@ -241,7 +241,9 @@ export function SuppliersPage() {
           onDeactivate={openDeactivateConfirm}
           onActivate={openActivateConfirm}
           onDelete={openDeleteConfirm}
-          onHistory={(supplier) => history.openRecord(supplier.id, supplier.name)}
+          onHistory={(supplier) =>
+            history.openRecord(supplier.id, supplier.name)
+          }
         />
 
         {listStatus === "success" && totalPages > 1 ? (

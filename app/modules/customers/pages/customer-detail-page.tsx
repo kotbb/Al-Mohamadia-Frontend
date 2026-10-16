@@ -9,7 +9,7 @@ import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { CustomerFormModal } from "@/app/modules/customers/components/customer-form-modal";
 import { CustomerMergeModal } from "@/app/modules/customers/components/customer-merge-modal";
 import { useCustomerDetail } from "@/app/modules/customers/hooks/use-customer-detail";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { PaymentsTable } from "@/app/modules/payments/components/payments-table";
 import { RecordPaymentModal } from "@/app/modules/payments/components/record-payment-modal";
 import { useCustomerPayments } from "@/app/modules/payments/hooks/use-customer-payments";
@@ -142,7 +142,7 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
   return (
     <AppShell
       title={customer.name}
-      subtitle={customer.phone}
+      subtitle={customer.phone ?? undefined}
       actions={
         <div className="flex flex-wrap items-center gap-2">
           <Link
@@ -316,13 +316,13 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
               </h2>
               <dl className="mt-3 flex flex-col gap-3 text-base">
                 <div>
-                  <dt className="text-text-muted">{t("fieldPhone")}</dt>
+                  <dt className="text-text-muted">{t("detailPhone")}</dt>
                   <dd className="font-medium text-text-primary">
-                    {customer.phone}
+                    {customer.phone ?? "-"}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-text-muted">{t("fieldAddress")}</dt>
+                  <dt className="text-text-muted">{t("detailAddress")}</dt>
                   <dd className="font-medium text-text-primary">
                     {customer.address?.trim() ? customer.address : "-"}
                   </dd>

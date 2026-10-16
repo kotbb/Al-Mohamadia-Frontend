@@ -19,6 +19,10 @@ function buildListQuery(filters?: ListSalesInvoicesFilters): string {
     params.set("period", filters.period);
     if (filters.date) params.set("date", filters.date);
   }
+  if (filters.from && filters.to) {
+    params.set("from", filters.from);
+    params.set("to", filters.to);
+  }
   if (filters.page !== undefined) params.set("page", String(filters.page));
   if (filters.limit !== undefined) params.set("limit", String(filters.limit));
   const query = params.toString();
@@ -58,14 +62,16 @@ export async function cancelSalesInvoice(id: string): Promise<SalesInvoice> {
   return apiClient.post<SalesInvoice>(`/sales-invoices/${id}/cancel`);
 }
 
-export async function getSalesInvoiceShare(
-  id: string,
-  signal?: AbortSignal,
-): Promise<SalesInvoiceSharePayload> {
-  return apiClient.get<SalesInvoiceSharePayload>(
-    `/sales-invoices/${id}/share`,
-    { signal },
-  );
+export async function getInvoiceReceipt(id: string, signal?: AbortSignal): Promise<PublicInvoice> {
+  return apiClient.get<PublicInvoice>(`/sales-invoices/${id}/receipt`, { signal });
+}
+
+export async function getInvoiceNeighbors(id: string, signal?: AbortSignal): Promise<{ previousId: string | null; nextId: string | null }> {
+  return apiClient.get<{ previousId: string | null; nextId: string | null }>(`/sales-invoices/${id}/neighbors`, { signal });
+}
+
+export async function getSalesInvoiceShare(id: string): Promise<SalesInvoiceSharePayload> {
+  return apiClient.get<SalesInvoiceSharePayload>(`/sales-invoices/${id}/share`);
 }
 
 export async function getPublicInvoice(
@@ -82,23 +88,4 @@ export async function getPublicInvoice(
   const body = (await res.json()) as { data?: PublicInvoice } | PublicInvoice;
   if ("data" in body && body.data) return body.data;
   return body as PublicInvoice;
-}
-
-export async function downloadInvoicePdf(
-  elementId: string,
-  invoiceNumber: string,
-): Promise<void> {
-  const html2pdf = (await import("html2pdf.js")).default;
-  const element = document.getElementById(elementId);
-  if (!element) return;
-  await html2pdf()
-    .set({
-      margin: 0,
-      filename: `فاتورة-${invoiceNumber}.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: false },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-    })
-    .from(element)
-    .save();
 }

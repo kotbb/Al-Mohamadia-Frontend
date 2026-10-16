@@ -1,16 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { AppShell } from "@/app/layout/app-shell";
 import { CancelInvoiceDialog } from "@/app/modules/invoices/components/cancel-invoice-dialog";
-import { InvoiceFormModal } from "@/app/modules/invoices/components/invoice-form-modal";
-import { InvoicePreviewModal } from "@/app/modules/invoices/components/invoice-preview-modal";
+import { InvoiceShareModal } from "@/app/modules/invoices/components/invoice-share-modal";
+import { getInvoiceNeighbors } from "@/app/modules/invoices/services/invoices.service";
 import { useInvoiceDetail } from "@/app/modules/invoices/hooks/use-invoice-detail";
-import { useInvoiceForm } from "@/app/modules/invoices/hooks/use-invoice-form";
 import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { Badge } from "@/app/modules/shared/components/badge";
 import { Button } from "@/app/modules/shared/components/button";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
@@ -26,9 +25,9 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
   const t = useTranslations("invoices");
   const tShared = useTranslations("shared");
   const locale = useLocale();
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const form = useInvoiceForm();
+  const router = useRouter();
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [neighbors, setNeighbors] = useState<{ previousId: string | null; nextId: string | null }>({ previousId: null, nextId: null });
   const {
     invoice,
     status,
@@ -42,28 +41,15 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
     submitCancel,
     isCancelling,
     cancelError,
-    shareInvoice,
-    actionError,
-    clearActionError,
     toastKind,
     clearToast,
-    notifyUpdated,
   } = useInvoiceDetail(invoiceId);
 
-  function openEdit() {
-    if (!invoice) return;
-    form.initializeForEdit(invoice);
-    setIsEditOpen(true);
-  }
-
-  function handleEditSuccess(id: string, printed: boolean) {
-    setIsEditOpen(false);
-    form.resetForm();
-    notifyUpdated();
-    if (printed) {
-      setIsPreviewOpen(true);
-    }
-  }
+  useEffect(() => {
+    const controller = new AbortController();
+    getInvoiceNeighbors(invoiceId, controller.signal).then(setNeighbors).catch(() => setNeighbors({ previousId: null, nextId: null }));
+    return () => controller.abort();
+  }, [invoiceId]);
 
   const currency = t("currency");
   const title = invoice
@@ -86,16 +72,13 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
       actions={
         <div className="flex flex-wrap items-center gap-2">
           {invoice && invoice.status === "saved" ? (
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              className="min-h-10 rounded-lg px-3.5 text-sm"
-              onClick={openEdit}
+            <Link
+              href={`/invoices/${invoice.id}/edit`}
+              className="ds-focus-ring inline-flex min-h-10 items-center rounded-lg border border-border bg-surface px-3.5 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-muted"
             >
               <EditIcon />
               {t("editInvoice")}
-            </Button>
+            </Link>
           ) : null}
           <Link
             href="/invoices"
@@ -117,12 +100,6 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
         message={t("updateSuccess")}
         variant="success"
         onClose={clearToast}
-      />
-      <Toast
-        open={actionError !== null}
-        message={actionError ?? ""}
-        variant="danger"
-        onClose={clearActionError}
       />
 
       <CancelInvoiceDialog
@@ -146,6 +123,10 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
           />
         ) : (
           <>
+            {invoice.type === "customer_sale" && (neighbors.previousId || neighbors.nextId) && <nav aria-label={t("invoiceNavigation")} className="flex flex-wrap gap-2 rounded-xl border border-border bg-surface p-3">
+              {neighbors.previousId && <Link href={`/invoices/${neighbors.previousId}`} className="rounded-lg border border-border px-3 py-2 text-sm">{t("previousCustomerInvoice")}</Link>}
+              {neighbors.nextId && <Link href={`/invoices/${neighbors.nextId}`} className="rounded-lg border border-border px-3 py-2 text-sm">{t("nextCustomerInvoice")}</Link>}
+            </nav>}
             <div className="flex flex-wrap items-center gap-2.5">
               <Badge
                 variant={invoice.status === "saved" ? "success" : "danger"}
@@ -196,7 +177,7 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
                         line.thickness != null &&
                         line.width != null &&
                         line.length != null
-                          ? `${line.thickness} × ${line.width} × ${line.length} سم`
+                          ? `${line.thickness} × ${line.width} × ${line.length} ${locale === "ar" ? "م" : "m"}`
                           : null;
                       return (
                         <tr
@@ -283,23 +264,22 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
               </div>
             </SurfaceCard>
 
-            <div className="flex flex-wrap items-center gap-3 border-t border-border pt-6">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setIsPreviewOpen(true)}
-              >
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-6">
+              <div className="flex flex-wrap items-center gap-3">
+              <Button type="button" variant="primary" onClick={() => router.push(`/invoices/${invoice.id}/export`)}>
                 <PrinterIcon />
                 {t("print")}
               </Button>
               <Button
                 type="button"
-                variant="primary"
-                onClick={() => void shareInvoice()}
+                variant="secondary"
+                className="!border-transparent !bg-[#25D366] !text-white hover:!bg-[#20c45b]"
+                onClick={() => setIsShareOpen(true)}
               >
                 <WhatsAppIcon />
-                {t("share")}
+                {t("whatsappOnly")}
               </Button>
+              </div>
               {invoice.status === "saved" ? (
                 <Button type="button" variant="danger" onClick={openCancel}>
                   <CancelIcon />
@@ -308,23 +288,7 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
               ) : null}
             </div>
 
-            <InvoiceFormModal
-              open={isEditOpen}
-              onClose={() => {
-                setIsEditOpen(false);
-                form.resetForm();
-              }}
-              form={form}
-              onSuccess={handleEditSuccess}
-            />
-
-            <InvoicePreviewModal
-              open={isPreviewOpen}
-              onClose={() => setIsPreviewOpen(false)}
-              invoiceId={invoice.id}
-              initialInvoice={invoice}
-              customerName={customerName}
-            />
+            {isShareOpen && <InvoiceShareModal invoiceId={invoice.id} onClose={() => setIsShareOpen(false)} />}
           </>
         )}
       </div>
@@ -360,7 +324,7 @@ function PrinterIcon() {
 function WhatsAppIcon() {
   return (
     <svg
-      className="h-4 w-4 shrink-0"
+      className="h-5 w-5 shrink-0"
       viewBox="0 0 24 24"
       fill="none"
       aria-hidden

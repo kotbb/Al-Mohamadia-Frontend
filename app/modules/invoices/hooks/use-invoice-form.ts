@@ -1,7 +1,18 @@
 "use client";
+import { useItemDimensionDefaults } from "@/app/modules/items/hooks/use-item-dimension-defaults";
+import type { DimensionName } from "@/app/modules/items/types/items.types";
+import { applySavedDimension } from "@/app/modules/shared/utils/saved-dimension";
+
+import type { InvoiceFormLine } from "../types/use-invoice-form.types";
+import { newLine, lineTotalForFormLine } from "../utils/invoice-form";
+import {
+  parsePositive,
+  parseNonNegative,
+} from "@/app/modules/shared/utils/form-numbers";
+import { moneyFieldString } from "@/app/modules/shared/utils/format-money";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   getCustomer,
   listCustomers,
@@ -18,90 +29,14 @@ import type {
 } from "@/app/modules/invoices/types/invoices.types";
 import {
   computeInvoiceTotals,
-  lineTotalForPricing,
   roundMoney,
-} from "@/app/modules/invoices/utils/invoice-math";
+} from "@/app/modules/shared/utils/invoice-math";
 import { getItem, listItems } from "@/app/modules/items/services/items.service";
 import type { Item } from "@/app/modules/items/types/items.types";
-import { roundMoneyAmount } from "@/app/modules/items/utils/format-money";
-
-export interface InvoiceFormLine {
-  key: string;
-  itemId: string;
-  quantity: string;
-  piecePrice: string;
-  thickness: string;
-  width: string;
-  length: string;
-  note: string;
-}
-
-function newLine(): InvoiceFormLine {
-  return {
-    key: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    itemId: "",
-    quantity: "1",
-    piecePrice: "",
-    thickness: "",
-    width: "",
-    length: "",
-    note: "",
-  };
-}
-
-function parsePositive(value: string): number | null {
-  const n = Number(value);
-  if (!Number.isFinite(n) || n <= 0) return null;
-  return n;
-}
-
-function parseNonNegative(value: string): number | null {
-  const n = Number(value);
-  if (!Number.isFinite(n) || n < 0) return null;
-  return n;
-}
+import { initialDimensions } from "@/app/modules/items/utils/dimension-defaults";
+import { roundMoneyAmount } from "@/app/modules/shared/utils/format-money";
 
 const SEARCH_DEBOUNCE_MS = 300;
-
-function moneyFieldString(raw: string): string {
-  const rounded = roundMoneyAmount(raw);
-  return rounded === null ? raw : String(rounded);
-}
-
-function lineTotalForFormLine(
-  line: InvoiceFormLine,
-  itemsById: Map<string, Item>,
-): number {
-  const item = itemsById.get(line.itemId);
-  if (!item) return 0;
-  const quantity = parsePositive(line.quantity);
-  const piecePrice = parsePositive(line.piecePrice);
-  if (quantity === null || piecePrice === null) return 0;
-  const thickness =
-    item.pricingMode === "per_cubic_meter"
-      ? parsePositive(line.thickness)
-      : null;
-  const width =
-    item.pricingMode === "per_cubic_meter" ? parsePositive(line.width) : null;
-  const length =
-    item.pricingMode === "per_cubic_meter" ? parsePositive(line.length) : null;
-  if (
-    item.pricingMode === "per_cubic_meter" &&
-    (thickness === null || width === null || length === null)
-  ) {
-    return 0;
-  }
-  return roundMoney(
-    lineTotalForPricing({
-      pricingMode: item.pricingMode,
-      quantity,
-      piecePrice,
-      thicknessCm: thickness,
-      widthCm: width,
-      lengthCm: length,
-    }),
-  );
-}
 
 export function useInvoiceForm() {
   const describeError = useApiErrorMessage();
@@ -117,6 +52,9 @@ export function useInvoiceForm() {
   const [customersLoading, setCustomersLoading] = useState(false);
 
   const [items, setItems] = useState<Item[]>([]);
+  const saveItemDefault = useItemDimensionDefaults(setItems);
+  const selectionVersions = useRef(new Map<string, number>());
+
   const [itemsStatus, setItemsStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("loading");
@@ -145,9 +83,7 @@ export function useInvoiceForm() {
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
         setItemsStatus("error");
-        setItemsError(
-          describeError(error, "Failed to load items"),
-        );
+        setItemsError(describeError(error, "Failed to load items"));
       });
     return () => controller.abort();
   }, []);
@@ -215,9 +151,7 @@ export function useInvoiceForm() {
   useEffect(() => {
     const missingIds = [
       ...new Set(
-        lines
-          .map((l) => l.itemId)
-          .filter((id) => id && !itemsById.has(id)),
+        lines.map((l) => l.itemId).filter((id) => id && !itemsById.has(id)),
       ),
     ];
     if (missingIds.length === 0) return;
@@ -320,8 +254,23 @@ export function useInvoiceForm() {
     setLines((prev) => [...prev, newLine()]);
   }
 
+  function duplicateLine(key: string) {
+    setLines((prev) => {
+      const index = prev.findIndex((line) => line.key === key);
+      if (index === -1) return prev;
+      const copy = { ...prev[index], key: newLine().key };
+      return [...prev.slice(0, index + 1), copy, ...prev.slice(index + 1)];
+    });
+  }
+
   function removeLine(key: string) {
-    setLines((prev) => (prev.length <= 1 ? prev : prev.filter((l) => l.key !== key)));
+    selectionVersions.current.set(
+      key,
+      (selectionVersions.current.get(key) ?? 0) + 1,
+    );
+    setLines((prev) =>
+      prev.length <= 1 ? prev : prev.filter((l) => l.key !== key),
+    );
   }
 
   function updateLine(key: string, patch: Partial<InvoiceFormLine>) {
@@ -330,14 +279,31 @@ export function useInvoiceForm() {
     );
   }
 
+  async function addDimensionDefault(
+    key: string,
+    itemId: string,
+    dimension: DimensionName,
+    value: number,
+  ) {
+    const version = selectionVersions.current.get(key) ?? 0;
+    await saveItemDefault(itemId, dimension, value);
+    const isCurrent = (selectionVersions.current.get(key) ?? 0) === version;
+    setLines((current) =>
+      applySavedDimension(current, key, itemId, dimension, value, isCurrent),
+    );
+  }
+
   function selectItem(key: string, itemId: string) {
+    selectionVersions.current.set(
+      key,
+      (selectionVersions.current.get(key) ?? 0) + 1,
+    );
     const item = itemsById.get(itemId);
+    const dimensions = initialDimensions(item?.dimensionDefaults);
     updateLine(key, {
       itemId,
       piecePrice: item ? String(item.unitPrice) : "",
-      thickness: "",
-      width: "",
-      length: "",
+      ...dimensions,
     });
   }
 
@@ -363,6 +329,12 @@ export function useInvoiceForm() {
       if (!item) return t("validationItem");
       if (parsePositive(line.quantity) === null) return t("validationItem");
       if (parsePositive(line.piecePrice) === null) return t("validationItem");
+      if (
+        [line.thickness, line.width, line.length].some(
+          (value) => value.trim() && parsePositive(value) === null,
+        )
+      )
+        return t("validationOptionalDims");
       if (item.pricingMode === "per_cubic_meter") {
         if (
           parsePositive(line.thickness) === null ||
@@ -395,21 +367,15 @@ export function useInvoiceForm() {
     const payloadLines = snapshotLines
       .filter((line) => line.itemId)
       .map((line) => {
-        const item = itemsById.get(line.itemId)!;
         const base = {
           itemId: line.itemId,
           quantity: parsePositive(line.quantity)!,
           piecePrice: roundMoney(parsePositive(line.piecePrice)!),
           note: line.note.trim() || undefined,
+          thickness: parsePositive(line.thickness) ?? undefined,
+          width: parsePositive(line.width) ?? undefined,
+          length: parsePositive(line.length) ?? undefined,
         };
-        if (item.pricingMode === "per_cubic_meter") {
-          return {
-            ...base,
-            thickness: parsePositive(line.thickness)!,
-            width: parsePositive(line.width)!,
-            length: parsePositive(line.length)!,
-          };
-        }
         return base;
       });
 
@@ -578,9 +544,11 @@ export function useInvoiceForm() {
     itemsError,
     lines,
     addLine,
+    duplicateLine,
     removeLine,
     updateLine,
     selectItem,
+    addDimensionDefault,
     lineTotals,
     discountInput,
     setDiscountInput,

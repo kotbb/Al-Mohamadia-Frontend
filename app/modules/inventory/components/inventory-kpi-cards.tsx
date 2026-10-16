@@ -6,7 +6,7 @@ import type {
   StockListSummary,
   StockStatusFilter,
 } from "@/app/modules/inventory/types/inventory.types";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
 import { Badge } from "@/app/modules/shared/components/badge";
 
@@ -26,122 +26,114 @@ export function InventoryKpiCards({
 
   const totalCost = valuation?.totalValuationAtCost ?? 0;
   const totalSelling = valuation?.totalValuationAtSellingPrice ?? 0;
-  const potentialProfit = valuation?.potentialProfit ?? (totalSelling - totalCost);
+  const potentialProfit =
+    valuation?.potentialProfit ?? totalSelling - totalCost;
   const profitMargin =
-    totalSelling > 0 ? ((potentialProfit / totalSelling) * 100).toFixed(1) : "0";
+    totalSelling > 0
+      ? ((potentialProfit / totalSelling) * 100).toFixed(1)
+      : "0";
 
   const attentionCount =
-    summary.lowStockCount + summary.outOfStockCount + summary.negativeStockCount;
+    summary.lowStockCount +
+    summary.outOfStockCount +
+    summary.negativeStockCount;
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {/* Card 1: Valuation at Cost */}
-      <SurfaceCard padding="none" className="flex flex-col justify-between p-5 sm:p-6">
-        <div>
-          <div className="flex items-center justify-between">
-            <span className="text-base font-medium text-text-secondary">
-              {t("kpiValuationAtCost")}
-            </span>
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-warning/12 text-warning">
-              <BoxIcon className="h-4 w-4" />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-1.5">
-            <span className="text-2xl font-bold tracking-tight tabular-nums text-text-primary">
-              {formatMoney(totalCost, locale)}
-            </span>
-            <span className="text-sm font-medium text-text-muted">
-              {t("currency")}
-            </span>
+      <SurfaceCard padding="none" className="min-w-0 p-3 lg:min-h-36">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-medium text-text-secondary">
+            {t("kpiValuationAtCost")}
+          </span>
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-warning/12 text-warning">
+            <BoxIcon className="h-3.5 w-3.5" />
           </div>
         </div>
-        <div className="mt-4 flex items-center border-t border-border/40 pt-3 min-h-8">
-          <span className="text-sm text-text-muted">
-            {t("kpiCostHint")}
+        <div className="mt-1.5 flex flex-wrap items-baseline gap-1.5">
+          <span className="text-xl font-bold tracking-tight tabular-nums text-text-primary">
+            {formatMoney(totalCost, locale)}
+          </span>
+          <span className="text-xs font-medium text-text-muted">
+            {t("currency")}
           </span>
         </div>
       </SurfaceCard>
 
       {/* Card 2: Expected Revenue at Selling Price */}
-      <SurfaceCard padding="none" className="flex flex-col justify-between p-5 sm:p-6">
-        <div>
-          <div className="flex items-center justify-between">
-            <span className="text-base font-medium text-text-secondary">
-              {t("kpiValuationAtSelling")}
-            </span>
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-info/12 text-info">
-              <TrendingUpIcon className="h-4 w-4" />
-            </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-1.5">
-            <span className="text-2xl font-bold tracking-tight tabular-nums text-text-primary">
-              {formatMoney(totalSelling, locale)}
-            </span>
-            <span className="text-sm font-medium text-text-muted">
-              {t("currency")}
-            </span>
+      <SurfaceCard padding="none" className="min-w-0 p-3 lg:min-h-36">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-medium text-text-secondary">
+            {t("kpiValuationAtSelling")}
+          </span>
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-info/12 text-info">
+            <TrendingUpIcon className="h-3.5 w-3.5" />
           </div>
         </div>
-        <div className="mt-4 flex items-center border-t border-border/40 pt-3 min-h-8">
-          <span className="text-sm text-text-muted">
-            {t("kpiSellingHint")}
+        <div className="mt-1.5 flex flex-wrap items-baseline gap-1.5">
+          <span className="text-xl font-bold tracking-tight tabular-nums text-text-primary">
+            {formatMoney(totalSelling, locale)}
+          </span>
+          <span className="text-xs font-medium text-text-muted">
+            {t("currency")}
           </span>
         </div>
       </SurfaceCard>
 
       {/* Card 3: Potential Profit & Margin */}
-      <SurfaceCard padding="none" className="flex flex-col justify-between p-5 sm:p-6">
-        <div>
-          <div className="flex items-center justify-between">
-            <span className="text-base font-medium text-text-secondary">
-              {t("kpiPotentialProfit")}
-            </span>
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-success/12 text-success">
-              <PercentIcon className="h-4 w-4" />
-            </div>
+      <SurfaceCard padding="none" className="min-w-0 p-3 lg:min-h-36">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-medium text-text-secondary">
+            {t("kpiPotentialProfit")}
+          </span>
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-success/12 text-success">
+            <PercentIcon className="h-3.5 w-3.5" />
           </div>
-          <div className="mt-3 flex items-baseline gap-1.5">
-            <span className="text-2xl font-bold tracking-tight tabular-nums text-success">
+        </div>
+        <div className="mt-1.5 flex flex-col items-start gap-1.5">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-xl font-bold tracking-tight tabular-nums text-success">
               {formatMoney(potentialProfit, locale)}
             </span>
-            <span className="text-sm font-medium text-text-muted">
+            <span className="text-xs font-medium text-text-muted">
               {t("currency")}
             </span>
           </div>
-        </div>
-        <div className="mt-2 flex items-center border-t border-border/40 pt-1.5 min-h-[22px]">
-          <Badge variant="success" className="!text-sm font-medium">
+          <Badge
+            variant="success"
+            className="!text-xs !py-0.5 !px-2 font-medium"
+          >
             {t("kpiProfitMargin", { percent: profitMargin })}
           </Badge>
         </div>
       </SurfaceCard>
 
       {/* Card 4: Stock Alerts */}
-      <SurfaceCard padding="none" className="flex flex-col justify-between p-5 sm:p-6">
-        <div>
-          <div className="flex items-center justify-between">
-            <span className="text-base font-medium text-text-secondary">
-              {t("kpiStockAlerts")}
-            </span>
-            <div
-              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-                summary.negativeStockCount > 0
-                  ? "bg-danger/12 text-danger"
-                  : attentionCount > 0
-                    ? "bg-warning/12 text-warning"
-                    : "bg-success/12 text-success"
-              }`}
-            >
-              {attentionCount > 0 ? (
-                <AlertTriangleIcon className="h-4 w-4" />
-              ) : (
-                <CheckCircleIcon className="h-4 w-4" />
-              )}
-            </div>
+      <SurfaceCard padding="none" className="min-w-0 p-3 lg:min-h-36">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm font-medium text-text-secondary">
+            {t("kpiStockAlerts")}
+          </span>
+          <div
+            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
+              summary.negativeStockCount > 0
+                ? "bg-danger/12 text-danger"
+                : attentionCount > 0
+                  ? "bg-warning/12 text-warning"
+                  : "bg-success/12 text-success"
+            }`}
+          >
+            {attentionCount > 0 ? (
+              <AlertTriangleIcon className="h-3.5 w-3.5" />
+            ) : (
+              <CheckCircleIcon className="h-3.5 w-3.5" />
+            )}
           </div>
-          <div className="mt-3 flex items-baseline gap-1.5">
+        </div>
+        <div className="mt-1.5 flex flex-col items-start gap-1.5">
+          <div className="flex items-baseline gap-1.5">
             <span
-              className={`text-2xl font-bold tracking-tight tabular-nums ${
+              className={`text-xl font-bold tracking-tight tabular-nums ${
                 summary.negativeStockCount > 0
                   ? "text-danger"
                   : attentionCount > 0
@@ -151,48 +143,54 @@ export function InventoryKpiCards({
             >
               {attentionCount}
             </span>
-            <span className="text-sm font-medium text-text-muted">
+            <span className="text-xs font-medium text-text-muted">
               {t("kpiAttentionHint")}
             </span>
           </div>
-        </div>
-        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border/40 pt-3 min-h-8">
-          {summary.lowStockCount > 0 && (
-            <button
-              type="button"
-              onClick={() => onSelectStatusFilter?.("low_stock")}
-              className="cursor-pointer inline-flex items-center gap-1.5 rounded-full bg-warning/12 border border-warning/20 px-2.5 py-0.5 text-sm font-medium text-warning hover:bg-warning/20 transition-colors"
-            >
-              <span className="h-1.5 w-1.5 rounded-full bg-warning" />
-              <span>{summary.lowStockCount} {t("badgeLowStock")}</span>
-            </button>
-          )}
-          {summary.outOfStockCount > 0 && (
-            <button
-              type="button"
-              onClick={() => onSelectStatusFilter?.("out_of_stock")}
-              className="cursor-pointer inline-flex items-center gap-1.5 rounded-full bg-danger/12 border border-danger/20 px-2.5 py-0.5 text-sm font-medium text-danger hover:bg-danger/20 transition-colors"
-            >
-              <span className="h-1.5 w-1.5 rounded-full bg-danger" />
-              <span>{summary.outOfStockCount} {t("badgeOutOfStock")}</span>
-            </button>
-          )}
-          {summary.negativeStockCount > 0 && (
-            <button
-              type="button"
-              onClick={() => onSelectStatusFilter?.("negative_stock")}
-              className="cursor-pointer inline-flex items-center gap-1.5 rounded-full bg-danger/12 border border-danger/20 px-2.5 py-0.5 text-sm font-semibold text-danger hover:bg-danger/20 transition-colors"
-            >
-              <span className="h-1.5 w-1.5 rounded-full bg-danger" />
-              <span>{summary.negativeStockCount} {t("badgeNegativeStock")}</span>
-            </button>
-          )}
-          {attentionCount === 0 && (
-            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-success">
-              <span className="h-1.5 w-1.5 rounded-full bg-success" />
-              {t("kpiHealthyHint")}
-            </span>
-          )}
+          <div className="flex w-full flex-wrap items-center gap-1">
+            {summary.lowStockCount > 0 && (
+              <button
+                type="button"
+                onClick={() => onSelectStatusFilter?.("low_stock")}
+                className="ds-focus-ring min-h-11 cursor-pointer inline-flex items-center gap-1 rounded-full bg-warning/12 border border-warning/20 px-2 py-0.5 text-xs font-medium text-warning hover:bg-warning/20 transition-colors"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-warning" />
+                <span>
+                  {summary.lowStockCount} {t("badgeLowStock")}
+                </span>
+              </button>
+            )}
+            {summary.outOfStockCount > 0 && (
+              <button
+                type="button"
+                onClick={() => onSelectStatusFilter?.("out_of_stock")}
+                className="ds-focus-ring min-h-11 cursor-pointer inline-flex items-center gap-1 rounded-full bg-danger/12 border border-danger/20 px-2 py-0.5 text-xs font-medium text-danger hover:bg-danger/20 transition-colors"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-danger" />
+                <span>
+                  {summary.outOfStockCount} {t("badgeOutOfStock")}
+                </span>
+              </button>
+            )}
+            {summary.negativeStockCount > 0 && (
+              <button
+                type="button"
+                onClick={() => onSelectStatusFilter?.("negative_stock")}
+                className="ds-focus-ring min-h-11 cursor-pointer inline-flex items-center gap-1 rounded-full bg-danger/12 border border-danger/20 px-2 py-0.5 text-xs font-semibold text-danger hover:bg-danger/20 transition-colors"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-danger" />
+                <span>
+                  {summary.negativeStockCount} {t("badgeNegativeStock")}
+                </span>
+              </button>
+            )}
+            {attentionCount === 0 && (
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-success">
+                <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                {t("kpiHealthyHint")}
+              </span>
+            )}
+          </div>
         </div>
       </SurfaceCard>
     </div>

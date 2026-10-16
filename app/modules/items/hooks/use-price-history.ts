@@ -1,18 +1,20 @@
 "use client";
+
+import type {
+  LoadStatus,
+  UsePriceHistoryResult,
+} from "../types/use-price-history.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useEffect, useState } from "react";
-import { getItem, getPriceHistory } from "@/app/modules/items/services/items.service";
-import type { Item, PriceHistoryEntry } from "@/app/modules/items/types/items.types";
-
-type LoadStatus = "idle" | "loading" | "success" | "error";
-
-export interface UsePriceHistoryResult {
-  item: Item | null;
-  history: PriceHistoryEntry[];
-  status: LoadStatus;
-  error: string | null;
-}
+import {
+  getItem,
+  getPriceHistory,
+} from "@/app/modules/items/services/items.service";
+import type {
+  Item,
+  PriceHistoryEntry,
+} from "@/app/modules/items/types/items.types";
 
 export function usePriceHistory(itemId: string | null): UsePriceHistoryResult {
   const describeError = useApiErrorMessage();
@@ -46,8 +48,7 @@ export function usePriceHistory(itemId: string | null): UsePriceHistoryResult {
       })
       .catch((loadError: unknown) => {
         if (controller.signal.aborted) return;
-        const message =
-          describeError(loadError, "Request failed");
+        const message = describeError(loadError, "Request failed");
         setItem(null);
         setHistory([]);
         setStatus("error");

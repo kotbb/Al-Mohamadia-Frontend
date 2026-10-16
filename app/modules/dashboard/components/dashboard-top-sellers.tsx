@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { DashboardTopSellingItem } from "@/app/modules/dashboard/types/dashboard.types";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
 
@@ -20,7 +20,9 @@ export function DashboardTopSellers({ items }: DashboardTopSellersProps) {
       <h3 className="text-base font-semibold text-text-primary">
         {t("topSellersTitle")}
       </h3>
-      <p className="mt-0.5 text-sm text-text-muted">{t("topSellersSubtitle")}</p>
+      <p className="mt-0.5 text-sm text-text-muted">
+        {t("topSellersSubtitle")}
+      </p>
 
       {items.length === 0 ? (
         <div className="mt-4 flex-1">

@@ -81,7 +81,7 @@ flowchart LR
    dashboard (or the first permitted route). Super admin can manage admin
    accounts; admins cannot.
 2. **Sell** — Create cash or customer invoice, multi-line items (piece or
-   m³), discount, paid/remaining → save / save & print → PDF / WhatsApp.
+   m³), discount, paid/remaining → save / save & print → A4 PDF or A5-width PNG; share PDF via a URL-only WhatsApp message using the existing public receipt link, or share PNG through the system share sheet or WhatsApp paste/download fallback.
 3. **Collect** — Record standalone payments against existing customer debt.
 4. **Restock** — Purchase invoices from suppliers (modal creation, view details); stock up, amount owed up.
 5. **Settle** — Record standalone debt payments to suppliers.
@@ -102,7 +102,8 @@ flowchart LR
 |------|---------|
 | Sales invoices | Cash / customer sale, lines, discount, paid/remaining, cancel, PDF / WhatsApp *(Phase 4 — live)* |
 | Customer payments | Standalone debt payments + payments captured on new sales, debtor customer picker *(Phase 5 — live)* |
-| Dashboard | Today's sales / profit / collected / invoice count, debt totals, period chart, top items, "فاتورة جديدة" *(Phase 8 — live)* |
+| Dashboard | Today's sales / gross profit / estimated net profit / collected / invoice count, debt totals, selected-period sales and profit, period chart, top items, "فاتورة جديدة" *(Phase 8 — live)* |
+| Operating expenses | Finance sidebar ledger with Cairo period, category, method and search filters; category management and audited edit/soft delete actions |
 
 ### Stock & catalog
 
@@ -110,7 +111,7 @@ flowchart LR
 |------|---------|
 | Items & pricing | Categories, items, per-piece / per-m³, cost & unit price, price history *(Phase 2 — live; base reference price API kept for later UI)* |
 | Inventory | Stock list, low/negative stock flags, manual جرد, inventory valuation at cost & selling *(Phase 7 — live)* |
-| Purchases | Restock invoices from suppliers; modal-based creation and view-only detail *(Phase 6 — live)* |
+| Purchases | Restock invoices from suppliers; page-based creation and view-only detail *(Phase 6 — live)* |
 | Supplier payments | Standalone debt payments to suppliers + payments captured on purchases, debtor supplier picker *(Phase 6 — live)* |
 
 ### People & trust
@@ -156,14 +157,14 @@ The admin shell organizes primary navigation into 3 domain hubs with horizontal 
 2. **Procurement & Suppliers** (`/suppliers`, `/purchases`, `/supplier-payments`)
 3. **Inventory & Catalog** (`/inventory`, `/items`, `/categories`)
 
-Direct top-level routes: **Home / Dashboard** (`/`), **Users** (`/users`).
+Direct top-level routes: **Home / Dashboard** (`/`), **Finance / Operating expenses** (`/operating-expenses`), **Users** (`/users`).
 Detail views (`/customers/[id]`, `/suppliers/[id]`) accept `?from=...` to contextually route the "Back to list" action back to the user's originating list.
 
 - **HTTP:** native `fetch` via a shared client under `lib/api/` — Bearer
   access token, refresh on 401, base URL from `NEXT_PUBLIC_API_URL`.
 - **Theme:** CSS variables from [`Design-System.md`](./Design-System.md) + `.dark`.
 - **Engineering rules for agents and contributors:** see
-  [`AGENTS.md`](./AGENTS.md).
+  [`AGENTS.md`](../AGENTS.md).
 
 ---
 
@@ -251,7 +252,7 @@ After `npm run seed:catalog` in the backend repo:
 
 1. Open **Categories** — list loads; create/edit via modal; delete disabled when items exist.
 2. Open **Items & Prices** — categories/items load; search and filter work.
-3. **Add item** / **Edit** via modal; change selling price or cost.
+3. **Add item** / **Edit** via localized `/items/new` and `/items/[id]/edit` pages; change selling price or cost.
 4. Open **Price history** from the row menu — change appears in the modal.
 5. **Delete** item with confirmation; list refreshes.
 6. On **Users** (super admin): edit / deactivate / delete via row menu + confirms.
@@ -262,8 +263,8 @@ API route table: [Backend PHASES.md — Phase 2](../../Al-Mohamadia-Backend/docs
 
 1. Log in → Home `/` shows the dashboard (not the old Foundation health page).
 2. Today KPIs and debt strip match invoices/payments/customer balances for Cairo today.
-3. Change period (day/week/month/year) and date → chart buckets and top sellers update; today/debt stay the same.
-4. **New Invoice** (page header) opens the create modal via `/invoices?new=1`.
+3. Change period (day/week/month/year/custom) and date range → chart buckets and top sellers update; today/debt stay the same.
+4. **New Invoice** (page header) opens `/invoices/new`.
 5. Debt strip **View debtors** opens Customers with the Has debt filter selected (`?hasDebt=1`).
 6. Top seller rows go to `/items`; an empty period shows EmptyState for the list (flat chart is OK).
 7. Check `en` / `ar` and light / dark.
@@ -271,6 +272,12 @@ API route table: [Backend PHASES.md — Phase 2](../../Al-Mohamadia-Backend/docs
 API: [Backend PHASES.md — Phase 8](../../Al-Mohamadia-Backend/docs/PHASES.md#phase-8--dashboard).
 
 ---
+
+## Invoice form and filter behavior
+
+Invoice filters keep the last successful table and total visible during refresh, with an Updating indicator. Row actions and pagination are disabled until the selected filters load successfully. Refresh failures retain the previous results with a retry message; aborted requests cannot overwrite newer results.
+
+Sales create/edit and purchase create use compact desktop line rows, a second row for meter dimensions, and one dashed Add line button below the rows. Controls stack on mobile and keep 44px touch targets.
 
 ## Related repositories
 
@@ -284,9 +291,50 @@ API: [Backend PHASES.md — Phase 8](../../Al-Mohamadia-Backend/docs/PHASES.md#p
 
 | Doc | Purpose |
 |-----|---------|
-| [`AGENTS.md`](./AGENTS.md) | Engineering standards, folder structure, security, UX |
+| [`AGENTS.md`](../AGENTS.md) | Engineering standards, folder structure, security, UX |
 | [`Design-System.md`](./Design-System.md) | Quiet Ledger design system — tokens, typography, UX rules |
 | [`UI/`](../UI/) | Screen mockups — **layout/structure** source of truth (re-skin with Design-System.md) |
 | [`PHASES.md`](./PHASES.md) | Phased build plan and status |
 | [`../../Al-Mohamadia-Backend/docs/DATABASE.md`](../../Al-Mohamadia-Backend/docs/DATABASE.md) | Data model source of truth |
 | [`../README.md`](../README.md) | Public GitHub project README |
+
+
+### Optional phones and item dimension presets
+
+Customer/supplier phones are nullable and optional in forms and API types.
+Blank input sends `null`, including edits. Merge dialogs offer an explicit phone
+override checkbox; unchecked preserves the target phone, checked with blank
+input clears it. Missing phones are omitted from selector subtitles and shown
+as a dash in list/details.
+
+Items store `dimensionDefaults: { thickness: number[], width: number[], length: number[] }`
+in meters. Creation/editing supports multiple values per axis, validates positive
+finite numbers, and deduplicates/sorts numerically. Invoice selection fills a
+single preset, leaves multiple presets for an editable choice, and resets fields
+when selecting another item. Invoice editing keeps saved dimensions.
+
+Both piece and cubic lines show dimensions. Piece dimensions are optional and do
+not affect quantity-based totals/stock; cubic dimensions remain required.
+Snapshots are server-controlled and returned as `pricingModeSnapshot`; legacy
+responses infer the old mode. No database migration is included.
+
+
+## Architecture maintenance
+
+Root `AGENTS.md` contains the complete agent instructions; this repository has one instruction file.
+Named contracts live in feature `types/`, pure transformations and query builders
+in `utils/`, and application/React orchestration remains in services/hooks.
+Shared ownership is established by real cross-feature callers, not anticipated reuse.
+
+Run `npm run check:architecture` and `npm run test:architecture` for placement
+checks and their regression tests. The check also runs automatically before
+`npm run build`. It uses the existing TypeScript AST parser and does not add a
+dependency or change runtime behavior. Diagnostics identify file, line, rule,
+and destination. These focused checks complement code review; they do not prove
+all business logic or ownership decisions correct.
+
+### Saved dimension choices from invoices
+
+Sales create/edit and purchase create offer a dropdown for every dimension, including empty and single presets. The final Add value action saves a positive meter value for future invoices through POST /items/:id/dimension-defaults; custom typing stays local. Successful additions select the current value and merge sorted choices across the form. Late responses cannot update switched or removed lines.
+
+Inventory retains eight columns and its existing actions inside compact category tables. Counts describe the loaded page. See docs/INVENTORY-ITEM-PRESETS-VERIFICATION.md for manual checks.

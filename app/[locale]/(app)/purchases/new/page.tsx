@@ -1,18 +1,17 @@
-import { redirect } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-
-interface PageProps {
-  params: Promise<{ locale: string }>;
-  searchParams: Promise<{ supplierId?: string }>;
-}
+import { AuthGuard } from "@/lib/auth/auth-guard";
+import { NewPurchasePage } from "@/app/modules/purchases/pages/new-purchase-page";
 
 export default async function NewPurchaseRoutePage({
   params,
-  searchParams,
-}: PageProps) {
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
-  const { supplierId } = await searchParams;
   setRequestLocale(locale);
-  const query = supplierId ? `?new=1&supplierId=${supplierId}` : "?new=1";
-  redirect(`/${locale}/purchases${query}`);
+  return (
+    <AuthGuard roles={["admin", "super_admin"]}>
+      <NewPurchasePage />
+    </AuthGuard>
+  );
 }

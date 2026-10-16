@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { AppShell } from "@/app/layout/app-shell";
 import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { RecordSupplierPaymentModal } from "@/app/modules/supplier-payments/components/record-supplier-payment-modal";
 import { SupplierPaymentsFilters } from "@/app/modules/supplier-payments/components/supplier-payments-filters";
 import { SupplierPaymentsTable } from "@/app/modules/supplier-payments/components/supplier-payments-table";
@@ -36,6 +36,8 @@ export function SupplierPaymentsPage() {
     periodFilter,
     setPeriodFilter,
     periodDate,
+    customRange,
+    setCustomRange,
     setPeriodDate,
     supplierSearch,
     setSupplierSearch,
@@ -164,6 +166,8 @@ export function SupplierPaymentsPage() {
           periodFilter={periodFilter}
           onPeriodChange={setPeriodFilter}
           periodDate={periodDate}
+          customRange={customRange}
+          onCustomRangeChange={setCustomRange}
           onPeriodDateChange={setPeriodDate}
           supplierSearch={supplierSearch}
           onSupplierSearchChange={setSupplierSearch}

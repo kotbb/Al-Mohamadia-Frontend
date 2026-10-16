@@ -3,8 +3,8 @@
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { DashboardDebtStrip } from "@/app/modules/dashboard/components/dashboard-debt-strip";
 import { DashboardPeriodControls } from "@/app/modules/dashboard/components/dashboard-period-controls";
+import { DashboardPeriodFinancials } from "@/app/modules/dashboard/components/dashboard-period-financials";
 import { DashboardTodayKpis } from "@/app/modules/dashboard/components/dashboard-today-kpis";
 import { DashboardTopSellers } from "@/app/modules/dashboard/components/dashboard-top-sellers";
 import { useDashboard } from "@/app/modules/dashboard/hooks/use-dashboard";
@@ -47,6 +47,8 @@ export function DashboardPage() {
     period,
     setPeriod,
     periodDate,
+    customRange,
+    setCustomRange,
     setPeriodDate,
     isRefreshing,
     refresh,
@@ -58,15 +60,13 @@ export function DashboardPage() {
       subtitle={t("subtitle")}
       hubTabs={false}
       actions={
-        <Button variant="primary" onClick={() => router.push("/invoices?new=1")}>
+        <Button variant="primary" onClick={() => router.push("/invoices/new")}>
           <PlusIcon />
           {tNav("newInvoice")}
         </Button>
       }
     >
-      {status === "loading" ? (
-        <LoadingState message={t("loading")} />
-      ) : null}
+      {status === "loading" ? <LoadingState message={t("loading")} /> : null}
 
       {status === "error" ? (
         <ErrorState
@@ -79,14 +79,16 @@ export function DashboardPage() {
 
       {status === "success" && data ? (
         <div className="flex flex-col gap-6">
-          <DashboardTodayKpis today={data.today} />
-          <DashboardDebtStrip debt={data.debt} />
+          <DashboardTodayKpis today={data.today} debt={data.debt} />
           <DashboardPeriodControls
             period={period}
             onPeriodChange={setPeriod}
             periodDate={periodDate}
+            customRange={customRange}
+            onCustomRangeChange={setCustomRange}
             onPeriodDateChange={setPeriodDate}
           />
+          <DashboardPeriodFinancials financials={data.periodFinancials} />
           <div
             className={`grid grid-cols-1 gap-4 lg:grid-cols-5 ${
               isRefreshing ? "pointer-events-none opacity-60" : ""

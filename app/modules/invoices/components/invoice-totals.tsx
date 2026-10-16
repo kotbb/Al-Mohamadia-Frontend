@@ -4,7 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import {
   formatMoney,
   roundMoneyAmount,
-} from "@/app/modules/items/utils/format-money";
+} from "@/app/modules/shared/utils/format-money";
 import { Input } from "@/app/modules/shared/components/input";
 import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
 

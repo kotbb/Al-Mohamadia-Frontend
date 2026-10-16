@@ -1,5 +1,10 @@
 import { apiClient } from "@/lib/api/client";
 import type {
+  AddDimensionDefaultInput,
+  ItemDimensionDefaultsResponse,
+} from "../types/items.types";
+
+import type {
   CreateItemInput,
   Item,
   ListItemsFilters,
@@ -8,6 +13,15 @@ import type {
   UpdateItemPricingInput,
 } from "@/app/modules/items/types/items.types";
 
+export function addItemDimensionDefault(
+  itemId: string,
+  input: AddDimensionDefaultInput,
+): Promise<ItemDimensionDefaultsResponse> {
+  return apiClient.post<ItemDimensionDefaultsResponse>(
+    `/items/${itemId}/dimension-defaults`,
+    input,
+  );
+}
 function buildItemsQuery(filters?: ListItemsFilters): string {
   if (!filters) return "/items";
   const params = new URLSearchParams();
@@ -34,7 +48,10 @@ export async function createItem(input: CreateItemInput): Promise<Item> {
   return apiClient.post<Item>("/items", input);
 }
 
-export async function updateItem(id: string, input: UpdateItemInput): Promise<Item> {
+export async function updateItem(
+  id: string,
+  input: UpdateItemInput,
+): Promise<Item> {
   return apiClient.patch<Item>(`/items/${id}`, input);
 }
 

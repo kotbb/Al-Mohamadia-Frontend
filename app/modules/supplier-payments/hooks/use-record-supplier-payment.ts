@@ -1,20 +1,15 @@
 "use client";
 
+import type { SupplierTarget } from "../types/use-record-supplier-payment.types";
+
 import { useCallback, useState } from "react";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
-import { roundMoneyAmount } from "@/app/modules/items/utils/format-money";
+import { roundMoneyAmount } from "@/app/modules/shared/utils/format-money";
 import { recordSupplierPayment } from "@/app/modules/supplier-payments/services/supplier-payments.service";
 import type {
   SupplierPayment,
   PaymentMethod,
 } from "@/app/modules/supplier-payments/types/supplier-payments.types";
-
-export interface SupplierTarget {
-  id: string;
-  name: string;
-  amountOwed: number;
-  phone?: string | null;
-}
 
 export function useRecordSupplierPayment() {
   const describeError = useApiErrorMessage();
@@ -31,7 +26,9 @@ export function useRecordSupplierPayment() {
       setSupplier(target);
       setAmount(
         target.amountOwed > 0
-          ? String(roundMoneyAmount(String(target.amountOwed)) ?? target.amountOwed)
+          ? String(
+              roundMoneyAmount(String(target.amountOwed)) ?? target.amountOwed,
+            )
           : "",
       );
     } else {
@@ -48,7 +45,9 @@ export function useRecordSupplierPayment() {
     setSupplier(target);
     setAmount(
       target.amountOwed > 0
-        ? String(roundMoneyAmount(String(target.amountOwed)) ?? target.amountOwed)
+        ? String(
+            roundMoneyAmount(String(target.amountOwed)) ?? target.amountOwed,
+          )
         : "",
     );
     setError(null);

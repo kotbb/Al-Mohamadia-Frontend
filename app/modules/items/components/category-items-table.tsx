@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import type { Category, Item } from "@/app/modules/items/types/items.types";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import {
   historyRowAction,
   RowActionsMenu,
@@ -13,7 +13,6 @@ interface CategoryItemsTableProps {
   category: Category;
   items: Item[];
   onEdit: (itemId: string) => void;
-  onPriceHistory: (itemId: string) => void;
   onDelete: (item: Item) => void;
   onHistory: (item: Item) => void;
 }
@@ -22,14 +21,15 @@ function pricingModeLabel(
   mode: Item["pricingMode"],
   t: ReturnType<typeof useTranslations>,
 ): string {
-  return mode === "per_cubic_meter" ? t("unitPerCubicMeter") : t("unitPerPiece");
+  return mode === "per_cubic_meter"
+    ? t("unitPerCubicMeter")
+    : t("unitPerPiece");
 }
 
 export function CategoryItemsTable({
   category,
   items,
   onEdit,
-  onPriceHistory,
   onDelete,
   onHistory,
 }: CategoryItemsTableProps) {
@@ -43,7 +43,10 @@ export function CategoryItemsTable({
       {/* Category Header */}
       <div className="flex items-center justify-between border-b border-border bg-surface-muted px-4 py-3">
         <div className="flex items-center gap-2.5">
-          <span className="h-4 w-1 rounded-full bg-primary" aria-hidden="true" />
+          <span
+            className="h-4 w-1 rounded-full bg-primary"
+            aria-hidden="true"
+          />
           <h2 className="text-sm font-semibold text-text-primary sm:text-base">
             {category.name}
           </h2>
@@ -64,19 +67,29 @@ export function CategoryItemsTable({
           </colgroup>
           <thead>
             <tr className="border-b border-border bg-surface dark:bg-surface">
-              <th className={`${cell} text-start font-medium text-text-secondary`}>
+              <th
+                className={`${cell} text-start font-medium text-text-secondary`}
+              >
                 {t("colItem")}
               </th>
-              <th className={`${cell} text-start font-medium text-text-secondary`}>
+              <th
+                className={`${cell} text-start font-medium text-text-secondary`}
+              >
                 {t("colUnit")}
               </th>
-              <th className={`${cell} text-end pe-6 font-medium text-text-secondary`}>
-                {t("colPrice")}
-              </th>
-              <th className={`${cell} text-end pe-6 font-medium text-text-secondary`}>
+              <th
+                className={`${cell} text-end pe-6 font-medium text-text-secondary`}
+              >
                 {t("colCost")}
               </th>
-              <th className={`${cell} text-center font-medium text-text-secondary`}>
+              <th
+                className={`${cell} text-end pe-6 font-medium text-text-secondary`}
+              >
+                {t("colPrice")}
+              </th>
+              <th
+                className={`${cell} text-center font-medium text-text-secondary`}
+              >
                 {t("colActions")}
               </th>
             </tr>
@@ -89,11 +102,6 @@ export function CategoryItemsTable({
                   id: "edit",
                   label: t("edit"),
                   onSelect: () => onEdit(item.id),
-                },
-                {
-                  id: "history",
-                  label: t("priceHistory"),
-                  onSelect: () => onPriceHistory(item.id),
                 },
                 {
                   id: "delete",
@@ -109,16 +117,22 @@ export function CategoryItemsTable({
                   className="transition-colors hover:bg-surface-muted/80"
                 >
                   <td className={`${cell} align-middle text-text-primary`}>
-                    <div className="truncate font-semibold text-text-primary">{item.name}</div>
+                    <div className="truncate font-semibold text-text-primary">
+                      {item.name}
+                    </div>
                   </td>
                   <td className={`${cell} align-middle text-text-secondary`}>
                     {pricingModeLabel(item.pricingMode, t)}
                   </td>
-                  <td className={`${cell} align-middle text-end pe-6 font-medium tabular-nums text-text-primary`}>
-                    {formatMoney(item.unitPrice, locale)}
-                  </td>
-                  <td className={`${cell} align-middle text-end pe-6 tabular-nums text-text-secondary`}>
+                  <td
+                    className={`${cell} align-middle text-end pe-6 tabular-nums text-text-secondary`}
+                  >
                     {formatMoney(item.cost, locale)}
+                  </td>
+                  <td
+                    className={`${cell} align-middle text-end pe-6 font-medium tabular-nums text-text-primary`}
+                  >
+                    {formatMoney(item.unitPrice, locale)}
                   </td>
                   <td className={`${cell} align-middle text-center`}>
                     <RowActionsMenu label={t("colActions")} items={actions} />

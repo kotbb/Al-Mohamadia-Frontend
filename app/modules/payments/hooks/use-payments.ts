@@ -1,26 +1,26 @@
 "use client";
+
+import type {
+  ListStatus,
+  PaymentStatusFilterOption,
+  PaymentMethodFilterOption,
+  PaymentPeriodFilterOption,
+  PaymentsToastState,
+} from "../types/use-payments.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
-import { getCustomer, listCustomers } from "@/app/modules/customers/services/customers.service";
+import {
+  getCustomer,
+  listCustomers,
+} from "@/app/modules/customers/services/customers.service";
 import type { Customer } from "@/app/modules/customers/types/customers.types";
 import { todayIsoDate } from "@/app/modules/invoices/utils/format-invoice-date";
-import { cancelPayment, listPayments } from "@/app/modules/payments/services/payments.service";
-import type {
-  Payment,
-  PaymentMethod,
-  PaymentPeriod,
-} from "@/app/modules/payments/types/payments.types";
-
-type ListStatus = "idle" | "loading" | "success" | "error";
-export type PaymentStatusFilterOption = "all" | "active" | "reversed";
-export type PaymentMethodFilterOption = "all" | PaymentMethod;
-export type PaymentPeriodFilterOption = "off" | PaymentPeriod;
-
-export interface PaymentsToastState {
-  kind: "cancelled";
-  variant: "success" | "danger";
-}
+import {
+  cancelPayment,
+  listPayments,
+} from "@/app/modules/payments/services/payments.service";
+import type { Payment } from "@/app/modules/payments/types/payments.types";
 
 const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
@@ -39,6 +39,7 @@ export function usePayments() {
   const [periodFilter, setPeriodFilter] =
     useState<PaymentPeriodFilterOption>("off");
   const [periodDate, setPeriodDate] = useState(todayIsoDate());
+  const [customRange, setCustomRange] = useState(() => { const today = todayIsoDate(); return { from: `${today.slice(0, 7)}-01`, to: today }; });
 
   // Customer filter state
   const [customerSearch, setCustomerSearch] = useState("");
@@ -46,14 +47,18 @@ export function usePayments() {
     id: string;
     name: string;
   } | null>(null);
-  const [customerSuggestions, setCustomerSuggestions] = useState<Customer[]>([]);
+  const [customerSuggestions, setCustomerSuggestions] = useState<Customer[]>(
+    [],
+  );
   const [isSearchingCustomers, setIsSearchingCustomers] = useState(false);
 
   const [listStatus, setListStatus] = useState<ListStatus>("loading");
   const [listError, setListError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
 
-  const [customerNames, setCustomerNames] = useState<Record<string, string>>({});
+  const [customerNames, setCustomerNames] = useState<Record<string, string>>(
+    {},
+  );
 
   // Cancel flow
   const [confirmPayment, setConfirmPayment] = useState<Payment | null>(null);
@@ -109,8 +114,10 @@ export function usePayments() {
         customerId: selectedCustomer ? selectedCustomer.id : undefined,
         status: statusFilter,
         method: methodFilter === "all" ? undefined : methodFilter,
-        period: periodFilter === "off" ? undefined : periodFilter,
-        date: periodFilter === "off" ? undefined : periodDate,
+        period: periodFilter !== "off" && periodFilter !== "custom" ? periodFilter : undefined,
+        date: periodFilter !== "off" && periodFilter !== "custom" ? periodDate : undefined,
+        from: periodFilter === "custom" ? customRange.from : undefined,
+        to: periodFilter === "custom" ? customRange.to : undefined,
         page,
         limit: PAGE_SIZE,
       },
@@ -125,8 +132,7 @@ export function usePayments() {
       })
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
-        const message =
-          describeError(err, "Failed to load payments");
+        const message = describeError(err, "Failed to load payments");
         setListStatus("error");
         setListError(message);
       });
@@ -138,6 +144,7 @@ export function usePayments() {
     methodFilter,
     periodFilter,
     periodDate,
+    customRange,
     page,
     tick,
   ]);
@@ -214,8 +221,7 @@ export function usePayments() {
       setToast({ kind: "cancelled", variant: "success" });
       refresh();
     } catch (err: unknown) {
-      const message =
-        describeError(err, "Failed to cancel payment");
+      const message = describeError(err, "Failed to cancel payment");
       setCancelError(message);
     } finally {
       setIsCancelling(false);
@@ -249,6 +255,8 @@ export function usePayments() {
       setPage(1);
     },
     periodDate,
+    customRange,
+    setCustomRange: (from: string, to: string) => { setCustomRange({ from, to }); setPage(1); },
     setPeriodDate: (val: string) => {
       setPeriodDate(val);
       setPage(1);

@@ -4,7 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { SalesInvoice } from "@/app/modules/invoices/types/invoices.types";
 import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { Badge } from "@/app/modules/shared/components/badge";
 import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
@@ -26,6 +26,7 @@ interface InvoicesListProps {
   onShare: (invoice: SalesInvoice) => void;
   onCancel: (invoice: SalesInvoice) => void;
   onHistory: (invoice: SalesInvoice) => void;
+  actionsDisabled?: boolean;
 }
 
 function InvoiceDocIcon({ className = "h-4 w-4" }: { className?: string }) {
@@ -58,6 +59,7 @@ export function InvoicesList({
   onShare,
   onCancel,
   onHistory,
+  actionsDisabled = false,
 }: InvoicesListProps) {
   const t = useTranslations("invoices");
   const tAudit = useTranslations("audit");
@@ -160,7 +162,12 @@ export function InvoicesList({
                 <td className="px-4 py-3 whitespace-nowrap">
                   <Link
                     href={`/invoices/${invoice.id}`}
-                    className="ds-focus-ring group inline-flex items-center gap-3 rounded-xl transition-colors"
+                    aria-disabled={actionsDisabled}
+                    tabIndex={actionsDisabled ? -1 : undefined}
+                    onClick={(event) => {
+                      if (actionsDisabled) event.preventDefault();
+                    }}
+                    className="ds-focus-ring group inline-flex items-center gap-3 rounded-xl transition-colors aria-disabled:cursor-wait aria-disabled:opacity-50"
                   >
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-all duration-150 group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-sm">
                       <InvoiceDocIcon className="h-4 w-4" />
@@ -203,11 +210,23 @@ export function InvoicesList({
                   <div className="flex items-center justify-center gap-2">
                     <Link
                       href={`/invoices/${invoice.id}`}
-                      className="ds-focus-ring rounded-lg px-2 py-1 text-sm font-medium text-primary hover:underline"
+                      aria-disabled={actionsDisabled}
+                      tabIndex={actionsDisabled ? -1 : undefined}
+                      onClick={(event) => {
+                        if (actionsDisabled) event.preventDefault();
+                      }}
+                      className="ds-focus-ring rounded-lg px-2 py-1 text-sm font-medium text-primary hover:underline aria-disabled:cursor-wait aria-disabled:opacity-50"
                     >
                       {t("view")}
                     </Link>
-                    <RowActionsMenu label={t("colActions")} items={actions} />
+                    <RowActionsMenu
+                      label={t("colActions")}
+                      disabled={actionsDisabled}
+                      items={actions.map((action) => ({
+                        ...action,
+                        disabled: actionsDisabled || action.disabled,
+                      }))}
+                    />
                   </div>
                 </td>
               </tr>

@@ -1,0 +1,40 @@
+import type { ExpenseCategory, ExpenseFilters, ExpenseInput, ExpenseList, OperatingExpense } from "./expenses.types";
+
+export interface OperatingExpensesViewModel {
+  filters: ExpenseFilters;
+  categories: ExpenseCategory[];
+  list: ExpenseList | null;
+  loading: boolean;
+  error: string | null;
+  mutationError: string | null;
+  saving: boolean;
+  editing: OperatingExpense | null;
+  formOpen: boolean;
+  form: ExpenseInput;
+  detail: OperatingExpense | null;
+  deleteTarget: OperatingExpense | null;
+  categoryOpen: boolean;
+  categoryName: string;
+  renaming: string | null;
+  categoryLabel: (id: string) => string;
+  setFilter: <K extends keyof ExpenseFilters>(key: K, value: ExpenseFilters[K]) => void;
+  setPeriod: (period: ExpenseFilters["period"], date?: string) => void;
+  setPage: (page: number) => void;
+  setForm: (update: Partial<ExpenseInput>) => void;
+  setDetail: (expense: OperatingExpense | null) => void;
+  openCreate: () => void;
+  openEdit: (expense: OperatingExpense) => void;
+  closeForm: () => void;
+  saveExpense: () => Promise<void>;
+  openCategories: () => void;
+  closeCategories: () => void;
+  setCategoryName: (name: string) => void;
+  startRename: (category: ExpenseCategory) => void;
+  cancelRename: () => void;
+  saveCategory: () => Promise<boolean>;
+  toggleCategory: (category: ExpenseCategory) => Promise<void>;
+  openDelete: (expense: OperatingExpense) => void;
+  closeDelete: () => void;
+  confirmDelete: () => Promise<void>;
+  refresh: () => void;
+}

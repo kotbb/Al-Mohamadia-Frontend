@@ -1,4 +1,12 @@
 "use client";
+
+import type {
+  ListStatus,
+  CategoriesToastState,
+  CategoriesConfirmKind,
+  CategoryListRow,
+  UseCategoriesResult,
+} from "../types/use-categories.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -11,54 +19,6 @@ import {
 import { listItems } from "@/app/modules/items/services/items.service";
 import type { Category } from "@/app/modules/items/types/items.types";
 
-type ListStatus = "idle" | "loading" | "success" | "error";
-
-export type CategoriesToastKind =
-  | "created"
-  | "updated"
-  | "activated"
-  | "deactivated"
-  | "deleted";
-
-export interface CategoriesToastState {
-  kind: CategoriesToastKind;
-  variant: "success" | "danger";
-}
-
-export type CategoriesConfirmKind = "deactivate" | "activate" | "delete" | null;
-
-export interface CategoryListRow extends Category {
-  itemCount: number;
-}
-
-interface UseCategoriesResult {
-  categories: CategoryListRow[];
-  listStatus: ListStatus;
-  listError: string | null;
-  refresh: () => void;
-  formMode: "create" | "edit";
-  isFormOpen: boolean;
-  openCreate: () => void;
-  openEdit: (category: CategoryListRow) => void;
-  closeForm: () => void;
-  formName: string;
-  setFormName: (value: string) => void;
-  isSaving: boolean;
-  formError: string | null;
-  submitForm: () => Promise<void>;
-  toast: CategoriesToastState | null;
-  clearToast: () => void;
-  confirmKind: CategoriesConfirmKind;
-  confirmCategory: CategoryListRow | null;
-  isConfirming: boolean;
-  confirmError: string | null;
-  openDeactivateConfirm: (category: CategoryListRow) => void;
-  openActivateConfirm: (category: CategoryListRow) => void;
-  openDeleteConfirm: (category: CategoryListRow) => void;
-  closeConfirm: () => void;
-  submitConfirm: () => Promise<void>;
-}
-
 export function useCategories(): UseCategoriesResult {
   const describeError = useApiErrorMessage();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -68,7 +28,9 @@ export function useCategories(): UseCategoriesResult {
   const [tick, setTick] = useState(0);
 
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
-  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
+    null,
+  );
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formName, setFormName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -76,9 +38,8 @@ export function useCategories(): UseCategoriesResult {
   const [toast, setToast] = useState<CategoriesToastState | null>(null);
 
   const [confirmKind, setConfirmKind] = useState<CategoriesConfirmKind>(null);
-  const [confirmCategory, setConfirmCategory] = useState<CategoryListRow | null>(
-    null,
-  );
+  const [confirmCategory, setConfirmCategory] =
+    useState<CategoryListRow | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
 
@@ -96,7 +57,9 @@ export function useCategories(): UseCategoriesResult {
       listItems(undefined, controller.signal),
     ])
       .then(([categoryList, itemList]) => {
-        const liveCategories = categoryList.filter((category) => !category.isDeleted);
+        const liveCategories = categoryList.filter(
+          (category) => !category.isDeleted,
+        );
         const counts: Record<string, number> = {};
         for (const item of itemList) {
           if (item.isDeleted) continue;
@@ -110,8 +73,7 @@ export function useCategories(): UseCategoriesResult {
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
-        const message =
-          describeError(error, "Request failed");
+        const message = describeError(error, "Request failed");
         setCategories([]);
         setItemCounts({});
         setListError(message);
@@ -180,8 +142,7 @@ export function useCategories(): UseCategoriesResult {
       resetForm();
       refresh();
     } catch (error: unknown) {
-      const message =
-        describeError(error, "Save failed");
+      const message = describeError(error, "Save failed");
       setFormError(message);
     } finally {
       setIsSaving(false);
@@ -235,8 +196,7 @@ export function useCategories(): UseCategoriesResult {
       setConfirmCategory(null);
       refresh();
     } catch (error: unknown) {
-      const message =
-        describeError(error, "Action failed");
+      const message = describeError(error, "Action failed");
       setConfirmError(message);
     } finally {
       setIsConfirming(false);

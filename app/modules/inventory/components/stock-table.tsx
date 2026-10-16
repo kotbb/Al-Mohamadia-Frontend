@@ -1,8 +1,12 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { isCubicPricingMode, type StockItem } from "@/app/modules/inventory/types/inventory.types";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import {
+  isCubicPricingMode,
+  type StockItem,
+} from "@/app/modules/inventory/types/inventory.types";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { Badge } from "@/app/modules/shared/components/badge";
 import { RowActionsMenu } from "@/app/modules/shared/components/row-actions-menu";
 import { Button } from "@/app/modules/shared/components/button";
@@ -33,6 +37,11 @@ export function StockTable({
   const tShared = useTranslations("shared");
   const locale = useLocale();
 
+  // Collapsed categories state (set of categoryIds that are currently collapsed)
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(
+    () => new Set(),
+  );
+
   const formatQuantity = (qty: number, isCubic: boolean) => {
     return qty.toLocaleString("en-US", {
       minimumFractionDigits: isCubic ? 3 : 0,
@@ -40,170 +49,304 @@ export function StockTable({
     });
   };
 
+  // Group items by category (preserves alphabetical category order)
+  const groups = useMemo(() => {
+    const collator = new Intl.Collator(locale, {
+      sensitivity: "base",
+      numeric: true,
+    });
+    const map = new Map<
+      string,
+      { categoryId: string; categoryName: string; items: StockItem[] }
+    >();
+
+    for (const item of items) {
+      const catId = item.category?.id ?? "uncategorized";
+      const catName = item.category?.name ?? t("uncategorized");
+      if (!map.has(catId)) {
+        map.set(catId, { categoryId: catId, categoryName: catName, items: [] });
+      }
+      map.get(catId)!.items.push(item);
+    }
+
+    return Array.from(map.values()).sort((a, b) => {
+      if (a.categoryId === "uncategorized") return 1;
+      if (b.categoryId === "uncategorized") return -1;
+      return collator.compare(a.categoryName, b.categoryName);
+    });
+  }, [items, locale, t]);
+
+  const toggleCategory = (categoryId: string) => {
+    setCollapsedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) {
+        next.delete(categoryId);
+      } else {
+        next.add(categoryId);
+      }
+      return next;
+    });
+  };
+
+  const allCollapsed =
+    groups.length > 0 &&
+    groups.every((g) => collapsedCategories.has(g.categoryId));
+
+  const toggleAll = () => {
+    if (allCollapsed) {
+      setCollapsedCategories(new Set());
+    } else {
+      setCollapsedCategories(new Set(groups.map((g) => g.categoryId)));
+    }
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="overflow-x-auto rounded-shell border border-border bg-surface">
-        <table className="w-full min-w-[48rem] border-collapse text-sm lg:text-base">
-          <thead className="bg-surface-muted">
-            <tr className="border-b border-border">
-              <th className="px-4 py-3 text-start font-medium text-text-secondary">
-                {t("colItem")}
-              </th>
-              <th className="px-4 py-3 text-center font-medium text-text-secondary">
-                {t("colPricingMode")}
-              </th>
-              <th className="px-4 py-3 text-center font-medium text-text-secondary">
-                {t("colStockAndThreshold")}
-              </th>
-              <th className="px-4 py-3 text-center font-medium text-text-secondary">
-                {t("colStatus")}
-              </th>
-              <th className="px-4 py-3 text-end font-medium text-text-secondary">
-                {t("colCostPrice")}
-              </th>
-              <th className="px-4 py-3 text-end font-medium text-text-secondary">
-                {t("colValuation")}
-              </th>
-              <th className="w-40 px-4 py-3 text-center font-medium text-text-secondary">
-                {t("colActions")}
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {isLoading ? (
-              <tr>
-                <td colSpan={7} className="py-12 text-center text-text-secondary">
-                  <div className="inline-flex items-center gap-2">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                    <span>{t("loading")}</span>
+    <div className="space-y-3">
+      {/* Category count & Collapse/Expand all toggle */}
+      {!isLoading && groups.length > 0 && (
+        <div className="flex items-center justify-between px-1 text-sm text-text-secondary">
+          <span className="font-medium text-xs sm:text-sm">
+            {t("categoryCount", { count: groups.length })}
+          </span>
+          <button
+            type="button"
+            onClick={toggleAll}
+            className="ds-focus-ring min-h-11 cursor-pointer rounded-lg px-2 text-sm font-semibold text-primary hover:underline"
+          >
+            {allCollapsed ? t("expandAll") : t("collapseAll")}
+          </button>
+        </div>
+      )}
+
+      {/* Loading state */}
+      {isLoading ? (
+        <div className="rounded-shell border border-border bg-surface p-12 text-center text-text-secondary">
+          <div className="inline-flex items-center gap-2">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <span>{t("loading")}</span>
+          </div>
+        </div>
+      ) : items.length === 0 ? (
+        <div className="rounded-shell border border-border bg-surface p-16 text-center">
+          <div className="mx-auto max-w-sm space-y-1">
+            <p className="font-semibold text-text-primary">
+              {t("emptyStockTitle")}
+            </p>
+            <p className="text-xs text-text-secondary">{t("emptyStockDesc")}</p>
+          </div>
+        </div>
+      ) : (
+        /* Separate Category Cards with space between them */
+        <div className="flex flex-col gap-4">
+          {groups.map((group) => {
+            const isCollapsed = collapsedCategories.has(group.categoryId);
+
+            return (
+              <div
+                key={group.categoryId}
+                className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm"
+              >
+                {/* Category Header Button (Click to collapse / expand) */}
+                <button
+                  type="button"
+                  onClick={() => toggleCategory(group.categoryId)}
+                  className="ds-focus-ring flex min-h-12 w-full items-center justify-between gap-3 bg-surface-muted px-3 py-2 text-start transition-colors hover:bg-surface-muted/80"
+                  aria-expanded={!isCollapsed}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <ChevronDownIcon
+                      className={`h-4 w-4 text-text-secondary transition-transform duration-200 ${
+                        isCollapsed ? "-rotate-90 rtl:rotate-90" : "rotate-0"
+                      }`}
+                    />
+                    <span
+                      className="h-4 w-1 shrink-0 rounded-full bg-primary"
+                      aria-hidden="true"
+                    />
+                    <span className="text-sm font-semibold text-text-primary">
+                      {group.categoryName}
+                    </span>
                   </div>
-                </td>
-              </tr>
-            ) : items.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="py-16 text-center">
-                  <div className="mx-auto max-w-sm space-y-1">
-                    <p className="font-semibold text-text-primary">
-                      {t("emptyStockTitle")}
-                    </p>
-                    <p className="text-xs text-text-secondary">
-                      {t("emptyStockDesc")}
-                    </p>
+
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span className="rounded-full border border-border bg-surface px-2 py-0.5 text-xs font-medium text-text-secondary">
+                      {group.items.length}
+                    </span>
+                    {isCollapsed && (
+                      <span className="text-xs font-medium text-text-muted">
+                        {t("clickToExpand")}
+                      </span>
+                    )}
                   </div>
-                </td>
-              </tr>
-            ) : (
-              items.map((item) => {
-                const isCubic = isCubicPricingMode(item.pricingMode);
-                const unitLabel = isCubic ? t("unitCubicMeter") : t("unitPiece");
+                </button>
 
-                return (
-                  <tr
-                    key={item.id}
-                    className="border-b border-border transition-colors hover:bg-surface-muted/50"
-                  >
-                    {/* Item info - Code removed beside name */}
-                    <td className="px-4 py-3">
-                      <div className="space-y-0.5">
-                        <span className="block font-semibold text-text-primary">
-                          {item.name}
-                        </span>
-                        {item.category && (
-                          <div className="text-text-muted">
-                            {item.category.name}
-                          </div>
-                        )}
-                      </div>
-                    </td>
+                {/* Collapsible Table of Items */}
+                {!isCollapsed && (
+                  <div className="overflow-x-auto border-t border-border">
+                    <table className="w-full min-w-[56rem] table-fixed border-collapse text-sm lg:text-base">
+                      <colgroup>
+                        <col className="w-[23%]" />
+                        <col className="w-[10%]" />
+                        <col className="w-[10%]" />
+                        <col className="w-[12%]" />
+                        <col className="w-[10%]" />
+                        <col className="w-[10%]" />
+                        <col className="w-[17%]" />
+                        <col className="w-[8%]" />
+                      </colgroup>
+                      <thead className="bg-surface">
+                        <tr className="border-b border-border">
+                          <th className="px-3 py-2 text-start font-medium text-text-secondary">
+                            {t("colItem")}
+                          </th>
+                          <th className="px-3 py-2 text-end font-medium text-text-secondary">
+                            {t("colStock")}
+                          </th>
+                          <th className="px-3 py-2 text-end font-medium text-text-secondary">
+                            {t("colMinStock")}
+                          </th>
+                          <th className="px-3 py-2 text-center font-medium text-text-secondary">
+                            {t("colStatus")}
+                          </th>
+                          <th className="px-3 py-2 text-end font-medium text-text-secondary">
+                            {t("colCost")}
+                          </th>
+                          <th className="px-3 py-2 text-end font-medium text-text-secondary">
+                            {t("colSelling")}
+                          </th>
+                          <th className="px-3 py-2 text-end font-medium text-text-secondary">
+                            {t("colValuation")}
+                          </th>
+                          <th className="w-16 px-3 py-2 text-center font-medium text-text-secondary">
+                            {t("colActions")}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {group.items.map((item) => {
+                          const isCubic = isCubicPricingMode(item.pricingMode);
+                          const unitLabel = isCubic
+                            ? t("unitCubicMeter")
+                            : t("unitPiece");
 
-                    {/* Unit */}
-                    <td className="px-4 py-3 text-center text-text-secondary">
-                      {unitLabel}
-                    </td>
+                          return (
+                            <tr
+                              key={item.id}
+                              className="transition-colors hover:bg-surface-muted/40"
+                            >
+                              {/* Item Name */}
+                              <td className="break-words px-3 py-1 text-start">
+                                <span className="font-semibold text-text-primary">
+                                  {item.name}
+                                </span>
+                              </td>
 
-                    {/* Stock / Threshold */}
-                    <td className="px-4 py-3 text-center tabular-nums">
-                      <div
-                        className={
-                          item.isNegativeStock || item.isOutOfStock
-                            ? "font-medium text-danger"
-                            : "font-medium text-text-primary"
-                        }
-                      >
-                        {formatQuantity(item.stockQuantity, isCubic)}
-                      </div>
-                      <div className="text-text-muted">
-                        / {formatQuantity(item.reorderThreshold ?? 0, isCubic)}
-                      </div>
-                    </td>
+                              {/* Current Stock */}
+                              <td className="whitespace-nowrap px-3 py-1 text-end tabular-nums">
+                                <span
+                                  className={
+                                    item.isNegativeStock || item.isOutOfStock
+                                      ? "font-semibold text-danger"
+                                      : item.isLowStock
+                                        ? "font-semibold text-warning"
+                                        : "font-semibold text-text-primary"
+                                  }
+                                >
+                                  {formatQuantity(item.stockQuantity, isCubic)}
+                                </span>
+                                <span className="ms-1 text-xs font-medium text-text-muted">
+                                  {unitLabel}
+                                </span>
+                              </td>
 
-                    {/* Status using Badge with differentiated severity */}
-                    <td className="px-4 py-3 text-center">
-                      {item.isNegativeStock ? (
-                        <Badge variant="danger">
-                          {t("badgeNegativeStock")}
-                        </Badge>
-                      ) : item.isOutOfStock ? (
-                        <Badge variant="danger">
-                          {t("badgeOutOfStock")}
-                        </Badge>
-                      ) : item.isLowStock ? (
-                        <Badge variant="warning">{t("badgeLowStock")}</Badge>
-                      ) : (
-                        <Badge variant="success">{t("badgeNormal")}</Badge>
-                      )}
-                    </td>
+                              {/* Min Stock (Reorder Threshold) */}
+                              <td className="whitespace-nowrap px-3 py-1 text-end tabular-nums text-text-secondary">
+                                <span>
+                                  {formatQuantity(
+                                    item.reorderThreshold ?? 0,
+                                    isCubic,
+                                  )}
+                                </span>
+                                <span className="ms-1 text-xs text-text-muted">
+                                  {unitLabel}
+                                </span>
+                              </td>
 
-                    {/* Cost / Selling */}
-                    <td className="px-4 py-3 text-end tabular-nums">
-                      <div className="font-medium text-text-primary">
-                        {formatMoney(item.unitPrice, locale)} {t("currency")}
-                      </div>
-                      <div className="text-text-muted">
-                        {formatMoney(item.cost, locale)} {t("currency")}
-                      </div>
-                    </td>
+                              {/* Status Badge */}
+                              <td className="px-3 py-1 text-center">
+                                {item.isNegativeStock ? (
+                                  <Badge variant="danger" className="lg:text-sm">
+                                    {t("badgeNegativeStock")}
+                                  </Badge>
+                                ) : item.isOutOfStock ? (
+                                  <Badge variant="danger" className="lg:text-sm">
+                                    {t("badgeOutOfStock")}
+                                  </Badge>
+                                ) : item.isLowStock ? (
+                                  <Badge variant="warning" className="lg:text-sm">
+                                    {t("badgeLowStock")}
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="success" className="lg:text-sm">
+                                    {t("badgeNormal")}
+                                  </Badge>
+                                )}
+                              </td>
 
-                    {/* Valuation */}
-                    <td className="px-4 py-3 text-end tabular-nums font-medium text-text-primary">
-                      {formatMoney(item.valuationAtCost, locale)} {t("currency")}
-                    </td>
+                              {/* Cost */}
+                              <td className="whitespace-nowrap px-3 py-1 text-end tabular-nums text-text-secondary">
+                                {formatMoney(item.cost, locale)} {t("currency")}
+                              </td>
 
-                    {/* Actions - Direct Adjust Stock button + RowActionsMenu without icons & without Adjust Stock */}
-                    <td className="px-4 py-3 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => onAdjustStock(item)}
-                          className="ds-focus-ring rounded-lg px-2.5 py-1 text-primary hover:bg-primary/10 transition-colors"
-                        >
-                          <span className="font-medium">{t("actionAdjustStock")}</span>
-                        </button>
+                              {/* Selling Price */}
+                              <td className="whitespace-nowrap px-3 py-1 text-end tabular-nums font-medium text-text-primary">
+                                {formatMoney(item.unitPrice, locale)}{" "}
+                                {t("currency")}
+                              </td>
 
-                        <RowActionsMenu
-                          label={t("colActions")}
-                          items={[
-                            {
-                              id: "history",
-                              label: tAudit("viewHistory"),
-                              onSelect: () => onViewAdjustmentsForItem(item),
-                            },
-                            {
-                              id: "threshold",
-                              label: t("actionUpdateThreshold"),
-                              onSelect: () => onUpdateThreshold(item),
-                            },
-                          ]}
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+                              {/* Valuation */}
+                              <td className="whitespace-nowrap px-3 py-1 text-end tabular-nums font-medium text-text-primary">
+                                {formatMoney(item.valuationAtCost, locale)}{" "}
+                                {t("currency")}
+                              </td>
+
+                              {/* Actions (3-dots menu containing Adjust Stock, Threshold, History) */}
+                              <td className="px-3 py-1 text-center">
+                                <RowActionsMenu
+                                  size="default"
+                                  label={t("colActions")}
+                                  items={[
+                                    {
+                                      id: "adjust",
+                                      label: t("actionAdjustStock"),
+                                      onSelect: () => onAdjustStock(item),
+                                    },
+                                    {
+                                      id: "threshold",
+                                      label: t("actionUpdateThreshold"),
+                                      onSelect: () => onUpdateThreshold(item),
+                                    },
+                                    {
+                                      id: "history",
+                                      label: tAudit("viewHistory"),
+                                      onSelect: () =>
+                                        onViewAdjustmentsForItem(item),
+                                    },
+                                  ]}
+                                />
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Pagination Bar */}
       {totalPages > 1 && (
@@ -218,9 +361,7 @@ export function StockTable({
             {tShared("prevPage")}
           </Button>
 
-          <span className="text-sm">
-            {t("pageOf", { page, totalPages })}
-          </span>
+          <span className="text-sm">{t("pageOf", { page, totalPages })}</span>
 
           <Button
             type="button"
@@ -234,5 +375,22 @@ export function StockTable({
         </div>
       )}
     </div>
+  );
+}
+
+function ChevronDownIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
   );
 }

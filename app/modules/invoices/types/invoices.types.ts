@@ -5,6 +5,7 @@ export type SalesInvoicePeriod = "day" | "week" | "month" | "year";
 export interface SalesInvoiceLine {
   itemId: string;
   quantity: number;
+  pricingModeSnapshot?: "per_piece" | "per_cubic_meter";
   width: number | null;
   length: number | null;
   thickness: number | null;
@@ -51,6 +52,8 @@ export interface ListSalesInvoicesFilters {
   status?: SalesInvoiceStatus;
   period?: SalesInvoicePeriod;
   date?: string;
+  from?: string;
+  to?: string;
   page?: number;
   limit?: number;
 }
@@ -106,4 +109,3 @@ export interface PublicInvoice {
   paid: number;
   remaining: number;
 }
-

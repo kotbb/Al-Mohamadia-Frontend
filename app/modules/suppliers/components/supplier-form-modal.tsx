@@ -112,7 +112,6 @@ export function SupplierFormModal({
           onChange={(event) => onAddressChange(event.target.value)}
           disabled={isSubmitting}
           autoComplete="off"
-          hint={t("fieldAddressHint")}
         />
         {!isEdit ? (
           <Input
@@ -124,7 +123,6 @@ export function SupplierFormModal({
             value={amountOwed}
             onChange={(event) => onAmountOwedChange(event.target.value)}
             disabled={isSubmitting}
-            hint={t("fieldOpeningAmountOwedHint")}
           />
         ) : null}
         {error ? (

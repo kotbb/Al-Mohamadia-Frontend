@@ -1,4 +1,9 @@
 "use client";
+
+import type {
+  DetailStatus,
+  SupplierDetailToastKind,
+} from "../types/use-supplier-detail.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
@@ -11,15 +16,6 @@ import {
   updateSupplier,
 } from "@/app/modules/suppliers/services/suppliers.service";
 import type { Supplier } from "@/app/modules/suppliers/types/suppliers.types";
-
-type DetailStatus = "loading" | "success" | "error";
-
-export type SupplierDetailToastKind =
-  | "updated"
-  | "activated"
-  | "deactivated"
-  | "deleted"
-  | "merged";
 
 export function useSupplierDetail(id: string) {
   const describeError = useApiErrorMessage();
@@ -69,8 +65,7 @@ export function useSupplierDetail(id: string) {
       })
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
-        const message =
-          describeError(err, "Request failed");
+        const message = describeError(err, "Request failed");
         setSupplier(null);
         setError(message);
         setStatus("error");
@@ -106,15 +101,14 @@ export function useSupplierDetail(id: string) {
     try {
       const updated = await updateSupplier(supplier.id, {
         name,
-        phone: phone || undefined,
+        phone: phone || null,
         address: formAddress.trim(),
       });
       setSupplier(updated);
       setIsFormOpen(false);
       setToast({ kind: "updated", variant: "success" });
     } catch (err: unknown) {
-      const message =
-        describeError(err, "Save failed");
+      const message = describeError(err, "Save failed");
       setFormError(message);
     } finally {
       setIsSaving(false);
@@ -130,8 +124,7 @@ export function useSupplierDetail(id: string) {
       const result = await listSuppliers({ page: 1, limit: 100 });
       setMergeOptions(result.items);
     } catch (err: unknown) {
-      const message =
-        describeError(err, "Could not load suppliers");
+      const message = describeError(err, "Could not load suppliers");
       setMergeError(message);
     }
   }, [id]);
@@ -150,33 +143,36 @@ export function useSupplierDetail(id: string) {
     );
   }, []);
 
-  const submitMerge = useCallback(async () => {
-    if (!mergeTargetId || mergeSourceIds.length === 0) {
-      setMergeError("Select a main supplier and at least one duplicate");
-      return;
-    }
-    setIsMerging(true);
-    setMergeError(null);
-    try {
-      const kept = await mergeSuppliers({
-        targetId: mergeTargetId,
-        sourceIds: mergeSourceIds,
-      });
-      setIsMergeOpen(false);
-      setToast({ kind: "merged", variant: "success" });
-      if (kept.id !== id) {
-        router.replace(`/suppliers/${kept.id}`);
-      } else {
-        refresh();
+  const submitMerge = useCallback(
+    async (phone?: string | null) => {
+      if (!mergeTargetId || mergeSourceIds.length === 0) {
+        setMergeError("Select a main supplier and at least one duplicate");
+        return;
       }
-    } catch (err: unknown) {
-      const message =
-        describeError(err, "Merge failed");
-      setMergeError(message);
-    } finally {
-      setIsMerging(false);
-    }
-  }, [mergeTargetId, mergeSourceIds, id, router, refresh]);
+      setIsMerging(true);
+      setMergeError(null);
+      try {
+        const kept = await mergeSuppliers({
+          targetId: mergeTargetId,
+          sourceIds: mergeSourceIds,
+          phone,
+        });
+        setIsMergeOpen(false);
+        setToast({ kind: "merged", variant: "success" });
+        if (kept.id !== id) {
+          router.replace(`/suppliers/${kept.id}`);
+        } else {
+          refresh();
+        }
+      } catch (err: unknown) {
+        const message = describeError(err, "Merge failed");
+        setMergeError(message);
+      } finally {
+        setIsMerging(false);
+      }
+    },
+    [mergeTargetId, mergeSourceIds, id, router, refresh],
+  );
 
   const openDeactivateConfirm = useCallback(() => {
     setConfirmError(null);
@@ -222,8 +218,7 @@ export function useSupplierDetail(id: string) {
       );
       setConfirmKind(null);
     } catch (err: unknown) {
-      const message =
-        describeError(err, "Action failed");
+      const message = describeError(err, "Action failed");
       setConfirmError(message);
     } finally {
       setIsConfirming(false);

@@ -3,9 +3,13 @@
 import type { FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { Input } from "@/app/modules/shared/components/input";
+import { DimensionDefaultsEditor } from "@/app/modules/items/components/dimension-defaults-editor";
 import { SegmentedControl } from "@/app/modules/shared/components/segmented-control";
-import type { ItemFormValues } from "@/app/modules/items/hooks/use-item-form";
-import type { Category, PricingMode } from "@/app/modules/items/types/items.types";
+import type { ItemFormValues } from "@/app/modules/items/types/use-item-form.types";
+import type {
+  Category,
+  PricingMode,
+} from "@/app/modules/items/types/items.types";
 
 interface ItemFormProps {
   values: ItemFormValues;
@@ -46,7 +50,11 @@ export function ItemForm({
   const gap = compact ? "gap-4" : "gap-6";
 
   return (
-    <form id="item-form" onSubmit={handleSubmit} className={`flex flex-col ${gap}`}>
+    <form
+      id="item-form"
+      onSubmit={handleSubmit}
+      className={`flex flex-col ${gap}`}
+    >
       <Input
         name="name"
         label={t("fieldName")}
@@ -87,6 +95,13 @@ export function ItemForm({
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <DimensionDefaultsEditor
+            value={values.dimensionDefaults}
+            disabled={isSubmitting}
+            onChange={(value) => onFieldChange("dimensionDefaults", value)}
+          />
+        </div>
         <Input
           name="unitPrice"
           type="number"
@@ -117,7 +132,9 @@ export function ItemForm({
           step="1"
           label={t("fieldReorderThreshold")}
           value={values.reorderThreshold}
-          onChange={(event) => onFieldChange("reorderThreshold", event.target.value)}
+          onChange={(event) =>
+            onFieldChange("reorderThreshold", event.target.value)
+          }
           disabled={isSubmitting}
         />
 
@@ -129,7 +146,9 @@ export function ItemForm({
             step="1"
             label={t("fieldStockQuantity")}
             value={values.stockQuantity}
-            onChange={(event) => onFieldChange("stockQuantity", event.target.value)}
+            onChange={(event) =>
+              onFieldChange("stockQuantity", event.target.value)
+            }
             disabled={isSubmitting}
           />
         ) : null}

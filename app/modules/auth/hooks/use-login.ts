@@ -1,47 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import type { UseLoginResult } from "../types/use-login.types";
+import {
+  readStoredRetryAt,
+  storeRetryAt,
+  clearStoredRetryAt,
+} from "../utils/login-retry-storage";
+
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { useAuth } from "@/lib/auth/auth-provider";
 import { useRouter } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api/types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 const RATE_LIMIT_MS = 60_000;
-const RATE_LIMIT_STORAGE_KEY = "login-rate-limit-until";
-
-function readStoredRetryAt(): number | null {
-  const fromLocal = localStorage.getItem(RATE_LIMIT_STORAGE_KEY);
-  const raw = fromLocal ?? sessionStorage.getItem(RATE_LIMIT_STORAGE_KEY);
-  const until = raw === null ? NaN : Number(raw);
-  sessionStorage.removeItem(RATE_LIMIT_STORAGE_KEY);
-  if (!Number.isFinite(until) || until <= Date.now()) {
-    localStorage.removeItem(RATE_LIMIT_STORAGE_KEY);
-    return null;
-  }
-  if (fromLocal === null) {
-    localStorage.setItem(RATE_LIMIT_STORAGE_KEY, String(until));
-  }
-  return until;
-}
-
-function storeRetryAt(until: number) {
-  localStorage.setItem(RATE_LIMIT_STORAGE_KEY, String(until));
-}
-
-function clearStoredRetryAt() {
-  localStorage.removeItem(RATE_LIMIT_STORAGE_KEY);
-}
-
-interface UseLoginResult {
-  username: string;
-  password: string;
-  setUsername: (value: string) => void;
-  setPassword: (value: string) => void;
-  isSubmitting: boolean;
-  rateLimitSecondsLeft: number;
-  errorMessage: string | null;
-  submit: () => Promise<void>;
-}
 
 export function useLogin(): UseLoginResult {
   const describeError = useApiErrorMessage();

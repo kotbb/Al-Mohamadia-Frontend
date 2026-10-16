@@ -73,7 +73,7 @@ UI or API routes.
 
 - [x] Items list grouped by category, search/filters
 - [x] Categories list page (create/edit modal, activate/deactivate/delete; delete blocked when items exist)
-- [x] Add/edit item **modal** (pricing mode toggle; auto-generated editable code)
+- [x] Add/edit item **pages** (pricing mode toggle; auto-generated editable code)
 - [x] Price history **modal** per item
 - [x] Soft-delete item with confirmation (row actions kebab menu)
 - [x] Users page polish: row actions, create/edit admin modal, activate/deactivate/delete confirms
@@ -146,16 +146,17 @@ Modules: `src/modules/customers`, `suppliers`.
 - [x] Dev seed: `npm run seed:invoices`
 - [x] Invoice editing (`PATCH /sales-invoices/:id`): transactional stock revert & reapply, customer balance adjustment, in-place payment update, audit `invoice_updated`
 - [x] Client-side A4 PDF generation + public tokenized JSON receipt (`GET /public/sales-invoices/:token`) + WhatsApp share payload (`GET .../share`)
+- [x] Authenticated receipt and same-customer navigation endpoints; existing public links remain valid
 
 **Frontend** — *Done*
 
-- [x] New-invoice modal dialog: customer search-or-cash toggle, multi-line item entry
-  with dimension fields shown conditionally for `per_cubic_meter`, live
+- [x] New-invoice page: customer search-or-cash toggle, multi-line item entry
+  with optional piece dimensions and required `per_cubic_meter` dimensions, live
   totals, discount, paid/remaining
-- [x] Invoice list with filters + search, total sales summary card, and primary "فاتورة جديدة" action opening the creation modal
-- [x] Invoice detail view; Save / Save & Print (auto-print preview modal); client-side PDF export / WhatsApp share
+- [x] Invoice list with filters + search, total sales summary card, and primary "فاتورة جديدة" action opening `/invoices/new`
+- [x] Invoice detail view; Save opens details and Save & Print opens a dedicated export page; A4 PDF/A5-width PNG download, A4/A5 print, price visibility, PNG file sharing, PDF public-link sharing, and same-customer navigation
 - [x] Cancel invoice action
-- [x] Invoice edit modal dialog (opened from detail page and list row actions) with stock/customer balance reconciliation and inactive item alerts
+- [x] Invoice edit page (`/invoices/[id]/edit`, opened from detail page and list row actions) with stock/customer balance reconciliation and inactive item alerts
 - [x] Public receipt page (`/[locale]/invoices/public/[token]`) with client-side print and PDF download
 
 **Done when:** you can create a real invoice end-to-end, see stock and (if
@@ -171,6 +172,7 @@ applicable) customer debt update correctly, edit it with atomic stock/balance re
 List query params: `status`, `period`, `date`, `q`, `page`, `limit`.
 List response: `{ items, meta, summary: { totalAmount } }` (`totalAmount` is saved invoices matching the other filters).
 Create body: `{ customerId?, type, lines: [{ itemId, quantity, piecePrice?, width?, length?, thickness?, note? }], discount?, paid?, paymentMethod?, paymentNotes? }`.
+Line dimensions `width`, `length`, and `thickness` are meters.
 Update body: `UpdateSalesInvoiceDto` (same shape as create, validates and reconciles stock, customer balance, and linked payments).
 
 Module: `src/modules/sales-invoices`.
@@ -238,7 +240,7 @@ Module: `src/modules/payments`.
 **Frontend** — *Done*
 
 - [x] Dedicated Purchase Invoices list page (`/purchases`) with status/period/search filters, total purchases summary card, and pagination
-- [x] Modal-based new purchase invoice dialog matching customer invoice creation, with supplier picker, item selector with cubic-meter dimension calculation, live totals, and on-purchase payment
+- [x] New purchase invoice page (`/purchases/new`) with supplier picker, category-grouped item selector, meter dimensions, live totals, and on-purchase payment
 - [x] View-only purchase invoice detail dialog/view with line items and transactional cancellation
 - [x] Dedicated Supplier Payments list page (`/supplier-payments`) with Cairo period/date filters, method filter, supplier search, summary card, and pagination
 - [x] "Record payment" modal action with debtor supplier droplist and live autocomplete search
@@ -260,6 +262,7 @@ supplier's owed amount, supplier payments can be recorded and cancelled, both vi
 
 List query params (Purchases): `supplierId`, `status`, `period`, `date`, `q`, `page`, `limit`.
 Create body (Purchases): `{ supplierId, lines: [{ itemId, quantity, unitCost, width?, length?, thickness?, note? }], paid?, paymentMethod?, paymentNotes?, notes? }`.
+Line dimensions `width`, `length`, and `thickness` are meters.
 List query params (Supplier payments): `supplierId`, `purchaseId`, `status`, `type`, `method`, `period`, `date`, `page`, `limit`.
 Create body (Supplier payments): `{ supplierId, amount, method?, notes? }`.
 List response: `{ items, meta, summary: { totalAmount } }`.
@@ -327,7 +330,7 @@ Module: `src/modules/inventory`.
 - [x] Dashboard page on `/`: today KPIs, debt strip, period chart + top sellers
 - [x] `GET /dashboard` via `app/modules/dashboard` (service + hook); period `day|week|month|year` + date picker
 - [x] Recharts bar chart (lazy-loaded); top sellers by revenue; EmptyState when none
-- [x] "New Invoice" AppShell action → `/invoices?new=1`; debt strip → `/customers?hasDebt=1`
+- [x] "New Invoice" AppShell action → `/invoices/new`; debt strip → `/customers?hasDebt=1`
 - [x] Removed Phase 0 Foundation home page
 
 **Done when:** dashboard numbers match what you'd compute manually from the
@@ -377,6 +380,18 @@ Module: `src/modules/audit` (backend); `app/modules/audit` (frontend).
 
 ---
 
+## Operating expenses extension
+
+- Run `npm run seed:expenses` in the backend once to insert starter categories;
+  reruns keep renamed and deactivated categories intact.
+- [x] Finance sidebar destination and bilingual operating expense ledger.
+- [x] Current Cairo month default, filterable paginated list with full-filter
+  active totals, category management, detail/edit forms, and confirmed soft delete.
+- [x] Custom inclusive From/To Cairo dates beside Day/Week/Month/Year across
+  invoice, payment, purchase, supplier payment, dashboard, and expense filters.
+- [x] Dashboard relabels existing estimated profit as gross profit and shows
+  paid expenses and estimated net profit for today and the selected period.
+
 ## Phase 10 — Polish & Hardening
 
 - Full i18n pass (no missed/hardcoded strings in either language)
@@ -404,3 +419,11 @@ Module: `src/modules/audit` (backend); `app/modules/audit` (frontend).
 | 8 — Dashboard | Done | Done |
 | 9 — Audit Log UI | Done | Done |
 | 10 — Polish & Hardening | Not started | Done |
+
+### Compact inventory and invoice dimension additions
+
+- [x] Compact inventory category tables retain eight columns, counts for the current page, existing actions, filters and pagination.
+- [x] Localized item creation/edit pages replace catalog form modals.
+- [x] Shared dashed Add line/Add value buttons and invoice preset addition for sales create/edit and purchase create.
+- [x] POST /api/v1/items/:id/dimension-defaults appends positive meter defaults transactionally with item-edit auditing; duplicates are no-ops.
+- [ ] Manual visual/interaction checks in both languages and on mobile (browser access intentionally skipped).

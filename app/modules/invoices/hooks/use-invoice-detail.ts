@@ -1,4 +1,6 @@
 "use client";
+
+import type { Status } from "../types/use-invoice-detail.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
@@ -6,13 +8,10 @@ import { getCustomer } from "@/app/modules/customers/services/customers.service"
 import {
   cancelSalesInvoice,
   getSalesInvoice,
-  getSalesInvoiceShare,
 } from "@/app/modules/invoices/services/invoices.service";
 import type { SalesInvoice } from "@/app/modules/invoices/types/invoices.types";
 import { getItem, listItems } from "@/app/modules/items/services/items.service";
 import type { Item } from "@/app/modules/items/types/items.types";
-
-type Status = "idle" | "loading" | "success" | "error";
 
 export function useInvoiceDetail(invoiceId: string) {
   const describeError = useApiErrorMessage();
@@ -26,7 +25,6 @@ export function useInvoiceDetail(invoiceId: string) {
   const [isCancelOpen, setIsCancelOpen] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
   const [toastKind, setToastKind] = useState<"cancelled" | "updated" | null>(
     null,
   );
@@ -60,7 +58,10 @@ export function useInvoiceDetail(invoiceId: string) {
           setCustomerName(null);
         } else {
           try {
-            const customer = await getCustomer(doc.customerId, controller.signal);
+            const customer = await getCustomer(
+              doc.customerId,
+              controller.signal,
+            );
             setCustomerName(customer.name);
           } catch {
             setCustomerName("-");
@@ -76,8 +77,7 @@ export function useInvoiceDetail(invoiceId: string) {
               try {
                 const fetched = await getItem(id, controller.signal);
                 map[fetched.id] = fetched;
-              } catch {
-              }
+              } catch {}
             }),
           );
           setItemsById({ ...map });
@@ -89,9 +89,7 @@ export function useInvoiceDetail(invoiceId: string) {
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
         setStatus("error");
-        setError(
-          describeError(err, "Failed to load invoice"),
-        );
+        setError(describeError(err, "Failed to load invoice"));
       });
 
     return () => controller.abort();
@@ -118,24 +116,9 @@ export function useInvoiceDetail(invoiceId: string) {
       setIsCancelOpen(false);
       setToastKind("cancelled");
     } catch (err: unknown) {
-      setCancelError(
-        describeError(err, "Cancel failed"),
-      );
+      setCancelError(describeError(err, "Cancel failed"));
     } finally {
       setIsCancelling(false);
-    }
-  }
-
-  async function shareInvoice() {
-    if (!invoice) return;
-    setActionError(null);
-    try {
-      const payload = await getSalesInvoiceShare(invoice.id);
-      window.open(payload.whatsappUrl, "_blank", "noopener,noreferrer");
-    } catch (err: unknown) {
-      setActionError(
-        describeError(err, "Share failed"),
-      );
     }
   }
 
@@ -152,9 +135,6 @@ export function useInvoiceDetail(invoiceId: string) {
     submitCancel,
     isCancelling,
     cancelError,
-    shareInvoice,
-    actionError,
-    clearActionError: () => setActionError(null),
     toastKind,
     clearToast: () => setToastKind(null),
     notifyUpdated,

@@ -40,8 +40,8 @@ export function InvoiceCustomerSection({
   const t = useTranslations("invoices");
 
   return (
-    <SurfaceCard>
-      <div className="flex flex-col gap-4">
+    <SurfaceCard padding="sm">
+      <div className="grid gap-3 lg:grid-cols-[minmax(15rem,.8fr)_minmax(0,1.2fr)] lg:items-end">
         <SegmentedControl
           label={t("colCustomer")}
           value={type}
@@ -63,9 +63,11 @@ export function InvoiceCustomerSection({
                   <p className="font-semibold text-text-primary">
                     {selectedCustomer.name}
                   </p>
-                  <p className="text-sm text-text-secondary">
-                    {selectedCustomer.phone}
-                  </p>
+                  {selectedCustomer.phone ? (
+                    <p className="text-sm text-text-secondary">
+                      {selectedCustomer.phone}
+                    </p>
+                  ) : null}
                 </div>
                 <Button
                   type="button"
@@ -85,12 +87,16 @@ export function InvoiceCustomerSection({
                   </span>
                   <select
                     className="ds-focus-input min-h-11 w-full rounded-xl border border-border bg-surface px-4 text-base text-text-primary"
-                    value={selectedCustomer ? (selectedCustomer as Customer).id : ""}
+                    value={
+                      selectedCustomer ? (selectedCustomer as Customer).id : ""
+                    }
                     onChange={(event) => {
                       if (onSelectCustomerId) {
                         onSelectCustomerId(event.target.value);
                       } else {
-                        const c = allCustomers.find((item) => item.id === event.target.value);
+                        const c = allCustomers.find(
+                          (item) => item.id === event.target.value,
+                        );
                         if (c) onSelectCustomer(c);
                       }
                     }}
@@ -103,7 +109,8 @@ export function InvoiceCustomerSection({
                     </option>
                     {allCustomers.map((customer) => (
                       <option key={customer.id} value={customer.id}>
-                        {customer.name} ({customer.phone})
+                        {customer.name}
+                        {customer.phone ? ` (${customer.phone})` : ""}
                       </option>
                     ))}
                   </select>
@@ -142,9 +149,11 @@ export function InvoiceCustomerSection({
                               <span className="font-medium text-text-primary">
                                 {customer.name}
                               </span>
-                              <span className="text-sm text-text-secondary">
-                                {customer.phone}
-                              </span>
+                              {customer.phone ? (
+                                <span className="text-sm text-text-secondary">
+                                  {customer.phone}
+                                </span>
+                              ) : null}
                             </button>
                           </li>
                         ))

@@ -1,31 +1,16 @@
 "use client";
+
+import type {
+  LoadStatus,
+  ItemsPageFilters,
+  UseItemsPageResult,
+} from "../types/use-items-page.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { listCategories } from "@/app/modules/items/services/categories.service";
 import { listItems } from "@/app/modules/items/services/items.service";
 import type { Category, Item } from "@/app/modules/items/types/items.types";
-
-type LoadStatus = "idle" | "loading" | "success" | "error";
-
-export interface ItemsPageFilters {
-  search: string;
-  categoryId: string;
-  isActive: "all" | "active" | "inactive";
-}
-
-export interface UseItemsPageResult {
-  categories: Category[];
-  items: Item[];
-  groupedItems: Array<{ category: Category; items: Item[] }>;
-  status: LoadStatus;
-  error: string | null;
-  refresh: () => void;
-  filters: ItemsPageFilters;
-  setSearch: (value: string) => void;
-  setCategoryId: (value: string) => void;
-  setIsActive: (value: ItemsPageFilters["isActive"]) => void;
-}
 
 export function useItemsPage(): UseItemsPageResult {
   const describeError = useApiErrorMessage();
@@ -62,8 +47,7 @@ export function useItemsPage(): UseItemsPageResult {
       })
       .catch((loadError: unknown) => {
         if (controller.signal.aborted) return;
-        const message =
-          describeError(loadError, "Request failed");
+        const message = describeError(loadError, "Request failed");
         setCategories([]);
         setItems([]);
         setStatus("error");
@@ -90,7 +74,9 @@ export function useItemsPage(): UseItemsPageResult {
   }, [items, filters]);
 
   const groupedItems = useMemo(() => {
-    const categoryMap = new Map(categories.map((category) => [category.id, category]));
+    const categoryMap = new Map(
+      categories.map((category) => [category.id, category]),
+    );
     const groups = new Map<string, Item[]>();
 
     for (const item of filteredItems) {

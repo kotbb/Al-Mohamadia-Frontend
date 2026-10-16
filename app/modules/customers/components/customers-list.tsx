@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { Customer } from "@/app/modules/customers/types/customers.types";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { Badge } from "@/app/modules/shared/components/badge";
 import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
@@ -118,7 +118,9 @@ export function CustomersList({
         <tbody>
           {customers.map((customer) => {
             const actions: RowActionItem[] = [
-              historyRowAction(tAudit("viewHistory"), () => onHistory(customer)),
+              historyRowAction(tAudit("viewHistory"), () =>
+                onHistory(customer),
+              ),
               {
                 id: "edit",
                 label: t("edit"),
@@ -165,13 +167,13 @@ export function CustomersList({
                   </Link>
                 </td>
                 <td className="px-4 py-3 text-text-secondary">
-                  {customer.phone}
+                  {customer.phone ?? "-"}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
                   <span
                     className={
                       customer.balance > 0
-                        ? "font-bold text-danger"
+                        ? "font-bold text-text-primary"
                         : "text-text-secondary"
                     }
                   >

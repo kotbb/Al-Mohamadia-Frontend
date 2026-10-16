@@ -116,6 +116,7 @@ Practically, this means: a neutral canvas, one confident brand color, four disci
 - **Primary actions** (Save, Save & Print, Add Customer, Add Item): solid `primary` fill, sized and placed relative to their context — a toolbar "Add Customer" button is smaller than the page-level "New Invoice" button even though both are `primary`-colored. Hierarchy within the same color is achieved by **scale and context**.
 
 - **Secondary actions** (Cancel, Export PDF, Filter, Back): outline style — `border` + `text-primary`, transparent fill.
+- **Invoice WhatsApp actions:** use WhatsApp green `#25D366` with white text and a 20px icon as the branded exception; keep Print in the walnut primary style.
 
 - **Destructive actions** (Cancel Invoice, Delete, Merge Customers): solid `danger` fill, always behind a confirmation dialog that states the consequence in plain Arabic.
 
@@ -225,9 +226,11 @@ Two tiers, sharing the same token scale — only the values assigned to spacing/
 | Form field vertical spacing | 16px                                           |
 | Section spacing             | 24–32px                                        |
 
-**Comfortable is required (not just default) for:** New Invoice and any payment-entry workflow; any touch-primary device (tablet or touchscreen POS at the counter); all standard day-to-day workflows unless a screen is explicitly opted into Compact.
+**Invoice forms:** Sales create/edit and purchase create use compact horizontal line layouts on desktop: item, quantity, price/cost, note, total, remove. Meter dimensions occupy a second row for all selected items; dimensions are optional for piece-priced items and required for cubic items. Multiple presets offer editable choices; single presets auto-fill. Fields stack on mobile. Inputs and line action buttons retain a 44px minimum height, labels are 14px, line padding is 12px, and line gaps are 8px. A single dashed Add line button sits below the rows at the logical end of the card. Form headers and customer/supplier sections use reduced spacing.
 
-**Compact is allowed only on:** Invoice List, Inventory, Audit Log — and only on pointer/desktop devices. It is never offered as an option on New Invoice, any payment/critical-financial-entry workflow, or any touch-primary context.
+**Comfortable is required for:** Any payment-entry workflow; any touch-primary device (tablet or touchscreen POS at the counter); all standard day-to-day workflows unless a screen is explicitly opted into Compact. Invoice forms retain comfortable touch targets within their compact layout.
+
+**Compact table density is allowed only on:** Invoice List, Inventory, Audit Log — and only on pointer/desktop devices. Invoice forms use the horizontal layout described above with 44px controls. Payment-entry workflows and touch-primary contexts use comfortable control sizing.
 
 **Explicit sizing rule:**
 
@@ -359,3 +362,9 @@ Invoice creation is the fastest, least-friction, most touch-target-generous flow
 ### What to Avoid
 
 A second accent color of any kind. Solid-filled status badges. Fully rounded pill buttons/cards. Drop-shadows outside the defined elevation levels. Paper/vintage/ledger-texture visual motifs. Icon-only navigation or actions. Placeholder-only form labels. Decorative motion. Dense, tile-heavy dashboards beyond four primary KPI cards. Semantic colors used as a generic categorical chart palette. Compact density on New Invoice or touch-primary workflows. Any surface where brand color and semantic color could be mistaken for one another.
+
+### Compact inventory and shared Add actions
+
+Inventory category tables use muted headers, a brown accent, count pill, rounded border and restrained row dividers. Keep horizontal scrolling and 44px action targets. DashedAddButton is the shared plus-button primitive for invoice Add line and dimension Add value. Item forms use compact cards and header Back links. DimensionInput keeps its Add value action after all presets inside the scrollable list, with inline input, hint, validation and saving state.
+
+Inventory KPI cards keep four desktop columns, 12px padding and 20px figures. Desktop cards have a 144px minimum height and grow naturally for wrapped alert labels; mobile cards have no minimum height. Alert filter badges share a horizontal wrapping row with 44px targets. Preserve the existing values, semantic colors and filter actions.

@@ -1,14 +1,16 @@
 "use client";
+import {
+  formatDateYMD,
+  formatReceiptMoney as formatMoneyValue,
+} from "@/app/modules/invoices/utils/receipt-format";
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { getItem } from "@/app/modules/items/services/items.service";
 import type { Item } from "@/app/modules/items/types/items.types";
-import {
-  downloadInvoicePdf,
-  getSalesInvoice,
-} from "@/app/modules/invoices/services/invoices.service";
+import { getSalesInvoice } from "@/app/modules/invoices/services/invoices.service";
+import { downloadInvoicePdf } from "@/app/modules/invoices/utils/invoice-pdf";
 import type { SalesInvoice } from "@/app/modules/invoices/types/invoices.types";
 import { Button } from "@/app/modules/shared/components/button";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
@@ -146,7 +148,10 @@ export function InvoicePreviewModal({
     if (!invoice) return;
     setIsDownloading(true);
     try {
-      await downloadInvoicePdf("printable-invoice-sheet", invoice.invoiceNumber);
+      await downloadInvoicePdf(
+        "printable-invoice-sheet",
+        invoice.invoiceNumber,
+      );
     } catch {
       // Non-blocking: download failed silently
     } finally {
@@ -156,24 +161,6 @@ export function InvoicePreviewModal({
 
   function handlePrint() {
     window.print();
-  }
-
-  function formatDateYMD(value: string | undefined): string {
-    if (!value) return "-";
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return "-";
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${year}/${month}/${day}`;
-  }
-
-  function formatMoneyValue(value: number): string {
-    const amount = value.toLocaleString("en-US", {
-      maximumFractionDigits: 2,
-      minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
-    });
-    return `${amount} ج.م`;
   }
 
   const hasDimensions = Boolean(
@@ -240,7 +227,9 @@ export function InvoicePreviewModal({
               variant="secondary"
               size="sm"
               onClick={() => void handleDownloadPdf()}
-              disabled={isLoading || isDownloading || !invoice || !invoice.lines}
+              disabled={
+                isLoading || isDownloading || !invoice || !invoice.lines
+              }
               className="gap-1.5"
             >
               <DownloadIcon />
@@ -260,7 +249,9 @@ export function InvoicePreviewModal({
 
         {/* Scrollable Preview Area */}
         <div className="min-h-0 flex-1 overflow-y-auto bg-background p-4 sm:p-6">
-          {isLoading || (!invoice && !loadError) || (invoice && !invoice.lines && !loadError) ? (
+          {isLoading ||
+          (!invoice && !loadError) ||
+          (invoice && !invoice.lines && !loadError) ? (
             <div className="py-16">
               <LoadingState message={tShared("loading")} />
             </div>
@@ -346,13 +337,13 @@ export function InvoicePreviewModal({
                     {hasDimensions && (
                       <>
                         <th className="w-[10%] py-2 px-1.5 text-center font-bold text-[13px]">
-                          التخانة
+                          التخانة (م)
                         </th>
                         <th className="w-[10%] py-2 px-1.5 text-center font-bold text-[13px]">
-                          العرض
+                          العرض (م)
                         </th>
                         <th className="w-[10%] py-2 px-1.5 text-center font-bold text-[13px]">
-                          الطول
+                          الطول (م)
                         </th>
                       </>
                     )}

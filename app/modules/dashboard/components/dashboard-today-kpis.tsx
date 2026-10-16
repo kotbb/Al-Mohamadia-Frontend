@@ -1,21 +1,26 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import type { DashboardToday } from "@/app/modules/dashboard/types/dashboard.types";
-import { formatMoney } from "@/app/modules/items/utils/format-money";
+import type { DashboardDebt, DashboardToday } from "@/app/modules/dashboard/types/dashboard.types";
+import { DashboardDebtKpi } from "@/app/modules/dashboard/components/dashboard-debt-kpi";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
 
 interface DashboardTodayKpisProps {
   today: DashboardToday;
+  debt: DashboardDebt;
 }
 
-export function DashboardTodayKpis({ today }: DashboardTodayKpisProps) {
+export function DashboardTodayKpis({ today, debt }: DashboardTodayKpisProps) {
   const t = useTranslations("dashboard");
   const locale = useLocale();
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <SurfaceCard padding="none" className="flex flex-col justify-between p-5 sm:p-6">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <SurfaceCard
+        padding="none"
+        className="flex flex-col justify-between p-5 sm:p-6"
+      >
         <div>
           <div className="flex items-center justify-between">
             <span className="text-base font-medium text-text-secondary">
@@ -39,7 +44,10 @@ export function DashboardTodayKpis({ today }: DashboardTodayKpisProps) {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard padding="none" className="flex flex-col justify-between p-5 sm:p-6">
+      <SurfaceCard
+        padding="none"
+        className="flex flex-col justify-between p-5 sm:p-6"
+      >
         <div>
           <div className="flex items-center justify-between">
             <span className="text-base font-medium text-text-secondary">
@@ -73,11 +81,22 @@ export function DashboardTodayKpis({ today }: DashboardTodayKpisProps) {
           </div>
         </div>
         <div className="mt-4 flex items-center border-t border-border/40 pt-3 min-h-8">
-          <span className="text-sm text-text-muted">{t("kpiProfitHelper")}</span>
+          <span className="text-sm text-text-muted">
+            {t("kpiProfitHelper")}
+          </span>
         </div>
       </SurfaceCard>
 
       <SurfaceCard padding="none" className="flex flex-col justify-between p-5 sm:p-6">
+        <span className="text-base font-medium text-text-secondary">{t("kpiNetProfit")}</span>
+        <div className={`mt-3 text-2xl font-bold tabular-nums ${today.estimatedNetProfit < 0 ? "text-danger" : "text-success"}`}>{formatMoney(today.estimatedNetProfit, locale)} <span className="text-sm text-text-muted">{t("currency")}</span></div>
+        <p className="mt-4 border-t border-border/40 pt-3 text-sm text-text-muted">{t("kpiNetHint")}</p>
+      </SurfaceCard>
+
+      <SurfaceCard
+        padding="none"
+        className="flex flex-col justify-between p-5 sm:p-6"
+      >
         <div>
           <div className="flex items-center justify-between">
             <span className="text-base font-medium text-text-secondary">
@@ -97,11 +116,16 @@ export function DashboardTodayKpis({ today }: DashboardTodayKpisProps) {
           </div>
         </div>
         <div className="mt-4 flex items-center border-t border-border/40 pt-3 min-h-8">
-          <span className="text-sm text-text-muted">{t("kpiInvoiceCountHint")}</span>
+          <span className="text-sm text-text-muted">
+            {t("kpiInvoiceCountHint")}
+          </span>
         </div>
       </SurfaceCard>
 
-      <SurfaceCard padding="none" className="flex flex-col justify-between p-5 sm:p-6">
+      <SurfaceCard
+        padding="none"
+        className="flex flex-col justify-between p-5 sm:p-6"
+      >
         <div>
           <div className="flex items-center justify-between">
             <span className="text-base font-medium text-text-secondary">
@@ -121,9 +145,12 @@ export function DashboardTodayKpis({ today }: DashboardTodayKpisProps) {
           </div>
         </div>
         <div className="mt-4 flex items-center border-t border-border/40 pt-3 min-h-8">
-          <span className="text-sm text-text-muted">{t("kpiCollectedHint")}</span>
+          <span className="text-sm text-text-muted">
+            {t("kpiCollectedHint")}
+          </span>
         </div>
       </SurfaceCard>
+      <DashboardDebtKpi debt={debt} />
     </div>
   );
 }
@@ -202,3 +229,4 @@ function CollectedIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+
