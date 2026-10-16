@@ -138,16 +138,6 @@ export function LoginForm() {
             ? t("retryIn", { time: formatRetryWait(rateLimitSecondsLeft) })
             : t("submit")}
       </Button>
-
-      <p className="pt-1 text-center text-sm text-text-muted">
-        <button
-          type="button"
-          className="ds-focus-ring rounded font-medium text-primary transition-colors hover:text-primary-hover"
-          disabled={isSubmitting}
-        >
-          {t("forgotPassword")}
-        </button>
-      </p>
     </form>
   );
 }

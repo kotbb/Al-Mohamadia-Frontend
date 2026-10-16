@@ -1,5 +1,9 @@
 "use client";
 
+import { isOptionalMobile, normalizeMobile } from "@/app/modules/shared/utils/egyptian-mobile";
+import { isMoneyAmount } from "@/app/modules/shared/utils/money-validation";
+import { useTranslations } from "next-intl";
+
 import type {
   ListStatus,
   DebtFilter,
@@ -23,6 +27,7 @@ const SEARCH_DEBOUNCE_MS = 300;
 
 export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
   const describeError = useApiErrorMessage();
+  const shared = useTranslations("shared");
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [totalDebt, setTotalDebt] = useState(0);
   const [debtorCount, setDebtorCount] = useState(0);
@@ -42,6 +47,7 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formName, setFormName] = useState("");
   const [formPhone, setFormPhone] = useState("");
+  const [originalPhone, setOriginalPhone] = useState("");
   const [formAddress, setFormAddress] = useState("");
   const [formBalance, setFormBalance] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -125,6 +131,7 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
   const resetForm = useCallback(() => {
     setFormName("");
     setFormPhone("");
+    setOriginalPhone("");
     setFormAddress("");
     setFormBalance("");
     setFormError(null);
@@ -142,6 +149,7 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
     setEditingId(customer.id);
     setFormName(customer.name);
     setFormPhone(customer.phone ?? "");
+    setOriginalPhone(customer.phone ?? "");
     setFormAddress(customer.address ?? "");
     setFormBalance("");
     setFormError(null);
@@ -156,7 +164,11 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
 
   const submitForm = useCallback(async () => {
     const name = formName.trim();
-    const phone = formPhone.trim();
+    const phone = normalizeMobile(formPhone);
+    if (formPhone !== originalPhone && !isOptionalMobile(formPhone)) {
+      setFormError(shared("invalidEgyptianMobile"));
+      return;
+    }
     if (!name) {
       setFormError("Name is required");
       return;
@@ -170,14 +182,14 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
       if (formMode === "create") {
         const balanceRaw = formBalance.trim();
         const balance = balanceRaw === "" ? undefined : Number(balanceRaw);
-        if (balance !== undefined && (Number.isNaN(balance) || balance < 0)) {
-          setFormError("Opening balance must be a non-negative number");
+        if (balance !== undefined && (!isMoneyAmount(balance))) {
+          setFormError(shared("validationNumbers"));
           setIsSaving(false);
           return;
         }
         await createCustomer({
           name,
-          phone: phone || null,
+          phone: formPhone === originalPhone ? undefined : phone || null,
           address: address || undefined,
           balance,
         });
@@ -185,7 +197,7 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
       } else if (editingId) {
         await updateCustomer(editingId, {
           name,
-          phone: phone || null,
+          phone: formPhone === originalPhone ? undefined : phone || null,
           address: address,
         });
         setToast({ kind: "updated", variant: "success" });
@@ -204,6 +216,8 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
     editingId,
     formName,
     formPhone,
+    originalPhone,
+    shared,
     formAddress,
     formBalance,
     refresh,
@@ -355,6 +369,7 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
     formName,
     setFormName,
     formPhone,
+    originalPhone,
     setFormPhone,
     formAddress,
     setFormAddress,

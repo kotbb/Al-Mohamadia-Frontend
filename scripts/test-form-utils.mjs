@@ -9,16 +9,189 @@ const root = resolve(import.meta.dirname, "..");
 const nativeRequire = createRequire(import.meta.url);
 const cache = new Map();
 const overrides = new Map();
+
+test("invoice neighbor requests hide old results and ignore late responses or failures after switching", async () => {
+  const states = [];
+  let cursor = 0;
+  let previousDependencies;
+  let cleanup;
+  const effects = [];
+  const requests = [];
+  overrides.set("react", {
+    useState(initial) {
+      const index = cursor++;
+      if (!(index in states)) states[index] = initial;
+      return [
+        states[index],
+        (next) => {
+          states[index] =
+            typeof next === "function" ? next(states[index]) : next;
+        },
+      ];
+    },
+    useEffect(effect, dependencies) {
+      if (
+        !previousDependencies ||
+        dependencies.some(
+          (value, index) => previousDependencies[index] !== value,
+        )
+      ) {
+        cleanup?.();
+        effects.push(() => {
+          cleanup = effect();
+        });
+        previousDependencies = dependencies;
+      }
+    },
+  });
+  overrides.set("../services/invoices.service", {
+    getInvoiceNeighbors(id, signal) {
+      return new Promise((resolve, reject) =>
+        requests.push({ id, signal, resolve, reject }),
+      );
+    },
+  });
+  try {
+    const { useInvoiceNeighbors } = load(
+      "@/app/modules/invoices/hooks/use-invoice-neighbors",
+    );
+    function render(id) {
+      cursor = 0;
+      const value = useInvoiceNeighbors(id);
+      while (effects.length) effects.shift()();
+      return value;
+    }
+    const dataA = {
+      previousId: "a",
+      nextId: null,
+      previousByNumberId: "one",
+      nextByNumberId: "two",
+    };
+    render("A");
+    render("B");
+    assert.equal(requests[0].signal.aborted, true);
+    requests[0].resolve(dataA);
+    await Promise.resolve();
+    assert.equal(render("B").neighbors, null);
+    requests[1].resolve({ ...dataA, previousByNumberId: "three" });
+    await Promise.resolve();
+    assert.equal(render("B").neighbors.previousByNumberId, "three");
+    assert.equal(render("C").neighbors, null);
+    requests[2].reject(new Error("network"));
+    await Promise.resolve();
+    await Promise.resolve();
+    const failed = render("C");
+    assert.equal(failed.failed, true);
+    failed.retry();
+    assert.equal(render("C").failed, false);
+    assert.equal(requests.length, 4);
+    render("D");
+    requests[3].reject(new Error("late failure"));
+    await Promise.resolve();
+    await Promise.resolve();
+    assert.equal(render("D").failed, false);
+  } finally {
+    cleanup?.();
+    overrides.delete("react");
+    overrides.delete("../services/invoices.service");
+  }
+});
+
+test("row navigation ignores nested actions, modifiers, selections, and disabled results", () => {
+  const { canNavigateRow } = load("@/app/modules/shared/utils/row-navigation");
+  const click = {
+    button: 0,
+    modified: false,
+    defaultPrevented: false,
+    interactiveTarget: false,
+    textSelected: false,
+  };
+  assert.equal(canNavigateRow(click), true);
+  for (const patch of [
+    { disabled: true },
+    { button: 1 },
+    { modified: true },
+    { defaultPrevented: true },
+    { interactiveTarget: true },
+    { textSelected: true },
+  ]) {
+    assert.equal(canNavigateRow({ ...click, ...patch }), false);
+  }
+});
+
+test("calendar dates stay on the stored day in both locales and reject invalid dates", () => {
+  const { formatCalendarDate } = load(
+    "@/app/modules/shared/utils/format-calendar-date",
+  );
+  assert.equal(formatCalendarDate("2026-12-31", "en"), "Dec 31, 2026");
+  assert.equal(formatCalendarDate("2024-02-29", "en"), "Feb 29, 2024");
+  assert.match(formatCalendarDate("2026-01-01", "ar"), /2026/);
+  assert.match(formatCalendarDate("2026-01-01", "ar"), /1/);
+  for (const date of [
+    undefined,
+    "",
+    "2026-02-29",
+    "2026-13-01",
+    "2026-01-01T00:00:00Z",
+  ])
+    assert.equal(formatCalendarDate(date, "en"), "—");
+});
+
+test("receipt unit price uses saved cubic mode and rounded volume without changing line totals", () => {
+  const { receiptUnitPrice } = load(
+    "@/app/modules/invoices/utils/receipt-unit-price",
+  );
+  const line = {
+    thickness: 0.19,
+    width: 0.125,
+    length: 0.36,
+    piecePrice: 23000,
+    pricingModeSnapshot: "per_cubic_meter",
+    quantity: 3,
+    lineTotal: 589.95,
+  };
+  assert.equal(receiptUnitPrice(line), 196.65);
+  assert.equal(
+    receiptUnitPrice({ ...line, pricingModeSnapshot: "per_piece" }),
+    23000,
+  );
+  assert.equal(
+    receiptUnitPrice({ ...line, pricingModeSnapshot: undefined }),
+    196.65,
+  );
+  assert.equal(
+    receiptUnitPrice({
+      ...line,
+      pricingModeSnapshot: undefined,
+      thickness: null,
+    }),
+    23000,
+  );
+  assert.equal(
+    receiptUnitPrice({
+      ...line,
+      thickness: 0.3333333,
+      width: 1,
+      length: 1,
+      piecePrice: 10,
+    }),
+    3.33333,
+  );
+  assert.equal(line.lineTotal, 589.95);
+  assert.equal(line.piecePrice, 23000);
+});
 function load(modulePath, parent = root) {
   let file = modulePath.startsWith("@/")
     ? resolve(root, modulePath.slice(2))
     : resolve(parent, modulePath);
-  if (!existsSync(file)) file += ".ts";
+  if (!existsSync(file)) file += existsSync(`${file}.ts`) ? ".ts" : ".tsx";
   if (cache.has(file)) return cache.get(file);
   const exports = {};
   cache.set(file, exports);
   const output = ts.transpileModule(readFileSync(file, "utf8"), {
+    fileName: file,
     compilerOptions: {
+      jsx: ts.JsxEmit.ReactJSX,
       module: ts.ModuleKind.CommonJS,
       target: ts.ScriptTarget.ES2022,
     },
@@ -241,5 +414,110 @@ test("PDF utility retains the element, filename and renderer options used by Sav
     if (originalDocument === undefined) delete globalThis.document;
     else globalThis.document = originalDocument;
     overrides.delete("html2pdf.js");
+  }
+});
+
+
+test("Egyptian phones normalize local/international input, limit digits and reject unsupported pastes", () => {
+  const { normalizeMobile, isOptionalMobile, mobileInputValue, formatMobileInput } = load("@/app/modules/shared/utils/egyptian-mobile");
+  assert.equal(normalizeMobile("+20 109 690 7203"), "01096907203");
+  assert.equal(mobileInputValue("01096907203"), "01096907203");
+  assert.equal(mobileInputValue("+201096907203"), "01096907203");
+  assert.equal(mobileInputValue("109 690 72034"), null);
+  assert.equal(mobileInputValue("00201096907203"), null);
+  assert.equal(mobileInputValue("+441234567890"), null);
+  assert.equal(mobileInputValue(""), "");
+  assert.equal(formatMobileInput("01096907203"), "109 690 7203");
+  for (const value of ["01096907203", "01123456789", "01223456789", "01523456789", "", "+201096907203"]) assert.equal(isOptionalMobile(value), true);
+  for (const value of ["1", "0223456789", "01323456789", "010969072034", "00201096907203"]) assert.equal(isOptionalMobile(value), false);
+});
+
+test("money validation rejects nonfinite, negative and excess precision values", () => {
+  const { isMoneyAmount } = load("@/app/modules/shared/utils/money-validation");
+  for (const value of [0, 1.23, 1.01, 100]) assert.equal(isMoneyAmount(value), true);
+  for (const value of [Infinity, NaN, -1, 1.234]) assert.equal(isMoneyAmount(value), false);
+});
+
+test("line validation rejects zero rounded volumes and overflow, preserving descriptive piece dimensions", () => {
+  const { isUsableLine } = load("@/app/modules/shared/utils/line-validation");
+  const base = { pricingMode: "per_cubic_meter", quantity: 1, piecePrice: 20000, thicknessM: 0.1, widthM: 0.2, lengthM: 0.3 };
+  assert.equal(isUsableLine(base), true);
+  assert.equal(isUsableLine({ ...base, thicknessM: 0.000001, widthM: 0.000001, lengthM: 0.000001 }), false);
+  assert.equal(isUsableLine({ ...base, quantity: 1e308 }), false);
+  assert.equal(isUsableLine({ ...base, pricingMode: "per_piece", thicknessM: 0, widthM: 0, lengthM: 0 }), true);
+});
+
+test("invoice navigation carries its selected mode to both destinations and disables customer mode for cash sales", () => {
+  const React = nativeRequire("react");
+  const { renderToStaticMarkup } = nativeRequire("react-dom/server");
+  overrides.set("next-intl", { useTranslations: () => (key) => key });
+  overrides.set("@/i18n/navigation", { Link: ({ children, ...props }) => React.createElement("a", props, children) });
+  try {
+    const { InvoiceNavigation } = load("@/app/modules/invoices/components/invoice-navigation");
+    const props = { neighbors: { previousId: "customer-prev", nextId: "customer-next", previousByNumberId: "number-prev", nextByNumberId: null }, isCustomerSale: true, mode: "customer", onModeChange() {} };
+    const customer = renderToStaticMarkup(React.createElement(InvoiceNavigation, props));
+    assert.match(customer, /href="\/invoices\/customer-prev\?navigation=customer"/);
+    assert.match(customer, /href="\/invoices\/customer-next\?navigation=customer"/);
+    const cash = renderToStaticMarkup(React.createElement(InvoiceNavigation, { ...props, isCustomerSale: false }));
+    assert.match(cash, /href="\/invoices\/number-prev\?navigation=number"/);
+    assert.doesNotMatch(cash, /href="\/invoices\/customer-/);
+    assert.match(cash, /disabled=""/);
+  } finally {
+    overrides.delete("next-intl");
+    overrides.delete("@/i18n/navigation");
+  }
+});
+
+test("phone fields show errors only when requested and retain the unfilled generic guide", () => {
+  const React = nativeRequire("react");
+  const { renderToStaticMarkup } = nativeRequire("react-dom/server");
+  overrides.set("next-intl", { useTranslations: () => (key) => key });
+  try {
+    const { EgyptianPhoneInput } = load("@/app/modules/shared/components/egyptian-phone-input");
+    const props = { name: "test-phone", label: "Phone", value: "010", onValueChange() {} };
+    const typing = renderToStaticMarkup(React.createElement(EgyptianPhoneInput, props));
+    assert.doesNotMatch(typing, /role="alert"/);
+    assert.doesNotMatch(typing, /109 690 7203/);
+    assert.match(typing, /XXX XXXX/);
+    const submitted = renderToStaticMarkup(React.createElement(EgyptianPhoneInput, { ...props, showError: true }));
+    assert.match(submitted, /role="alert"/);
+    const corrected = renderToStaticMarkup(React.createElement(EgyptianPhoneInput, { ...props, value: "01012345678", showError: true }));
+    assert.doesNotMatch(corrected, /role="alert"/);
+  } finally { overrides.delete("next-intl"); }
+});
+
+test("an incomplete phone does not disable the customer or supplier submit button", () => {
+  const React = nativeRequire("react");
+  const { renderToStaticMarkup } = nativeRequire("react-dom/server");
+  overrides.set("next-intl", { useTranslations: () => (key) => key });
+  try {
+    for (const [feature, party] of [["customers", "customer"], ["suppliers", "supplier"]]) {
+      const mod = load(`@/app/modules/${feature}/components/${party}-form-modal`);
+      const Component = mod[party === "customer" ? "CustomerFormModal" : "SupplierFormModal"];
+      const html = renderToStaticMarkup(React.createElement(Component, { open: true, mode: "create", name: "Test", phone: "010", originalPhone: "", address: "", balance: "", amountOwed: "", isSubmitting: false, onSubmit() {}, onClose() {} }));
+      const submit = html.match(/<button[^>]*type="submit"[^>]*>/)?.[0];
+      assert.ok(submit);
+      assert.doesNotMatch(submit, /\sdisabled=/);
+    }
+  } finally { overrides.delete("next-intl"); }
+});
+
+test("public invoices show Arabic PDF print guidance outside the captured receipt and hide it on print", () => {
+  const React = nativeRequire("react");
+  const { renderToStaticMarkup } = nativeRequire("react-dom/server");
+  const messages = JSON.parse(readFileSync(resolve(root, "messages/ar.json"), "utf8")).invoices;
+  overrides.set("../hooks/use-public-invoice", { usePublicInvoice: () => ({ invoice: {}, isLoading: false, error: null, isDownloading: false, handleDownload() {} }) });
+  overrides.set("../components/public-invoice-sheet", { PublicInvoiceSheet: () => React.createElement("div", { id: "public-invoice-sheet" }, "receipt") });
+  overrides.set("next/image", { default: () => null });
+  try {
+    const { PublicInvoicePageClient } = load("@/app/modules/invoices/pages/public-invoice-page");
+    const html = renderToStaticMarkup(React.createElement(PublicInvoicePageClient, { token: "test", printGuidanceTitle: messages.printGuidanceTitle, printGuidanceMessage: messages.printGuidancePdf }));
+    assert.ok(html.includes(messages.printGuidancePdf));
+    assert.match(html, /<aside[^>]*class="[^"]*print:hidden/);
+    assert.ok(html.indexOf("</aside>") < html.indexOf('id="public-invoice-sheet"'));
+  } finally {
+    overrides.delete("../hooks/use-public-invoice");
+    overrides.delete("../components/public-invoice-sheet");
+    overrides.delete("next/image");
   }
 });

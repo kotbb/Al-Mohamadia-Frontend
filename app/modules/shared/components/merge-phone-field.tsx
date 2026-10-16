@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Input } from "./input";
+import { EgyptianPhoneInput } from "./egyptian-phone-input";
 
 interface MergePhoneFieldProps {
   name: string;
@@ -9,6 +9,7 @@ interface MergePhoneFieldProps {
   currentPhone: string | null;
   disabled: boolean;
   onChange: (value: string | null) => void;
+  showError?: boolean;
 }
 
 export function MergePhoneField({
@@ -17,6 +18,7 @@ export function MergePhoneField({
   currentPhone,
   disabled,
   onChange,
+  showError,
 }: MergePhoneFieldProps) {
   const t = useTranslations("shared");
   return (
@@ -34,13 +36,14 @@ export function MergePhoneField({
         {t("mergePhoneOverride")}
       </label>
       {value !== null ? (
-        <Input
+        <EgyptianPhoneInput
           name={name}
           label={t("optionalPhone")}
           hint={t("clearPhoneHint")}
           value={value}
           disabled={disabled}
-          onChange={(event) => onChange(event.target.value)}
+          onValueChange={onChange}
+          showError={showError}
         />
       ) : null}
     </div>

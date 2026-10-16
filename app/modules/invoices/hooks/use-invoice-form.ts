@@ -1,4 +1,6 @@
 "use client";
+
+import { isUsableLine } from "@/app/modules/shared/utils/line-validation";
 import { useItemDimensionDefaults } from "@/app/modules/items/hooks/use-item-dimension-defaults";
 import type { DimensionName } from "@/app/modules/items/types/items.types";
 import { applySavedDimension } from "@/app/modules/shared/utils/saved-dimension";
@@ -335,6 +337,7 @@ export function useInvoiceForm() {
         )
       )
         return t("validationOptionalDims");
+      if (!isUsableLine({ pricingMode: item.pricingMode, quantity: Number(line.quantity), piecePrice: Number(line.piecePrice), thicknessM: Number(line.thickness), widthM: Number(line.width), lengthM: Number(line.length) })) return t("validationCalculation");
       if (item.pricingMode === "per_cubic_meter") {
         if (
           parsePositive(line.thickness) === null ||
@@ -346,6 +349,7 @@ export function useInvoiceForm() {
       }
     }
 
+    if (!Number.isFinite(snapshotTotals.total) || !Number.isFinite(snapshotPaid) || !Number.isFinite(snapshotDiscount)) return t("validationCalculation");
     if (snapshotDiscount > snapshotTotals.total) return t("validationDiscount");
 
     if (type === "cash_sale") {
@@ -392,6 +396,10 @@ export function useInvoiceForm() {
     print: boolean;
     t: (key: string) => string;
   }): Promise<string | null> {
+    if ([discountInput, ...(type === "customer_sale" ? [paidInput] : [])].some((value) => value.trim() && parseNonNegative(value) === null)) {
+      setSubmitError(options.t("validationCalculation"));
+      return null;
+    }
     const snapshotLines = lines.map((line) => ({
       ...line,
       piecePrice: moneyFieldString(line.piecePrice),

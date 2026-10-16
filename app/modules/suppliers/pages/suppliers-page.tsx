@@ -40,6 +40,7 @@ export function SuppliersPage() {
     formName,
     setFormName,
     formPhone,
+    originalPhone,
     setFormPhone,
     formAddress,
     setFormAddress,
@@ -155,6 +156,7 @@ export function SuppliersPage() {
         name={formName}
         onNameChange={setFormName}
         phone={formPhone}
+        originalPhone={originalPhone}
         onPhoneChange={setFormPhone}
         address={formAddress}
         onAddressChange={setFormAddress}

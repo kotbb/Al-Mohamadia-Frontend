@@ -153,8 +153,8 @@ Feature domains: `auth`, `dashboard`, `invoices`, `payments`, `supplier-payments
 
 The admin shell organizes primary navigation into 3 domain hubs with horizontal in-page tabs (`HubTabs`):
 
-1. **Sales & Customers** (`/customers`, `/invoices`, `/payments`)
-2. **Procurement & Suppliers** (`/suppliers`, `/purchases`, `/supplier-payments`)
+1. **Sales & Customers** (`/invoices`, `/customers`, `/payments`)
+2. **Purchases & Suppliers** (`/purchases`, `/suppliers`, `/supplier-payments`)
 3. **Inventory & Catalog** (`/inventory`, `/items`, `/categories`)
 
 Direct top-level routes: **Home / Dashboard** (`/`), **Finance / Operating expenses** (`/operating-expenses`), **Users** (`/users`).
@@ -337,7 +337,7 @@ all business logic or ownership decisions correct.
 
 Sales create/edit and purchase create offer a dropdown for every dimension, including empty and single presets. The final Add value action saves a positive meter value for future invoices through POST /items/:id/dimension-defaults; custom typing stays local. Successful additions select the current value and merge sorted choices across the form. Late responses cannot update switched or removed lines.
 
-Inventory retains eight columns and its existing actions inside compact category tables. Counts describe the loaded page. See [Manual verification](./MANUAL-VERIFICATION.md) for manual checks.
+Inventory retains eight columns and its existing actions inside compact category tables. Counts describe the loaded page. See [Manual verification](./NAVIGATION-RECEIPT-VERIFICATION.md) for manual checks.
 
 ## Current export, loading and expense flows
 
@@ -345,4 +345,13 @@ Invoice editing uses `/invoices/:id/edit`; Save opens details and Save & Print o
 
 Route/auth loading uses shared loading surfaces. Localized/global fallback pages cover errors and unknown routes. Shared numeric inputs prevent mouse-wheel value changes while focused.
 
-Operating expenses are already-paid entries with category management, date/method/category/search filtering, paginated rows and full-filter active summaries. Dashboard figures show paid expenses and estimated net profit for today and the selected period. Recurring dues and email reminders are planned only; see [the proposed design](../../Al-Mohamadia-Backend/docs/RECURRING-EXPENSES.md).
+Operating expenses are already-paid entries with category management, date/method/category/search filtering, paginated rows and full-filter active summaries. Dashboard figures show paid expenses and estimated net profit for today and the selected period. Recurring dues and email reminders are planned only; see [the proposed design](../../Al-Mohamadia-Backend/docs/PHASES.md#planned-recurring-operating-expenses).
+
+## Row navigation and invoice presentation
+
+Both sales/purchase sidebar hubs open invoices first. Customer, supplier and sales/purchase invoice row clicks open details, with primary-link brown hover across the row and independent nested actions. Operating expenses retain modal details and share a stable localized date-only formatter. Invoice details now provide numeric ledger neighbors alongside customer chronology. Receipts calculate cubic per-piece display from saved meter volume/rate; rates and stored totals stay unchanged. See [manual verification](./NAVIGATION-RECEIPT-VERIFICATION.md).
+
+
+### Mobile validation and invoice presentation
+
+Invoice details use one Previous/Next pair with an Invoice number / Same customer selector. Export guidance follows PDF A4 / PNG A5 without appearing in outputs. Customer/supplier forms use a fixed Egypt +20 field with a ten-digit limit. See [behavior and manual checks](PHONE-AND-PRINT-VERIFICATION.md).

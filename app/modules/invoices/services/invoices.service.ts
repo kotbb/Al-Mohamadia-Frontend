@@ -1,3 +1,4 @@
+import type { InvoiceNeighbors } from "../types/invoices.types";
 import { apiClient } from "@/lib/api/client";
 import { getApiUrl } from "@/lib/api/env";
 import type {
@@ -62,15 +63,27 @@ export async function cancelSalesInvoice(id: string): Promise<SalesInvoice> {
   return apiClient.post<SalesInvoice>(`/sales-invoices/${id}/cancel`);
 }
 
-export async function getInvoiceReceipt(id: string, signal?: AbortSignal): Promise<PublicInvoice> {
-  return apiClient.get<PublicInvoice>(`/sales-invoices/${id}/receipt`, { signal });
+export async function getInvoiceReceipt(
+  id: string,
+  signal?: AbortSignal,
+): Promise<PublicInvoice> {
+  return apiClient.get<PublicInvoice>(`/sales-invoices/${id}/receipt`, {
+    signal,
+  });
 }
 
-export async function getInvoiceNeighbors(id: string, signal?: AbortSignal): Promise<{ previousId: string | null; nextId: string | null }> {
-  return apiClient.get<{ previousId: string | null; nextId: string | null }>(`/sales-invoices/${id}/neighbors`, { signal });
+export async function getInvoiceNeighbors(
+  id: string,
+  signal?: AbortSignal,
+): Promise<InvoiceNeighbors> {
+  return apiClient.get<InvoiceNeighbors>(`/sales-invoices/${id}/neighbors`, {
+    signal,
+  });
 }
 
-export async function getSalesInvoiceShare(id: string): Promise<SalesInvoiceSharePayload> {
+export async function getSalesInvoiceShare(
+  id: string,
+): Promise<SalesInvoiceSharePayload> {
   return apiClient.get<SalesInvoiceSharePayload>(`/sales-invoices/${id}/share`);
 }
 

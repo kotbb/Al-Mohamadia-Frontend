@@ -57,6 +57,7 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
     formName,
     setFormName,
     formPhone,
+    originalPhone,
     setFormPhone,
     formAddress,
     setFormAddress,
@@ -208,6 +209,7 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
         name={formName}
         onNameChange={setFormName}
         phone={formPhone}
+        originalPhone={originalPhone}
         onPhoneChange={setFormPhone}
         address={formAddress}
         onAddressChange={setFormAddress}

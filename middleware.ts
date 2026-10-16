@@ -7,7 +7,7 @@ const handleLocale = createMiddleware(routing);
 export default function middleware(request: NextRequest) {
   const firstSegment = request.nextUrl.pathname.split("/")[1];
   if (firstSegment && !routing.locales.some((locale) => locale === firstSegment)) {
-    return NextResponse.rewrite(new URL("/en/__not-found", request.url));
+    return NextResponse.rewrite(new URL(`/${routing.defaultLocale}/__not-found`, request.url));
   }
   return handleLocale(request);
 }

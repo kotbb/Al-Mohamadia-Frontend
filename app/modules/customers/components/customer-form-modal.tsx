@@ -1,6 +1,8 @@
 "use client";
 
-import type { FormEvent } from "react";
+import { EgyptianPhoneInput } from "@/app/modules/shared/components/egyptian-phone-input";
+import { isOptionalMobile } from "@/app/modules/shared/utils/egyptian-mobile";
+import { useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { Modal } from "@/app/modules/shared/components/modal";
 import { Button } from "@/app/modules/shared/components/button";
@@ -13,6 +15,7 @@ interface CustomerFormModalProps {
   name: string;
   onNameChange: (value: string) => void;
   phone: string;
+  originalPhone: string;
   onPhoneChange: (value: string) => void;
   address: string;
   onAddressChange: (value: string) => void;
@@ -30,6 +33,7 @@ export function CustomerFormModal({
   name,
   onNameChange,
   phone,
+  originalPhone,
   onPhoneChange,
   address,
   onAddressChange,
@@ -41,24 +45,34 @@ export function CustomerFormModal({
 }: CustomerFormModalProps) {
   const t = useTranslations("customers");
   const isEdit = mode === "edit";
+  const [phoneError, setPhoneError] = useState(false);
+  function closeForm() {
+    setPhoneError(false);
+    onClose();
+  }
   const canSubmit = name.trim().length > 0;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (phone !== originalPhone && !isOptionalMobile(phone)) {
+      setPhoneError(true);
+      return;
+    }
+    setPhoneError(false);
     await onSubmit();
   }
 
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={closeForm}
       title={isEdit ? t("editTitle") : t("createTitle")}
       footer={
         <div className="flex justify-end gap-3">
           <Button
             type="button"
             variant="secondary"
-            onClick={onClose}
+            onClick={closeForm}
             disabled={isSubmitting}
           >
             {t("modalCancel")}
@@ -97,13 +111,16 @@ export function CustomerFormModal({
           disabled={isSubmitting}
           autoComplete="off"
         />
-        <Input
+        <EgyptianPhoneInput
           name="customerPhone"
           label={t("fieldPhone")}
           value={phone}
-          onChange={(event) => onPhoneChange(event.target.value)}
+          showError={phoneError}
+          onValueChange={(value) => {
+            setPhoneError(false);
+            onPhoneChange(value);
+          }}
           disabled={isSubmitting}
-          autoComplete="off"
         />
         <Input
           name="customerAddress"

@@ -46,9 +46,9 @@ export function ExpenseFiltersPanel({ model }: { model: OperatingExpensesViewMod
       {filters.period !== "off" && filters.period !== "custom" ?
         <div className="w-full lg:w-auto"><PeriodDatePicker period={filters.period} value={filters.periodDate}
           onChange={(date) => model.setPeriod(filters.period, date)} /></div> : null}
-      {filters.period === "custom" ? <CustomDateRangePicker from={filters.from} to={filters.to}
+      {filters.period === "custom" ? <div className="w-full lg:w-80 lg:shrink-0"><CustomDateRangePicker from={filters.from} to={filters.to}
         fromLabel={t("from")} toLabel={t("to")}
-        onChange={(from, to) => { setFilter("from", from); setFilter("to", to); }} /> : null}
+        onChange={(from, to) => { setFilter("from", from); setFilter("to", to); }} /></div> : null}
     </div>
   </div>;
 }

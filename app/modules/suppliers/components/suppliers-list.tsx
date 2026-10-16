@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { NavigableTableRow } from "@/app/modules/shared/components/navigable-table-row";
 import { Link } from "@/i18n/navigation";
 import type { Supplier } from "@/app/modules/suppliers/types/suppliers.types";
 import { formatMoney } from "@/app/modules/shared/utils/format-money";
@@ -149,8 +150,9 @@ export function SuppliersList({
             ];
 
             return (
-              <tr
+              <NavigableTableRow
                 key={supplier.id}
+                href={`/suppliers/${supplier.id}`}
                 className="border-b border-border last:border-b-0 transition-colors hover:bg-surface-muted/50"
               >
                 <td className="px-4 py-3">
@@ -158,10 +160,10 @@ export function SuppliersList({
                     href={`/suppliers/${supplier.id}`}
                     className="ds-focus-ring group inline-flex items-center gap-3 rounded-xl transition-colors"
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xs font-bold text-primary transition-all duration-150 group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-sm">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xs font-bold text-primary transition-all duration-150 group-hover/record:bg-primary group-hover/record:text-primary-foreground group-hover/record:shadow-sm">
                       {supplier.name.trim().charAt(0).toUpperCase()}
                     </div>
-                    <span className="font-semibold text-text-primary transition-colors group-hover:text-primary group-hover:underline">
+                    <span className="font-semibold text-text-primary transition-colors group-hover/record:text-primary group-hover/record:underline">
                       {supplier.name}
                     </span>
                   </Link>
@@ -206,7 +208,7 @@ export function SuppliersList({
                     <RowActionsMenu label={t("colActions")} items={actions} />
                   </div>
                 </td>
-              </tr>
+              </NavigableTableRow>
             );
           })}
         </tbody>

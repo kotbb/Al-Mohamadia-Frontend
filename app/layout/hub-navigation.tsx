@@ -17,8 +17,8 @@ export function HubNavigation() {
 
   if (isSalesHub) {
     const tabs: HubTabItem[] = [
-      { key: "customers", label: t("customers"), href: "/customers" },
       { key: "invoices", label: t("invoices"), href: "/invoices" },
+      { key: "customers", label: t("customers"), href: "/customers" },
       { key: "payments", label: t("customerPayments"), href: "/payments" },
     ];
     return <HubTabs tabs={tabs} />;
@@ -32,9 +32,13 @@ export function HubNavigation() {
 
   if (isProcurementHub) {
     const tabs: HubTabItem[] = [
-      { key: "suppliers", label: t("suppliers"), href: "/suppliers" },
       { key: "purchases", label: t("purchases"), href: "/purchases" },
-      { key: "supplierPayments", label: t("supplierPayments"), href: "/supplier-payments" },
+      { key: "suppliers", label: t("suppliers"), href: "/suppliers" },
+      {
+        key: "supplierPayments",
+        label: t("supplierPayments"),
+        href: "/supplier-payments",
+      },
     ];
     return <HubTabs tabs={tabs} />;
   }

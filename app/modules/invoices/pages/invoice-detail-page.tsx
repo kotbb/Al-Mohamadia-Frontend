@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { AppShell } from "@/app/layout/app-shell";
 import { CancelInvoiceDialog } from "@/app/modules/invoices/components/cancel-invoice-dialog";
+import { useInvoiceNeighbors } from "../hooks/use-invoice-neighbors";
+import { InvoiceNavigation } from "../components/invoice-navigation";
 import { InvoiceShareModal } from "@/app/modules/invoices/components/invoice-share-modal";
-import { getInvoiceNeighbors } from "@/app/modules/invoices/services/invoices.service";
 import { useInvoiceDetail } from "@/app/modules/invoices/hooks/use-invoice-detail";
 import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
 import { formatMoney } from "@/app/modules/shared/utils/format-money";
@@ -27,7 +29,10 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
   const locale = useLocale();
   const router = useRouter();
   const [isShareOpen, setIsShareOpen] = useState(false);
-  const [neighbors, setNeighbors] = useState<{ previousId: string | null; nextId: string | null }>({ previousId: null, nextId: null });
+  const navigation = useInvoiceNeighbors(invoiceId);
+  const searchParams = useSearchParams();
+  const [navigationChoice, setNavigationChoice] = useState<{ invoiceId: string; mode: "number" | "customer" } | null>(null);
+  const navigationMode = navigationChoice?.invoiceId === invoiceId ? navigationChoice.mode : searchParams.get("navigation") === "customer" ? "customer" : "number";
   const {
     invoice,
     status,
@@ -44,12 +49,6 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
     toastKind,
     clearToast,
   } = useInvoiceDetail(invoiceId);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    getInvoiceNeighbors(invoiceId, controller.signal).then(setNeighbors).catch(() => setNeighbors({ previousId: null, nextId: null }));
-    return () => controller.abort();
-  }, [invoiceId]);
 
   const currency = t("currency");
   const title = invoice
@@ -123,10 +122,24 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
           />
         ) : (
           <>
-            {invoice.type === "customer_sale" && (neighbors.previousId || neighbors.nextId) && <nav aria-label={t("invoiceNavigation")} className="flex flex-wrap gap-2 rounded-xl border border-border bg-surface p-3">
-              {neighbors.previousId && <Link href={`/invoices/${neighbors.previousId}`} className="rounded-lg border border-border px-3 py-2 text-sm">{t("previousCustomerInvoice")}</Link>}
-              {neighbors.nextId && <Link href={`/invoices/${neighbors.nextId}`} className="rounded-lg border border-border px-3 py-2 text-sm">{t("nextCustomerInvoice")}</Link>}
-            </nav>}
+            <InvoiceNavigation
+              mode={navigationMode}
+              onModeChange={(mode) => setNavigationChoice({ invoiceId, mode })}
+              neighbors={navigation.neighbors}
+              isCustomerSale={invoice.type === "customer_sale"}
+            />
+            {navigation.failed && (
+              <p role="alert" className="text-sm text-danger">
+                {t("neighborLoadError")}{" "}
+                <button
+                  type="button"
+                  className="ds-focus-ring underline"
+                  onClick={navigation.retry}
+                >
+                  {t("retryNavigation")}
+                </button>
+              </p>
+            )}
             <div className="flex flex-wrap items-center gap-2.5">
               <Badge
                 variant={invoice.status === "saved" ? "success" : "danger"}
@@ -266,19 +279,23 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
 
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-6">
               <div className="flex flex-wrap items-center gap-3">
-              <Button type="button" variant="primary" onClick={() => router.push(`/invoices/${invoice.id}/export`)}>
-                <PrinterIcon />
-                {t("print")}
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                className="!border-transparent !bg-[#25D366] !text-white hover:!bg-[#20c45b]"
-                onClick={() => setIsShareOpen(true)}
-              >
-                <WhatsAppIcon />
-                {t("whatsappOnly")}
-              </Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={() => router.push(`/invoices/${invoice.id}/export`)}
+                >
+                  <PrinterIcon />
+                  {t("print")}
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="!border-transparent !bg-[#25D366] !text-white hover:!bg-[#20c45b]"
+                  onClick={() => setIsShareOpen(true)}
+                >
+                  <WhatsAppIcon />
+                  {t("whatsappOnly")}
+                </Button>
               </div>
               {invoice.status === "saved" ? (
                 <Button type="button" variant="danger" onClick={openCancel}>
@@ -288,7 +305,12 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
               ) : null}
             </div>
 
-            {isShareOpen && <InvoiceShareModal invoiceId={invoice.id} onClose={() => setIsShareOpen(false)} />}
+            {isShareOpen && (
+              <InvoiceShareModal
+                invoiceId={invoice.id}
+                onClose={() => setIsShareOpen(false)}
+              />
+            )}
           </>
         )}
       </div>

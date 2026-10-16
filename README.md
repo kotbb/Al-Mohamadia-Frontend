@@ -57,7 +57,7 @@ lib/
 - Create, edit, and soft-delete customers
 - Customer detail with balance (مديونية)
 - Merge duplicate customers
-- Optional phone numbers, including clearing an existing phone
+- Optional Egyptian mobile field with fixed Egypt/+20 prefix, automatic spacing and a ten-digit input limit; existing phones can be cleared
 
 ### Sales invoices (`/invoices`)
 
@@ -69,11 +69,13 @@ lib/
 - Save a new dimension preset inline or type a custom value without saving it
 - Saving presets preserves other line fields; failed entries remain available for retry
 - Focused shared numeric inputs ignore wheel changes; typing and arrow controls remain available
-- Dedicated export page defaults to PNG A5; PDF A4, price visibility, print, and download remain available
+- Dedicated export page defaults to PNG A5; PDF A4, price visibility, print, and download remain available, with paper/settings guidance excluded from invoice outputs
 - PNG file sharing where supported, with copy/download fallbacks; PDF sharing sends a public receipt link
 - Cancel an invoice
-- Invoice detail with previous/next navigation for the same customer
+- Invoice detail with separate previous/next controls by invoice number and by customer
 - Existing results stay visible while filters refresh; stale row actions are disabled
+- Click customer, supplier, sales-invoice or purchase-invoice rows to open details; nested links/actions remain independent
+- Cubic receipt unit prices show volume × saved m³ rate across preview, print, PNG, PDF and sharing; piece rates and stored totals stay unchanged
 
 ### Customer payments (`/payments`)
 
@@ -86,7 +88,7 @@ lib/
 - Create, edit, and soft-delete suppliers
 - Supplier detail with amount owed
 - Merge duplicate suppliers
-- Optional nullable phone numbers
+- Optional Egyptian mobile numbers with the shared Egypt/+20 field
 
 ### Purchases (`/purchases`)
 
@@ -122,6 +124,7 @@ lib/
 - Manage expense categories; view, edit, and soft-delete expenses with confirmation
 - Current Cairo month by default, date/category/method/search filters, paginated ledger, and filtered summaries
 - Paid expenses appear in dashboard expense and estimated net profit figures
+- Ledger/detail dates use localized month names, Latin digits and the full year without timezone shifts
 - Recurring schedules and due/overdue reminders are planned; no recurrence or email reminders exist yet
 
 ### Audit log (`/audit`)
@@ -242,8 +245,8 @@ Unauthenticated users are sent to `/login`. The **Users** screen is `super_admin
 
 The sidebar groups those screens into three hubs:
 
-1. **Sales** - customers, invoices, customer payments
-2. **Procurement** - suppliers, purchases, supplier payments
+1. **Sales & Customers** - customer invoices, customers, customer payments
+2. **Purchases & Suppliers** - purchase invoices, suppliers, supplier payments
 3. **Inventory** - stock, items, categories
 
 Dashboard, Finance / Operating Expenses, audit, and users sit outside those hubs.
@@ -283,3 +286,5 @@ and Save & Print. See [the overview](docs/OVERVIEW.md).
 - [Design system](docs/DESIGN-SYSTEM.md): colors, spacing, responsive and accessibility rules
 - [Phases](docs/PHASES.md): implementation status and planned work
 - [Backend database contracts](../Al-Mohamadia-Backend/docs/DATABASE.md)
+
+See [Navigation and receipt verification](docs/NAVIGATION-RECEIPT-VERIFICATION.md) for manual interaction and export checks.

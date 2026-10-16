@@ -1,4 +1,6 @@
 "use client";
+import { receiptUnitPrice } from "../utils/receipt-unit-price";
+
 import {
   formatDateYMD,
   formatReceiptMoney as formatMoneyValue,
@@ -395,7 +397,7 @@ export function InvoicePreviewModal({
                           {line.quantity}
                         </td>
                         <td className="py-2.5 px-1.5 text-center align-top whitespace-nowrap text-[#1a1a1a]">
-                          {formatMoneyValue(line.piecePrice)}
+                          {formatMoneyValue(receiptUnitPrice(line))}
                         </td>
                         <td className="py-2.5 px-1.5 text-center align-top whitespace-nowrap font-bold text-[#1a1a1a]">
                           {formatMoneyValue(line.lineTotal)}

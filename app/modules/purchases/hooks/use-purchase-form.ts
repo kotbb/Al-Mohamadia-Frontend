@@ -1,4 +1,6 @@
 "use client";
+
+import { isUsableLine } from "@/app/modules/shared/utils/line-validation";
 import { useItemDimensionDefaults } from "@/app/modules/items/hooks/use-item-dimension-defaults";
 import type { DimensionName } from "@/app/modules/items/types/items.types";
 import { applySavedDimension } from "@/app/modules/shared/utils/saved-dimension";
@@ -305,6 +307,7 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
         )
       )
         return t("validationOptionalDims");
+      if (!isUsableLine({ pricingMode: item.pricingMode, quantity: Number(line.quantity), piecePrice: Number(line.unitCost), thicknessM: Number(line.thicknessM), widthM: Number(line.widthM), lengthM: Number(line.lengthM) })) return t("validationCalculation");
       if (item.pricingMode === "per_cubic_meter") {
         if (
           parsePositive(line.thicknessM) === null ||
@@ -316,6 +319,7 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
       }
     }
 
+    if (!Number.isFinite(snapshotTotal)) return t("validationCalculation");
     if (snapshotPaidInput.trim() !== "") {
       const rawPaid = Number(snapshotPaidInput);
       if (!Number.isFinite(rawPaid) || rawPaid < 0) {

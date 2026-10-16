@@ -1,4 +1,4 @@
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PublicInvoicePageClient } from "@/app/modules/invoices/pages/public-invoice-page";
 
 interface PublicInvoicePageProps {
@@ -26,6 +26,7 @@ export default async function PublicInvoicePage({
   const { locale, token } = await params;
   const { prices } = await searchParams;
   setRequestLocale(locale);
+  const t = await getTranslations({ locale: "ar", namespace: "invoices" });
 
-  return <PublicInvoicePageClient token={token} showPrices={prices !== "off"} />;
+  return <PublicInvoicePageClient token={token} showPrices={prices !== "off"} printGuidanceTitle={t("printGuidanceTitle")} printGuidanceMessage={t("printGuidancePdf")} />;
 }

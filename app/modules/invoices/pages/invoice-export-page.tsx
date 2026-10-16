@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { PublicInvoiceSheet } from "../components/public-invoice-sheet";
+import { InvoicePrintGuidance } from "../components/invoice-print-guidance";
 import { InvoiceShareModal } from "../components/invoice-share-modal";
 import { getInvoiceReceipt } from "../services/invoices.service";
 import { createInvoiceFile, downloadInvoiceFile, type InvoiceFileFormat } from "../utils/invoice-file";
@@ -72,6 +73,7 @@ export function InvoiceExportPage({ invoiceId }: { invoiceId: string }) {
         </div>
       </div>
     </header>
+    <InvoicePrintGuidance title={t("printGuidanceTitle")} message={t(format === "pdf" ? "printGuidancePdf" : "printGuidancePng")} className="mx-auto mt-4 max-w-6xl" />
     {error && <p role="alert" className="mx-auto max-w-3xl p-4 text-danger">{error}</p>}
     {!invoice && !error && <p className="p-8 text-center">{t("loadingInvoice")}</p>}
     {invoice && <div className="mx-auto py-8 px-3 print:p-0" style={{ width: format === "pdf" ? "min(100%, 210mm)" : "min(100%, 148mm)" }}>

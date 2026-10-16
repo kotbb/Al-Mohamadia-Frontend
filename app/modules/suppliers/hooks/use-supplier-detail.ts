@@ -1,5 +1,8 @@
 "use client";
 
+import { isOptionalMobile, normalizeMobile } from "@/app/modules/shared/utils/egyptian-mobile";
+import { useTranslations } from "next-intl";
+
 import type {
   DetailStatus,
   SupplierDetailToastKind,
@@ -19,6 +22,7 @@ import type { Supplier } from "@/app/modules/suppliers/types/suppliers.types";
 
 export function useSupplierDetail(id: string) {
   const describeError = useApiErrorMessage();
+  const shared = useTranslations("shared");
   const router = useRouter();
   const [supplier, setSupplier] = useState<Supplier | null>(null);
   const [status, setStatus] = useState<DetailStatus>("loading");
@@ -28,6 +32,7 @@ export function useSupplierDetail(id: string) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formName, setFormName] = useState("");
   const [formPhone, setFormPhone] = useState("");
+  const [originalPhone, setOriginalPhone] = useState("");
   const [formAddress, setFormAddress] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -77,6 +82,7 @@ export function useSupplierDetail(id: string) {
     if (!supplier) return;
     setFormName(supplier.name);
     setFormPhone(supplier.phone ?? "");
+    setOriginalPhone(supplier.phone ?? "");
     setFormAddress(supplier.address ?? "");
     setFormError(null);
     setIsFormOpen(true);
@@ -91,7 +97,11 @@ export function useSupplierDetail(id: string) {
   const submitForm = useCallback(async () => {
     if (!supplier) return;
     const name = formName.trim();
-    const phone = formPhone.trim();
+    const phone = normalizeMobile(formPhone);
+    if (formPhone !== originalPhone && !isOptionalMobile(formPhone)) {
+      setFormError(shared("invalidEgyptianMobile"));
+      return;
+    }
     if (!name) {
       setFormError("Name is required");
       return;
@@ -101,7 +111,7 @@ export function useSupplierDetail(id: string) {
     try {
       const updated = await updateSupplier(supplier.id, {
         name,
-        phone: phone || null,
+        phone: formPhone === originalPhone ? undefined : phone || null,
         address: formAddress.trim(),
       });
       setSupplier(updated);
@@ -113,7 +123,7 @@ export function useSupplierDetail(id: string) {
     } finally {
       setIsSaving(false);
     }
-  }, [supplier, formName, formPhone, formAddress]);
+  }, [supplier, formName, formPhone, originalPhone, shared, formAddress]);
 
   const openMerge = useCallback(async () => {
     setMergeError(null);
@@ -237,6 +247,7 @@ export function useSupplierDetail(id: string) {
     formName,
     setFormName,
     formPhone,
+    originalPhone,
     setFormPhone,
     formAddress,
     setFormAddress,

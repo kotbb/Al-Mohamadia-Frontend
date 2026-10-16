@@ -86,7 +86,15 @@ export interface SalesInvoiceSharePayload {
   message: string;
 }
 
+export interface InvoiceNeighbors {
+  previousId: string | null;
+  nextId: string | null;
+  previousByNumberId: string | null;
+  nextByNumberId: string | null;
+}
+
 export interface PublicInvoiceLine {
+  pricingModeSnapshot: "per_piece" | "per_cubic_meter";
   itemLabel: string;
   quantity: number;
   width: number | null;

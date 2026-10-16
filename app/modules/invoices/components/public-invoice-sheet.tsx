@@ -1,3 +1,4 @@
+import { receiptUnitPrice } from "../utils/receipt-unit-price";
 import Image from "next/image";
 import type { Ref } from "react";
 import type { PublicInvoice } from "../types/invoices.types";
@@ -33,10 +34,14 @@ export function PublicInvoiceSheet({
       style={{ padding: compact ? "9mm" : "16mm", direction: "rtl" }}
     >
       {/* Header */}
-      <div className={`${compact ? "mb-3" : "mb-5"} flex items-center justify-between gap-4`}>
+      <div
+        className={`${compact ? "mb-3" : "mb-5"} flex items-center justify-between gap-4`}
+      >
         {/* Right: Invoice # & Date */}
         <div className="text-right">
-          <div className={`${compact ? "text-base" : "text-xl"} font-bold leading-tight text-[#b85d19]`}>
+          <div
+            className={`${compact ? "text-base" : "text-xl"} font-bold leading-tight text-[#b85d19]`}
+          >
             فاتورة #{invoice.invoiceNumber}
           </div>
           <div className="mt-1 text-xs text-[#666]">
@@ -76,10 +81,14 @@ export function PublicInvoiceSheet({
       </div>
 
       {/* Thick rule */}
-      <hr className={`${compact ? "mb-2.5" : "mb-3.5"} border-0 border-t-2 border-[#222]`} />
+      <hr
+        className={`${compact ? "mb-2.5" : "mb-3.5"} border-0 border-t-2 border-[#222]`}
+      />
 
       {/* Customer */}
-      <div className={`${compact ? "mb-2.5 text-xs" : "mb-4 text-sm"} flex items-center gap-2`}>
+      <div
+        className={`${compact ? "mb-2.5 text-xs" : "mb-4 text-sm"} flex items-center gap-2`}
+      >
         <span className="font-bold text-[#444]">العميل:</span>
         <span className="font-bold text-[#111]">
           {invoice.type === "cash_sale"
@@ -96,10 +105,15 @@ export function PublicInvoiceSheet({
       )}
 
       {/* Items table */}
-      <table dir="rtl" className={`${compact ? "mb-3 text-[10px]" : "mb-5 text-xs"} w-full table-fixed border-collapse`}>
+      <table
+        dir="rtl"
+        className={`${compact ? "mb-3 text-[10px]" : "mb-5 text-xs"} w-full table-fixed border-collapse`}
+      >
         <thead>
           <tr className="border-b-[1.5px] border-[#222] text-[#333]">
-            <th className={`${compact ? "py-1.5 text-[10px]" : "py-2 text-[13px]"} px-1.5 text-right font-bold`}>
+            <th
+              className={`${compact ? "py-1.5 text-[10px]" : "py-2 text-[13px]"} px-1.5 text-right font-bold`}
+            >
               الصنف
             </th>
             {hasDimensions && (
@@ -118,14 +132,30 @@ export function PublicInvoiceSheet({
             <th className="w-[11%] py-2 px-1.5 text-center text-[13px] font-bold">
               العدد
             </th>
-            {showPrices && <><th className="w-[15%] py-2 px-1.5 text-center text-[13px] font-bold">سعر الوحدة</th><th className="w-[16%] py-2 px-1.5 text-center text-[13px] font-bold">الإجمالي</th></>}
+            {showPrices && (
+              <>
+                <th className="w-[15%] py-2 px-1.5 text-center text-[13px] font-bold">
+                  سعر الوحدة
+                </th>
+                <th className="w-[16%] py-2 px-1.5 text-center text-[13px] font-bold">
+                  الإجمالي
+                </th>
+              </>
+            )}
           </tr>
         </thead>
         <tbody>
           {invoice.lines.map((line, idx) => (
-            <tr key={idx} className={`border-b border-[#e0e0e0] ${compact ? "text-[10px]" : "text-[12px]"}`}>
-              <td className={`${compact ? "py-1.5" : "py-2.5"} px-1.5 text-right align-top`}>
-                <div className={`${compact ? "text-[11px]" : "text-[13px]"} font-bold text-[#111]`}>
+            <tr
+              key={idx}
+              className={`border-b border-[#e0e0e0] ${compact ? "text-[10px]" : "text-[12px]"}`}
+            >
+              <td
+                className={`${compact ? "py-1.5" : "py-2.5"} px-1.5 text-right align-top`}
+              >
+                <div
+                  className={`${compact ? "text-[11px]" : "text-[13px]"} font-bold text-[#111]`}
+                >
                   {line.itemLabel}
                 </div>
                 {line.note && (
@@ -136,65 +166,102 @@ export function PublicInvoiceSheet({
               </td>
               {hasDimensions && (
                 <>
-                  <td className={`${compact ? "py-1.5" : "py-2.5"} px-1.5 text-center align-top text-[#1a1a1a]`}>
+                  <td
+                    className={`${compact ? "py-1.5" : "py-2.5"} px-1.5 text-center align-top text-[#1a1a1a]`}
+                  >
                     {line.thickness ?? "—"}
                   </td>
-                  <td className={`${compact ? "py-1.5" : "py-2.5"} px-1.5 text-center align-top text-[#1a1a1a]`}>
+                  <td
+                    className={`${compact ? "py-1.5" : "py-2.5"} px-1.5 text-center align-top text-[#1a1a1a]`}
+                  >
                     {line.width ?? "—"}
                   </td>
-                  <td className={`${compact ? "py-1.5" : "py-2.5"} px-1.5 text-center align-top text-[#1a1a1a]`}>
+                  <td
+                    className={`${compact ? "py-1.5" : "py-2.5"} px-1.5 text-center align-top text-[#1a1a1a]`}
+                  >
                     {line.length ?? "—"}
                   </td>
                 </>
               )}
-              <td className={`${compact ? "py-1.5" : "py-2.5"} px-1.5 text-center align-top font-bold text-[#1a1a1a]`}>
+              <td
+                className={`${compact ? "py-1.5" : "py-2.5"} px-1.5 text-center align-top font-bold text-[#1a1a1a]`}
+              >
                 {line.quantity}
               </td>
-              {showPrices && <><td className={`whitespace-nowrap px-1.5 text-center align-top text-[#1a1a1a] ${compact ? "py-1.5" : "py-2.5"}`}>{money(line.piecePrice)}</td><td className={`whitespace-nowrap px-1.5 text-center align-top font-bold text-[#1a1a1a] ${compact ? "py-1.5" : "py-2.5"}`}>{money(line.lineTotal)}</td></>}
+              {showPrices && (
+                <>
+                  <td
+                    className={`whitespace-nowrap px-1.5 text-center align-top text-[#1a1a1a] ${compact ? "py-1.5" : "py-2.5"}`}
+                  >
+                    {money(receiptUnitPrice(line))}
+                  </td>
+                  <td
+                    className={`whitespace-nowrap px-1.5 text-center align-top font-bold text-[#1a1a1a] ${compact ? "py-1.5" : "py-2.5"}`}
+                  >
+                    {money(line.lineTotal)}
+                  </td>
+                </>
+              )}
             </tr>
           ))}
         </tbody>
         <tfoot>
           <tr className="border-t-2 border-[#222] font-bold text-[#111]">
-            <td colSpan={hasDimensions ? 4 : 1} className="px-1.5 py-2 text-right">الإجمالي</td>
-            <td className="px-1.5 py-2 text-center">{invoice.lines.reduce((sum, line) => sum + line.quantity, 0)}</td>
-            {showPrices && <><td className="px-1.5 py-2" /><td dir="ltr" className="px-1.5 py-2 text-center">{money(invoice.total)}</td></>}
+            <td
+              colSpan={hasDimensions ? 4 : 1}
+              className="px-1.5 py-2 text-right"
+            >
+              الإجمالي
+            </td>
+            <td className="px-1.5 py-2 text-center">
+              {invoice.lines.reduce((sum, line) => sum + line.quantity, 0)}
+            </td>
+            {showPrices && (
+              <>
+                <td className="px-1.5 py-2" />
+                <td dir="ltr" className="px-1.5 py-2 text-center">
+                  {money(invoice.total)}
+                </td>
+              </>
+            )}
           </tr>
         </tfoot>
       </table>
 
       {/* Totals */}
-      {showPrices && <div className={`${compact ? "mt-2" : "mt-4"} flex justify-end`}>
-        <div className="w-[240px]">
-          <div className="mb-2 flex items-baseline justify-between gap-4 text-[13px]">
-            <span className="font-bold text-[#555]">المطلوب:</span>
-            <span className="whitespace-nowrap font-bold text-[#111]">
-              {money(invoice.total)}
-            </span>
-          </div>
-          {invoice.discount > 0 && (
+      {showPrices && (
+        <div className={`${compact ? "mt-2" : "mt-4"} flex justify-end`}>
+          <div className="w-[240px]">
             <div className="mb-2 flex items-baseline justify-between gap-4 text-[13px]">
-              <span className="font-bold text-[#555]">الخصم:</span>
+              <span className="font-bold text-[#555]">المطلوب:</span>
               <span className="whitespace-nowrap font-bold text-[#111]">
-                {money(invoice.discount)}
+                {money(invoice.total)}
               </span>
             </div>
-          )}
-          <div className="mb-2 flex items-baseline justify-between gap-4 text-[13px]">
-            <span className="font-bold text-[#555]">المدفوع:</span>
-            <span className="whitespace-nowrap font-bold text-[#111]">
-              {money(invoice.paid)}
-            </span>
-          </div>
-          <hr className="my-1.5 mb-2.5 border-0 border-t-[1.5px] border-[#222]" />
-          <div className="flex items-baseline justify-between gap-4 text-[16px] font-bold">
-            <span className="text-[#111]">المتبقي:</span>
-            <span className="whitespace-nowrap text-[17px] text-[#b85d19]">
-              {money(invoice.remaining)}
-            </span>
+            {invoice.discount > 0 && (
+              <div className="mb-2 flex items-baseline justify-between gap-4 text-[13px]">
+                <span className="font-bold text-[#555]">الخصم:</span>
+                <span className="whitespace-nowrap font-bold text-[#111]">
+                  {money(invoice.discount)}
+                </span>
+              </div>
+            )}
+            <div className="mb-2 flex items-baseline justify-between gap-4 text-[13px]">
+              <span className="font-bold text-[#555]">المدفوع:</span>
+              <span className="whitespace-nowrap font-bold text-[#111]">
+                {money(invoice.paid)}
+              </span>
+            </div>
+            <hr className="my-1.5 mb-2.5 border-0 border-t-[1.5px] border-[#222]" />
+            <div className="flex items-baseline justify-between gap-4 text-[16px] font-bold">
+              <span className="text-[#111]">المتبقي:</span>
+              <span className="whitespace-nowrap text-[17px] text-[#b85d19]">
+                {money(invoice.remaining)}
+              </span>
+            </div>
           </div>
         </div>
-      </div>}
+      )}
     </div>
   );
 }

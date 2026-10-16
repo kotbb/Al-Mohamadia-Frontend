@@ -51,6 +51,7 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
     formName,
     setFormName,
     formPhone,
+    originalPhone,
     setFormPhone,
     formAddress,
     setFormAddress,
@@ -208,6 +209,7 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
         name={formName}
         onNameChange={setFormName}
         phone={formPhone}
+        originalPhone={originalPhone}
         onPhoneChange={setFormPhone}
         address={formAddress}
         onAddressChange={setFormAddress}

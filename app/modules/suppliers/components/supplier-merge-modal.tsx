@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { MergePhoneField } from "@/app/modules/shared/components/merge-phone-field";
+import { isOptionalMobile } from "@/app/modules/shared/utils/egyptian-mobile";
 import { useTranslations } from "next-intl";
 import type { Supplier } from "@/app/modules/suppliers/types/suppliers.types";
 import { Modal } from "@/app/modules/shared/components/modal";
@@ -33,9 +34,13 @@ export function SupplierMergeModal({
   onSubmit,
 }: SupplierMergeModalProps) {
   const t = useTranslations("suppliers");
+  const [phoneError, setPhoneError] = useState(false);
   const [phoneOverride, setPhoneOverride] = useState<string | null>(null);
   useEffect(() => {
-    if (!open) setPhoneOverride(null);
+    if (!open) {
+      setPhoneOverride(null);
+      setPhoneError(false);
+    }
   }, [open]);
   const canSubmit = Boolean(targetId) && sourceIds.length > 0;
 
@@ -59,13 +64,24 @@ export function SupplierMergeModal({
             type="button"
             variant="primary"
             disabled={isSubmitting || !canSubmit}
-            onClick={() =>
+            onClick={() => {
+              const originalPhone =
+                options.find((option) => option.id === targetId)?.phone ?? "";
+              if (
+                phoneOverride !== null &&
+                phoneOverride !== originalPhone &&
+                !isOptionalMobile(phoneOverride)
+              ) {
+                setPhoneError(true);
+                return;
+              }
+              setPhoneError(false);
               void onSubmit(
                 phoneOverride === null
                   ? undefined
                   : phoneOverride.trim() || null,
-              )
-            }
+              );
+            }}
           >
             {isSubmitting ? t("merging") : t("mergeSubmit")}
           </Button>
@@ -85,6 +101,7 @@ export function SupplierMergeModal({
             disabled={isSubmitting}
             onChange={(event) => {
               setPhoneOverride(null);
+              setPhoneError(false);
               onTargetChange(event.target.value);
             }}
           >
@@ -105,7 +122,11 @@ export function SupplierMergeModal({
             options.find((option) => option.id === targetId)?.phone ?? null
           }
           disabled={isSubmitting || !targetId}
-          onChange={setPhoneOverride}
+          showError={phoneError}
+          onChange={(value) => {
+            setPhoneError(false);
+            setPhoneOverride(value);
+          }}
         />
 
         <fieldset className="flex flex-col gap-2">

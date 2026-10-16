@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { NavigableTableRow } from "@/app/modules/shared/components/navigable-table-row";
 import { Link } from "@/i18n/navigation";
 import type { SalesInvoice } from "@/app/modules/invoices/types/invoices.types";
 import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
@@ -155,8 +156,10 @@ export function InvoicesList({
             }
 
             return (
-              <tr
+              <NavigableTableRow
                 key={invoice.id}
+                href={`/invoices/${invoice.id}`}
+                disabled={actionsDisabled}
                 className="border-b border-border last:border-b-0 transition-colors hover:bg-surface-muted/50"
               >
                 <td className="px-4 py-3 whitespace-nowrap">
@@ -169,10 +172,10 @@ export function InvoicesList({
                     }}
                     className="ds-focus-ring group inline-flex items-center gap-3 rounded-xl transition-colors aria-disabled:cursor-wait aria-disabled:opacity-50"
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-all duration-150 group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-sm">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-all duration-150 group-hover/record:bg-primary group-hover/record:text-primary-foreground group-hover/record:shadow-sm">
                       <InvoiceDocIcon className="h-4 w-4" />
                     </div>
-                    <span className="font-semibold whitespace-nowrap text-text-primary transition-colors group-hover:text-primary group-hover:underline">
+                    <span className="font-semibold whitespace-nowrap text-text-primary transition-colors group-hover/record:text-primary group-hover/record:underline">
                       {invoice.invoiceNumber}
                     </span>
                   </Link>
@@ -229,7 +232,7 @@ export function InvoicesList({
                     />
                   </div>
                 </td>
-              </tr>
+              </NavigableTableRow>
             );
           })}
         </tbody>

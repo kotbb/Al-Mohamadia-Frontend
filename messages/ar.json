@@ -127,7 +127,11 @@
     "errorDescription": "حدث خطأ أثناء تحميل هذه الصفحة.",
     "mergePhoneOverride": "تغيير هاتف السجل الناتج عن الدمج",
     "optionalPhone": "الهاتف (اختياري)",
-    "clearPhoneHint": "اترك الحقل فارغاً لمسح رقم الهاتف."
+    "clearPhoneHint": "اترك الحقل فارغاً لمسح رقم الهاتف.",
+    "egypt": "مصر",
+    "invalidEgyptianMobile": "أدخل رقم موبايل مصري صحيح يبدأ بـ 010 أو 011 أو 012 أو 015 (11 رقمًا محليًا).",
+    "validationNumbers": "أدخل مبالغ صحيحة غير سالبة وبحد أقصى منزلتين عشريتين.",
+    "requiredText": "أكمل الحقول النصية المطلوبة."
   },
   "dashboard": {
     "title": "لوحة التحكم",
@@ -446,7 +450,7 @@
     "updatingList": "جارٍ تحديث الفواتير…",
     "newSubtitle": "إنشاء فاتورة بيع جديدة",
     "backToList": "رجوع للقائمة",
-    "backToInvoice": "الرجوع إلى الفاتورة",
+    "backToInvoice": "العودة إلى الفاتورة",
     "searchLabel": "بحث",
     "searchPlaceholder": "بحث برقم الفاتورة أو العميل…",
     "filterStatusAll": "الكل",
@@ -484,7 +488,6 @@
     "share": "مشاركة واتساب",
     "showPrices": "إظهار الأسعار",
     "format": "الصيغة",
-    "backToInvoice": "العودة إلى الفاتورة",
     "downloadFile": "تحميل الملف",
     "loadingInvoice": "جارٍ تحميل الفاتورة…",
     "exportError": "تعذر تجهيز ملف الفاتورة",
@@ -507,7 +510,13 @@
     "pasteImageHint": "تم نسخ الصورة. الصقها في محادثة واتساب.",
     "shareSheetOpened": "فُتحت نافذة مشاركة النظام. اختر جهة الإرسال.",
     "openWhatsApp": "فتح واتساب",
-    "invoiceNavigation": "التنقل بين فواتير العميل",
+    "invoiceNavigation": "التنقل بين الفواتير",
+    "byInvoiceNumber": "حسب رقم الفاتورة",
+    "sameCustomer": "لنفس العميل",
+    "previousInvoice": "الفاتورة السابقة",
+    "nextInvoice": "الفاتورة التالية",
+    "neighborLoadError": "تعذر تحميل روابط التنقل بين الفواتير.",
+    "retryNavigation": "إعادة المحاولة",
     "previousCustomerInvoice": "السابقة لنفس العميل",
     "nextCustomerInvoice": "التالية لنفس العميل",
     "cancel": "إلغاء الفاتورة",
@@ -585,7 +594,13 @@
     "colThickness": "التخانة",
     "colWidth": "العرض",
     "colLength": "الطول",
-    "validationOptionalDims": "الأبعاد يجب أن تكون أرقاماً موجبة بالمتر. يمكنك ترك أبعاد أصناف القطعة فارغة."
+    "validationOptionalDims": "الأبعاد يجب أن تكون أرقاماً موجبة بالمتر. يمكنك ترك أبعاد أصناف القطعة فارغة.",
+    "printGuidanceTitle": "إعدادات الطباعة",
+    "printGuidancePdf": "تأكد من اختيار مقاس الورق A4 في نافذة الطباعة ← إعدادات أكثر ← حجم الورق: A4",
+    "printGuidancePng": "تأكد من اختيار مقاس الورق A5 في نافذة الطباعة ← إعدادات أكثر ← حجم الورق: A5",
+    "validationCalculation": "أدخل أبعادًا تنتج حجمًا موجبًا عند التقريب إلى 6 منازل عشرية، وكميات وأسعارًا بإجماليات محدودة.",
+    "navigationPrevious": "السابق",
+    "navigationNext": "التالي"
   },
   "suppliers": {
     "title": "الموردون",
@@ -917,7 +932,8 @@
     "emptyTitle": "لا توجد فواتير شراء بعد",
     "emptyDescription": "فواتير الشراء المسجلة من الموردين ستظهر هنا.",
     "pageOf": "صفحة {page} من {totalPages}",
-    "validationOptionalDims": "الأبعاد يجب أن تكون أرقاماً موجبة بالمتر. يمكنك ترك أبعاد أصناف القطعة فارغة."
+    "validationOptionalDims": "الأبعاد يجب أن تكون أرقاماً موجبة بالمتر. يمكنك ترك أبعاد أصناف القطعة فارغة.",
+    "validationCalculation": "أدخل أبعادًا تنتج حجمًا موجبًا عند التقريب إلى 6 منازل عشرية، وكميات وأسعارًا بإجماليات محدودة."
   },
   "inventory": {
     "title": "إدارة المخزون",

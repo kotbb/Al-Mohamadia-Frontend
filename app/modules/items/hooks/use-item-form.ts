@@ -1,5 +1,7 @@
 "use client";
 
+import { isMoneyAmount } from "@/app/modules/shared/utils/money-validation";
+
 import type {
   LoadStatus,
   ItemFormValues,
@@ -47,6 +49,7 @@ const emptyFormValues: ItemFormValues = {
 export function useItemForm(itemId?: string): UseItemFormResult {
   const describeError = useApiErrorMessage();
   const t = useTranslations("items");
+  const shared = useTranslations("shared");
   const isEdit = Boolean(itemId);
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesStatus, setCategoriesStatus] =
@@ -187,6 +190,16 @@ export function useItemForm(itemId?: string): UseItemFormResult {
   }, [isEdit, codeIsManual, existingCodes, categories]);
 
   const submit = useCallback(async (): Promise<boolean> => {
+    const numericValues = [values.unitPrice, values.cost, values.reorderThreshold, ...(!isEdit ? [values.stockQuantity] : [])];
+    if (numericValues.some((value) => value.trim() && (!Number.isFinite(Number(value)) || Number(value) < 0)) ||
+      [values.unitPrice, values.cost].some((value) => value.trim() && !isMoneyAmount(Number(value)))) {
+      setSubmitError(shared("validationNumbers"));
+      return false;
+    }
+    if (!values.name.trim() || (isEdit && !values.code.trim())) {
+      setSubmitError(shared("requiredText"));
+      return false;
+    }
     setIsSubmitting(true);
     setSubmitError(null);
 
@@ -262,6 +275,7 @@ export function useItemForm(itemId?: string): UseItemFormResult {
       setIsSubmitting(false);
     }
   }, [
+    shared,
     isEdit,
     itemId,
     values,

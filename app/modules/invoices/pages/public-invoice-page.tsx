@@ -1,5 +1,7 @@
 "use client";
 import { PublicInvoiceSheet } from "../components/public-invoice-sheet";
+import { InvoicePrintGuidance } from "../components/invoice-print-guidance";
+import { Button } from "@/app/modules/shared/components/button";
 import { usePublicInvoice } from "../hooks/use-public-invoice";
 
 import { useRef } from "react";
@@ -8,11 +10,15 @@ import Image from "next/image";
 interface PublicInvoicePageClientProps {
   token: string;
   showPrices?: boolean;
+  printGuidanceTitle: string;
+  printGuidanceMessage: string;
 }
 
 export function PublicInvoicePageClient({
   token,
   showPrices = true,
+  printGuidanceTitle,
+  printGuidanceMessage,
 }: PublicInvoicePageClientProps) {
   const { invoice, isLoading, error, isDownloading, handleDownload } =
     usePublicInvoice(token);
@@ -45,24 +51,26 @@ export function PublicInvoicePageClient({
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={() => window.print()}
             disabled={isLoading || !invoice}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[#222] bg-white px-3 py-2 text-sm font-semibold text-[#222] transition-colors hover:bg-[#f0f0f0] disabled:opacity-40"
+            className="text-sm"
           >
             <PrinterIcon />
             طباعة
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="primary"
             onClick={() => void handleDownload()}
             disabled={isLoading || !invoice || isDownloading}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#b85d19] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#9d4e14] disabled:opacity-40"
+            className="text-sm"
           >
             <DownloadIcon />
             {isDownloading ? "جارٍ التحميل…" : "تحميل PDF"}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -80,7 +88,10 @@ export function PublicInvoicePageClient({
           </div>
         ) : (
           /* ── A4 Invoice Sheet ── */
-          <PublicInvoiceSheet invoice={invoice} showPrices={showPrices} printAreaRef={printAreaRef} />
+          <>
+            <InvoicePrintGuidance title={printGuidanceTitle} message={printGuidanceMessage} className="mb-4" />
+            <PublicInvoiceSheet invoice={invoice} showPrices={showPrices} printAreaRef={printAreaRef} />
+          </>
         )}
       </div>
 

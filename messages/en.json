@@ -6,7 +6,7 @@
   "nav": {
     "home": "Home",
     "hubSales": "Sales & Customers",
-    "hubProcurement": "Procurement & Suppliers",
+    "hubProcurement": "Purchases & Suppliers",
     "hubInventory": "Inventory & Catalog",
     "hubFinance": "Finance",
     "newInvoice": "New Invoice",
@@ -127,7 +127,11 @@
     "errorDescription": "Something went wrong while loading this page.",
     "mergePhoneOverride": "Change phone for the merged record",
     "optionalPhone": "Phone (optional)",
-    "clearPhoneHint": "Leave blank to remove the phone number."
+    "clearPhoneHint": "Leave blank to remove the phone number.",
+    "egypt": "Egypt",
+    "invalidEgyptianMobile": "Enter a valid Egyptian mobile number starting with 010, 011, 012 or 015 (11 local digits).",
+    "validationNumbers": "Enter finite, non-negative amounts with at most 2 decimal places.",
+    "requiredText": "Fill in the required text fields."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -484,7 +488,6 @@
     "share": "Share on WhatsApp",
     "showPrices": "Show prices",
     "format": "Format",
-    "backToInvoice": "Back to invoice",
     "downloadFile": "Download file",
     "loadingInvoice": "Loading invoice…",
     "exportError": "Could not prepare the invoice file",
@@ -507,7 +510,13 @@
     "pasteImageHint": "Image copied. Paste it into the WhatsApp chat.",
     "shareSheetOpened": "The system share sheet opened. Choose the destination to send the file.",
     "openWhatsApp": "Open WhatsApp",
-    "invoiceNavigation": "Customer invoice navigation",
+    "invoiceNavigation": "Invoice navigation",
+    "byInvoiceNumber": "By invoice number",
+    "sameCustomer": "Same customer",
+    "previousInvoice": "Previous invoice",
+    "nextInvoice": "Next invoice",
+    "neighborLoadError": "Could not load invoice navigation.",
+    "retryNavigation": "Retry",
     "previousCustomerInvoice": "Previous for this customer",
     "nextCustomerInvoice": "Next for this customer",
     "cancel": "Cancel invoice",
@@ -585,7 +594,13 @@
     "colThickness": "Thickness",
     "colWidth": "Width",
     "colLength": "Length",
-    "validationOptionalDims": "Dimensions must be positive numbers in meters, or left blank for piece-priced items."
+    "validationOptionalDims": "Dimensions must be positive numbers in meters, or left blank for piece-priced items.",
+    "printGuidanceTitle": "Print settings",
+    "printGuidancePdf": "Make sure to select A4 paper size in the print dialog → More settings → Paper size: A4",
+    "printGuidancePng": "Make sure to select A5 paper size in the print dialog → More settings → Paper size: A5",
+    "validationCalculation": "Enter dimensions producing a positive volume at 6 decimal places, and quantities/prices with finite totals.",
+    "navigationPrevious": "Previous",
+    "navigationNext": "Next"
   },
   "suppliers": {
     "title": "Suppliers",
@@ -917,7 +932,8 @@
     "emptyTitle": "No purchase invoices yet",
     "emptyDescription": "Purchases recorded from suppliers will appear here.",
     "pageOf": "Page {page} of {totalPages}",
-    "validationOptionalDims": "Dimensions must be positive numbers in meters, or left blank for piece-priced items."
+    "validationOptionalDims": "Dimensions must be positive numbers in meters, or left blank for piece-priced items.",
+    "validationCalculation": "Enter dimensions producing a positive volume at 6 decimal places, and quantities/prices with finite totals."
   },
   "inventory": {
     "title": "Inventory Management",

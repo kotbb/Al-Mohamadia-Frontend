@@ -1,5 +1,9 @@
 "use client";
 
+import { isOptionalMobile, normalizeMobile } from "@/app/modules/shared/utils/egyptian-mobile";
+import { isMoneyAmount } from "@/app/modules/shared/utils/money-validation";
+import { useTranslations } from "next-intl";
+
 import type {
   ListStatus,
   DebtFilter,
@@ -23,6 +27,7 @@ const SEARCH_DEBOUNCE_MS = 300;
 
 export function useSuppliers() {
   const describeError = useApiErrorMessage();
+  const shared = useTranslations("shared");
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [totalOwed, setTotalOwed] = useState(0);
   const [page, setPage] = useState(1);
@@ -39,6 +44,7 @@ export function useSuppliers() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formName, setFormName] = useState("");
   const [formPhone, setFormPhone] = useState("");
+  const [originalPhone, setOriginalPhone] = useState("");
   const [formAddress, setFormAddress] = useState("");
   const [formAmountOwed, setFormAmountOwed] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -109,6 +115,7 @@ export function useSuppliers() {
   const resetForm = useCallback(() => {
     setFormName("");
     setFormPhone("");
+    setOriginalPhone("");
     setFormAddress("");
     setFormAmountOwed("");
     setFormError(null);
@@ -126,6 +133,7 @@ export function useSuppliers() {
     setEditingId(supplier.id);
     setFormName(supplier.name);
     setFormPhone(supplier.phone ?? "");
+    setOriginalPhone(supplier.phone ?? "");
     setFormAddress(supplier.address ?? "");
     setFormAmountOwed("");
     setFormError(null);
@@ -140,7 +148,11 @@ export function useSuppliers() {
 
   const submitForm = useCallback(async () => {
     const name = formName.trim();
-    const phone = formPhone.trim();
+    const phone = normalizeMobile(formPhone);
+    if (formPhone !== originalPhone && !isOptionalMobile(formPhone)) {
+      setFormError(shared("invalidEgyptianMobile"));
+      return;
+    }
     if (!name) {
       setFormError("Name is required");
       return;
@@ -157,15 +169,15 @@ export function useSuppliers() {
           amountOwedRaw === "" ? undefined : Number(amountOwedRaw);
         if (
           amountOwed !== undefined &&
-          (Number.isNaN(amountOwed) || amountOwed < 0)
+          (!isMoneyAmount(amountOwed))
         ) {
-          setFormError("Opening amount owed must be a non-negative number");
+          setFormError(shared("validationNumbers"));
           setIsSaving(false);
           return;
         }
         await createSupplier({
           name,
-          phone: phone || null,
+          phone: formPhone === originalPhone ? undefined : phone || null,
           address: address || undefined,
           amountOwed,
         });
@@ -173,7 +185,7 @@ export function useSuppliers() {
       } else if (editingId) {
         await updateSupplier(editingId, {
           name,
-          phone: phone || null,
+          phone: formPhone === originalPhone ? undefined : phone || null,
           address: address,
         });
         setToast({ kind: "updated", variant: "success" });
@@ -192,6 +204,8 @@ export function useSuppliers() {
     editingId,
     formName,
     formPhone,
+    originalPhone,
+    shared,
     formAddress,
     formAmountOwed,
     refresh,
@@ -342,6 +356,7 @@ export function useSuppliers() {
     formName,
     setFormName,
     formPhone,
+    originalPhone,
     setFormPhone,
     formAddress,
     setFormAddress,
