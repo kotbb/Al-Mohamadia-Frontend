@@ -71,7 +71,6 @@ export function CustomersList({
   const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
-  const currency = t("currency");
 
   if (status === "loading" || status === "idle") {
     return <LoadingState message={tShared("loading")} />;
@@ -179,7 +178,7 @@ export function CustomersList({
                         : "text-text-secondary"
                     }
                   >
-                    {formatMoney(customer.balance, locale)} {currency}
+                    {formatMoney(customer.balance, locale)}
                   </span>
                 </td>
                 <td className="px-4 py-3">

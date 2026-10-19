@@ -7,6 +7,7 @@ import { PublicInvoiceSheet } from "./public-invoice-sheet";
 import { getInvoiceReceipt, getSalesInvoiceShare } from "../services/invoices.service";
 import { createInvoiceFile, downloadInvoiceFile, type InvoiceFileFormat } from "../utils/invoice-file";
 import type { PublicInvoice } from "../types/invoices.types";
+import { receiptDisplayNumber } from "../utils/receipt-format";
 
 type PreparedImage = { file: File; showPrices: boolean };
 
@@ -23,7 +24,7 @@ export function InvoiceShareModal({ invoiceId, onClose, initialShowPrices = true
   const [whatsAppUrl, setWhatsAppUrl] = useState<string | null>(null);
   const sheet = useRef<HTMLDivElement>(null);
   const imageReady = format === "png" && prepared?.showPrices === showPrices;
-  const invoiceText = t("sharedInvoiceNumber", { number: invoice?.invoiceNumber ?? "" });
+  const invoiceText = t("sharedInvoiceNumber", { number: invoice ? receiptDisplayNumber(invoice.invoiceNumber) : "" });
 
   useEffect(() => {
     const controller = new AbortController();
@@ -54,7 +55,7 @@ export function InvoiceShareModal({ invoiceId, onClose, initialShowPrices = true
         const payload = await getSalesInvoiceShare(invoiceId);
         const publicUrl = new URL(payload.pdfUrl);
         if (!showPrices) publicUrl.searchParams.set("prices", "off");
-        const url = `https://wa.me/?text=${encodeURIComponent(publicUrl.toString())}`;
+        const url = `https://wa.me/?text=${encodeURIComponent(`${invoiceText}\n${publicUrl.toString()}`)}`;
         setWhatsAppUrl(url);
         window.open(url, "_blank", "noopener,noreferrer");
         setStatus(t("publicLinkReady"));

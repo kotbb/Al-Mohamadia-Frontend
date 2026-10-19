@@ -71,7 +71,6 @@ export function SuppliersList({
   const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
-  const currency = t("currency");
 
   if (status === "loading" || status === "idle") {
     return <LoadingState message={tShared("loading")} />;
@@ -179,7 +178,7 @@ export function SuppliersList({
                         : "text-text-secondary"
                     }
                   >
-                    {formatMoney(supplier.amountOwed, locale)} {currency}
+                    {formatMoney(supplier.amountOwed, locale)}
                   </span>
                 </td>
                 <td className="px-4 py-3">

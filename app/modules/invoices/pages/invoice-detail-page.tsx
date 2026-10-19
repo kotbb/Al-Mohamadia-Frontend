@@ -220,10 +220,10 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
                             {line.quantity}
                           </td>
                           <td className="px-4 py-3 text-end whitespace-nowrap text-text-primary">
-                            {formatMoney(line.piecePrice, locale)} {currency}
+                            {formatMoney(line.piecePrice, locale)}
                           </td>
                           <td className="px-4 py-3 text-end whitespace-nowrap font-medium text-text-primary">
-                            {formatMoney(line.lineTotal, locale)} {currency}
+                            {formatMoney(line.lineTotal, locale)}
                           </td>
                         </tr>
                       );

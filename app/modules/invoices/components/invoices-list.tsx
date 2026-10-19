@@ -66,7 +66,6 @@ export function InvoicesList({
   const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
-  const currency = t("currency");
 
   if (status === "loading" || status === "idle") {
     return <LoadingState message={tShared("loading")} />;
@@ -187,7 +186,7 @@ export function InvoicesList({
                   {customerLabel}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap font-medium text-text-primary">
-                  {formatMoney(invoice.total, locale)} {currency}
+                  {formatMoney(invoice.total, locale)}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
                   <span
@@ -197,7 +196,7 @@ export function InvoicesList({
                         : "text-text-secondary"
                     }
                   >
-                    {formatMoney(invoice.remaining, locale)} {currency}
+                    {formatMoney(invoice.remaining, locale)}
                   </span>
                 </td>
                 <td className="px-4 py-3">

@@ -66,7 +66,6 @@ export function PurchasesTable({
   const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
-  const currency = t("currency");
 
   if (status === "loading" || status === "idle") {
     return <LoadingState message={tShared("loading")} />;
@@ -180,7 +179,7 @@ export function PurchasesTable({
 
                 {/* Total */}
                 <td className="px-4 py-3 whitespace-nowrap font-medium text-text-primary">
-                  {formatMoney(purchase.total, locale)} {currency}
+                  {formatMoney(purchase.total, locale)}
                 </td>
 
                 {/* Remaining */}
@@ -192,7 +191,7 @@ export function PurchasesTable({
                         : "text-text-secondary"
                     }`}
                   >
-                    {formatMoney(purchase.remaining, locale)} {currency}
+                    {formatMoney(purchase.remaining, locale)}
                   </span>
                 </td>
 

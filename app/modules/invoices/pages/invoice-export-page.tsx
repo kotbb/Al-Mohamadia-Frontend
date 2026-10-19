@@ -43,7 +43,7 @@ export function InvoiceExportPage({ invoiceId }: { invoiceId: string }) {
     }
   }
 
-  return <div className="min-h-screen bg-background text-text-primary" dir={locale === "ar" ? "rtl" : "ltr"}>
+  return <div className="invoice-export-page min-h-screen bg-background text-text-primary" dir={locale === "ar" ? "rtl" : "ltr"}>
     <header className="print:hidden sticky top-0 z-10 border-b border-border bg-surface/95 shadow-sm backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4">
         <div>
@@ -76,10 +76,16 @@ export function InvoiceExportPage({ invoiceId }: { invoiceId: string }) {
     <InvoicePrintGuidance title={t("printGuidanceTitle")} message={t(format === "pdf" ? "printGuidancePdf" : "printGuidancePng")} className="mx-auto mt-4 max-w-6xl" />
     {error && <p role="alert" className="mx-auto max-w-3xl p-4 text-danger">{error}</p>}
     {!invoice && !error && <p className="p-8 text-center">{t("loadingInvoice")}</p>}
-    {invoice && <div className="mx-auto py-8 px-3 print:p-0" style={{ width: format === "pdf" ? "min(100%, 210mm)" : "min(100%, 148mm)" }}>
+    {invoice && <div className="invoice-export-sheet-wrapper mx-auto py-8 print:p-0" style={{ width: format === "pdf" ? "min(100%, 210mm)" : "min(100%, 148mm)" }}>
       <PublicInvoiceSheet invoice={invoice} showPrices={showPrices} compact={format === "png"} id="export-invoice-sheet" printAreaRef={sheet} />
     </div>}
     {shareOpen && <InvoiceShareModal invoiceId={invoiceId} initialShowPrices={showPrices} initialFormat={format} onClose={() => setShareOpen(false)} />}
-    <style>{`@media print { @page { size: ${format === "pdf" ? "A4" : "A5"} portrait; margin: 0; } body * { visibility: hidden !important; } #export-invoice-sheet, #export-invoice-sheet * { visibility: visible !important; } #export-invoice-sheet { position: absolute; inset: 0 auto auto 0; width: ${format === "pdf" ? "210mm" : "148mm"}; box-shadow: none !important; } }`}</style>
+    <style>{`@media print {
+        html, body { width: 100% !important; margin: 0 !important; padding: 0 !important; background: white !important; }
+        .invoice-export-page { width: 100% !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; background: white !important; }
+        .invoice-export-page > :not(.invoice-export-sheet-wrapper):not(style) { display: none !important; }
+        .invoice-export-sheet-wrapper { display: block !important; width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; }
+        #export-invoice-sheet { box-sizing: border-box !important; width: 100% !important; padding: 8mm !important; box-shadow: none !important; }
+      }`}</style>
   </div>;
 }

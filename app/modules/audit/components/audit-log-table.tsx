@@ -7,9 +7,11 @@ import {
   AUDIT_FIELD_KEYS,
   AUDIT_LABEL_ACTIONS,
   AUDIT_LABEL_ENTITIES,
+  AUDIT_VALUE_CODES_BY_FIELD,
   auditActionTone,
 } from "@/app/modules/audit/utils/audit-catalog";
 import {
+  describeAuditSummary,
   formatAuditChangeValue,
   formatAuditSummary,
   formatAuditTimestamp,
@@ -93,6 +95,16 @@ export function AuditLogTable({
       : field;
   }
 
+  const valueLabels = {
+    value(field: string, code: string): string | null {
+      if (code === "true" || code === "false") return t(`values.${code}`);
+      return AUDIT_VALUE_CODES_BY_FIELD[field]?.includes(code)
+        ? t(`values.${code}`)
+        : null;
+    },
+    dimension: (field: "thickness" | "width" | "length") => fieldLabel(field),
+  };
+
   return (
     <div className="overflow-x-auto rounded-shell border border-border bg-surface">
       <table className="w-full min-w-[48rem] border-collapse text-sm lg:text-base">
@@ -127,12 +139,14 @@ export function AuditLogTable({
                   entry[1].old,
                   locale,
                   t("emptyValue"),
+                  valueLabels,
                 );
                 const newText = formatAuditChangeValue(
                   entry[0],
                   entry[1].new,
                   locale,
                   t("emptyValue"),
+                  valueLabels,
                 );
                 const oldShown = oldText ?? t("emptyValue");
                 const newShown = newText ?? t("emptyValue");
@@ -144,9 +158,12 @@ export function AuditLogTable({
             );
             const hasChanges = changeEntries.length > 0;
             const isOpen = openId === log.id;
-            const summary = log.summary?.trim()
-              ? formatAuditSummary(log.summary)
-              : t("emptyValue");
+            const description = describeAuditSummary(log, actionLabel(log.action), fieldLabel);
+            const summary = description
+              ? t(description.key, description.values)
+              : log.summary?.trim()
+                ? formatAuditSummary(log.summary)
+                : t("emptyValue");
 
             return (
               <LogRows
@@ -243,10 +260,10 @@ function LogRows({
               {changeEntries.map(([field, oldText, newText]) => (
                 <div
                   key={`${log.id}-${field}`}
-                  className="flex flex-wrap items-baseline gap-x-2 text-sm"
+                  className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm"
                 >
-                  <dt className="font-medium text-text-primary">
-                    {fieldLabel(field)}
+                  <dt className="whitespace-nowrap font-medium text-text-primary">
+                    {fieldLabel(field)}:
                   </dt>
                   <dd className="text-text-secondary">
                     <bdi>{oldText}</bdi>

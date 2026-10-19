@@ -2,7 +2,7 @@
 
 Next.js admin UI for a wood store. Shopkeepers sign in, sell wood, collect customer debt, restock from suppliers, record operating expenses, watch stock, and review an audit trail. A **super admin** manages admin accounts. Users cannot self-register.
 
-The UI is English (LTR, default) or Arabic (RTL), with light and dark themes. It talks only to the [Al-Mohamadia backend](https://github.com/kotbb/Al-Mohamadia-Backend) under `/api/v1`.
+The UI is Arabic (RTL, default) or English (LTR), with light and dark themes. It talks only to the [Al-Mohamadia backend](https://github.com/kotbb/Al-Mohamadia-Backend) under `/api/v1`.
 
 ## Project structure
 
@@ -26,7 +26,7 @@ app/
     items/
     audit/
     shared/                # buttons, modals, tables, form controls
-i18n/                      # locale routing (en default, ar)
+i18n/                      # locale routing (ar default, en)
 messages/                  # en.json and ar.json
 lib/
   api/                     # fetch client, auth header, refresh on 401
@@ -57,7 +57,7 @@ lib/
 - Create, edit, and soft-delete customers
 - Customer detail with balance (مديونية)
 - Merge duplicate customers
-- Optional Egyptian mobile field with fixed Egypt/+20 prefix, automatic spacing and a ten-digit input limit; existing phones can be cleared
+- Optional Egyptian mobile field with fixed Egypt/+20 prefix, automatic spacing, a ten-digit limit and persistent generic guidance; errors appear only after a submit attempt, and existing phones can be cleared
 
 ### Sales invoices (`/invoices`)
 
@@ -71,8 +71,9 @@ lib/
 - Focused shared numeric inputs ignore wheel changes; typing and arrow controls remain available
 - Dedicated export page defaults to PNG A5; PDF A4, price visibility, print, and download remain available, with paper/settings guidance excluded from invoice outputs
 - PNG file sharing where supported, with copy/download fallbacks; PDF sharing sends a public receipt link
+- Public receipts show Arabic PDF print guidance and the standard brown/outline action buttons; notices stay outside printed/downloaded receipts
 - Cancel an invoice
-- Invoice detail with separate previous/next controls by invoice number and by customer
+- Invoice detail uses an Invoice number / Same customer selector with one labeled Previous/Next pair; neighbor links preserve the selected mode
 - Existing results stay visible while filters refresh; stale row actions are disabled
 - Click customer, supplier, sales-invoice or purchase-invoice rows to open details; nested links/actions remain independent
 - Cubic receipt unit prices show volume × saved m³ rate across preview, print, PNG, PDF and sharing; piece rates and stored totals stay unchanged
@@ -123,8 +124,9 @@ lib/
 - Record paid expenses with category, amount, Cairo date, method, optional payee and notes
 - Manage expense categories; view, edit, and soft-delete expenses with confirmation
 - Current Cairo month by default, date/category/method/search filters, paginated ledger, and filtered summaries
+- Custom dates stay beside the period selector on desktop and stack on smaller screens; the selector remains available
 - Paid expenses appear in dashboard expense and estimated net profit figures
-- Ledger/detail dates use localized month names, Latin digits and the full year without timezone shifts
+- Ledger/detail expense dates use localized month names, Latin digits and the full year without timezone shifts; no payment time is stored or fabricated
 - Recurring schedules and due/overdue reminders are planned; no recurrence or email reminders exist yet
 
 ### Audit log (`/audit`)
@@ -210,7 +212,9 @@ npx next start -p 3001
 
 ## Routes
 
-Locales are prefixed: `/en/...` and `/ar/...`. English is the default. Paths below omit that prefix.
+Locales are prefixed: `/ar/...` and `/en/...`. Unprefixed visits select Arabic
+with RTL layout; browser language and locale cookies do not override that default.
+Explicit `/en` routes stay English/LTR. Paths below omit the prefix.
 
 Unauthenticated users are sent to `/login`. The **Users** screen is `super_admin` only. Other protected screens below are available to `admin` and `super_admin`. The shared receipt is public and does not require sign-in.
 
@@ -255,7 +259,7 @@ Dashboard, Finance / Operating Expenses, audit, and users sit outside those hubs
 
 | Role        | Value         | Notes                                                                                              |
 | ----------- | ------------- | -------------------------------------------------------------------------------------------------- |
-| Admin       | `admin`       | Shop screens: dashboard, sales, procurement, inventory, expenses, audit. The Users item is hidden. |
+| Admin       | `admin`       | Shop screens: dashboard, sales, purchases, inventory, expenses, audit. The Users item is hidden. |
 | Super admin | `super_admin` | Everything an admin sees, plus Users.                                                              |
 
 The API is the authority. Hiding a nav item does not grant access.
@@ -277,14 +281,4 @@ behavior. Architecture validation also runs automatically before builds.
 
 Visual verification is manual unless explicitly requested: check English/Arabic,
 mobile, numeric inputs, dimension presets, item/invoice pages, export/sharing,
-and Save & Print. See [the overview](docs/OVERVIEW.md).
-
-## Contributor documentation
-
-- [AGENTS.md](AGENTS.md): complete repository instructions and architecture placement rules
-- [Overview](docs/OVERVIEW.md): user flows and current capabilities
-- [Design system](docs/DESIGN-SYSTEM.md): colors, spacing, responsive and accessibility rules
-- [Phases](docs/PHASES.md): implementation status and planned work
-- [Backend database contracts](../Al-Mohamadia-Backend/docs/DATABASE.md)
-
-See [Navigation and receipt verification](docs/NAVIGATION-RECEIPT-VERIFICATION.md) for manual interaction and export checks.
+and Save & Print.

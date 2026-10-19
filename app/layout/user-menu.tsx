@@ -184,15 +184,6 @@ export function UserMenu() {
           <button
             type="button"
             role="menuitem"
-            className="ds-focus-ring flex w-full cursor-pointer items-center px-4 py-2.5 text-start text-sm text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary"
-            onClick={close}
-          >
-            {t("profile")}
-          </button>
-
-          <button
-            type="button"
-            role="menuitem"
             className="ds-focus-ring flex w-full cursor-pointer items-center px-4 py-2.5 text-start text-sm text-danger transition-colors hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={isLoggingOut}
             onClick={() => void handleLogout()}

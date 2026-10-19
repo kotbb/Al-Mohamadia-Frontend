@@ -1,13 +1,14 @@
 # Implementation Phases
 
-> This file is duplicated identically in `Al-Mohamadia-Backend/docs/` and
-> `Al-Mohamadia-Frontend/docs/` so each project has full system context
-> without needing to open the other repo. Keep both copies in sync.
+> Both repositories keep this system plan for local context. Repository-specific
+> implementation notes may differ; keep shared API contracts, feature status
+> and planned work aligned between the two copies.
 
 This project is built as a series of **vertical slices**: each phase
 delivers a complete, end-to-end feature (DB schema → NestJS module → Next.js
-pages), validated by actually driving the real frontend against the real
-backend, before the next phase starts. Do not build "the whole backend"
+pages), validated by automated backend/frontend checks and user-run manual
+frontend verification. Browser access is not part of agent verification unless
+explicitly requested. Do not build "the whole backend"
 then "the whole frontend" — and do not silently expand a phase's scope.
 
 Update this file's checkboxes/status as phases complete (in both copies),
@@ -85,8 +86,8 @@ and see it recorded in that item's price history.
 
 | Resource | Endpoints |
 |----------|-----------|
-| Categories | `POST/GET/PATCH/DELETE /categories`, `GET /categories/:id` |
-| Items | `POST/GET/PATCH/DELETE /items`, `GET /items?categoryId&isActive`, `PATCH /items/:id/pricing`, `GET /items/:id/price-history` |
+| Categories | `POST/GET /categories`, `GET/PATCH/DELETE /categories/:id` |
+| Items | `POST/GET /items`, `GET/PATCH/DELETE /items/:id`, `POST /items/:id/dimension-defaults`, `PATCH /items/:id/pricing`, `GET /items/:id/price-history` |
 
 Modules: `src/modules/categories`, `items`.
 
@@ -146,7 +147,7 @@ Modules: `src/modules/customers`, `suppliers`.
 - [x] Dev seed: `npm run seed:invoices`
 - [x] Invoice editing (`PATCH /sales-invoices/:id`): transactional stock revert & reapply, customer balance adjustment, in-place payment update, audit `invoice_updated`
 - [x] Client-side A4 PDF generation + public tokenized JSON receipt (`GET /public/sales-invoices/:token`) + WhatsApp share payload (`GET .../share`)
-- [x] Authenticated receipt and same-customer navigation endpoints; existing public links remain valid
+- [x] Authenticated receipt and numeric/same-customer navigation endpoints; existing public links remain valid
 
 **Frontend** — *Done*
 
@@ -154,7 +155,7 @@ Modules: `src/modules/customers`, `suppliers`.
   with optional piece dimensions and required `per_cubic_meter` dimensions, live
   totals, discount, paid/remaining
 - [x] Invoice list with filters + search, total sales summary card, and primary "فاتورة جديدة" action opening `/invoices/new`
-- [x] Invoice detail view; Save opens details and Save & Print opens a dedicated export page; A4 PDF/A5-width PNG download, A4/A5 print, price visibility, PNG file sharing, PDF public-link sharing, and same-customer navigation
+- [x] Invoice detail view; Save opens details and Save & Print opens a dedicated export page; A4 PDF/A5-width PNG download, A4/A5 print, price visibility, PNG file sharing, PDF public-link sharing, and a numeric/same-customer navigation mode selector
 - [x] Cancel invoice action
 - [x] Invoice edit page (`/invoices/[id]/edit`, opened from detail page and list row actions) with stock/customer balance reconciliation and inactive item alerts
 - [x] Public receipt page (`/[locale]/invoices/public/[token]`) with client-side print and PDF download
@@ -279,7 +280,7 @@ Modules: `src/modules/purchases`, `src/modules/supplier-payments`.
 - [x] Transactional stock adjustment updating `Item.stockQuantity` and writing `AuditLog` (`stock_adjusted`, `refCollection: 'StockAdjustment'`)
 - [x] Stock list endpoint (`GET /inventory/stock`) with computed low/out-of/negative stock flags, category/search filters, pagination, and KPI summary count badges
 - [x] Inventory valuation endpoint (`GET /inventory/valuation`) with total value at cost, at selling price, potential profit, and category breakdowns
-- [x] Adjustment history endpoints (`GET /inventory/adjustments`, `GET /inventory/adjustments/:id`)
+- [x] Adjustment history reads `stock_adjusted` entries through `GET /audit-logs`; there are no GET inventory-adjustment endpoints
 - [x] Unit test suite covering stock adjustments, listing flags, filters, and valuations
 
 **Frontend** — *Done*
@@ -288,7 +289,7 @@ Modules: `src/modules/purchases`, `src/modules/supplier-payments`.
 - [x] Top 4 KPI Cards with professional SVG line icons: Valuation at Cost, Expected Revenue at Selling Price, Potential Profit & Margin %, and Stock Alerts (clickable alert count badges filtering the stock table)
 - [x] "Category Breakdown" modal (`CategoryValuationModal`) displaying cost valuation, selling value, and potential profit per category
 - [x] Current stock table with SKU code badges, wood pricing units (`قطعة` / `م³` with 3 decimal precision), stock vs. threshold levels, dynamic status badges (Normal, Low Stock, Out of Stock, Negative), prices, and line valuations
-- [x] Stock Adjustment modal (`StockAdjustmentModal`) with wood store common reason presets (`عجز جرد`, `زيادة جرد`, `تالف / كسر`, `تلف رطوبة وتخزين`, `تصحيح خطأ إدخال`), custom notes, live difference badge (+X / -X), and input validation
+- [x] Stock Adjustment modal (`StockAdjustmentModal`) with wood store common reason presets (`عجز جرد`, `زيادة جرد`, `تالف / كسر`, `تلف رطوبة وتخزين`, `تصحيح كمية مخزون مُسجّلة بالخطأ`), custom notes, live difference badge (+X / -X), and input validation
 - [x] Quick Reorder Threshold modal (`ReorderThresholdModal`) to update minimum stock warning levels on the fly
 - [x] Adjustment Log table with Cairo-aware timestamps, item code/name, difference badges, old vs. new quantity, adjustment reason, and adjuster username
 - [x] Item-specific Adjustment Log history modal (`ItemAdjustmentHistoryModal`) accessible directly from stock row actions
@@ -308,7 +309,8 @@ low-stock warnings reflect real thresholds.
 | Stock Adjustments | `POST /inventory/adjustments` (history is `stock_adjusted` on the audit log) |
 
 List query params (Stock): `categoryId`, `stockStatus`, `q`, `page`, `limit`.
-List query params (Adjustments): `itemId`, `period`, `date`, `page`, `limit`.
+Adjustment history uses audit filters: `action=stock_adjusted`, `entityType=Item`,
+`entityId` (optional item), inclusive Cairo `from`/`to`, `page`, `limit`.
 Adjust body: `{ itemId, newQuantity, reason }`.
 
 Module: `src/modules/inventory`.
@@ -342,9 +344,12 @@ invoices/payments created in earlier phases.
 |----------|-----------|
 | Dashboard | `GET /dashboard` |
 
-Query params (optional pair): `period` (`day` \| `week` \| `month` \| `year`), `date` (`YYYY-MM-DD`). Default: current Cairo month. Applies only to `salesSeries` + `topSellingItems`.
+Query params: `period` (`day` \| `week` \| `month` \| `year`) with `date`
+(`YYYY-MM-DD`), or custom inclusive Cairo `from`/`to`. Default: current Cairo
+month. The selected range applies to `periodFinancials`, `salesSeries` and
+`topSellingItems`; today and live debt KPIs remain independent.
 
-Response: `{ today: { sales, estimatedProfit, invoiceCount, collected }, debt: { totalDebt, debtorCount }, period: { period, date, from, to }, salesSeries: [{ bucketStart, sales }], topSellingItems: [{ itemId, name, code, quantity, revenue }] }`.
+Response: `{ today: { sales, estimatedProfit, operatingExpenses, estimatedNetProfit, invoiceCount, collected }, periodFinancials: { sales, estimatedGrossProfit, operatingExpenses, estimatedNetProfit }, debt: { totalDebt, debtorCount }, period: { period, date, from, to }, salesSeries: [{ bucketStart, sales }], topSellingItems: [{ itemId, name, code, quantity, revenue }] }`. `today.estimatedProfit` retains its existing gross-profit meaning. Custom ranges return `period.period = "custom"`.
 
 Module: `src/modules/dashboard` (backend); `app/modules/dashboard` (frontend).
 
@@ -377,6 +382,8 @@ Response: `{ items: [{ id, createdAt, user: { id, username }, action, entityType
 `GET /audit-logs/actors`: `{ id, username }[]` of distinct users who appear on at least one log, including soft-deleted users. A missing user document is `{ id, username: null }`. Sorted by username ascending, null usernames first. Empty when there are no logs.
 
 Module: `src/modules/audit` (backend); `app/modules/audit` (frontend).
+
+The frontend localizes known audit summaries, change-field labels, and coded values for Arabic and English while preserving stored summaries and dynamic names/numbers. Unknown summary formats fall back to their sanitized stored text.
 
 ---
 
@@ -418,7 +425,7 @@ Module: `src/modules/audit` (backend); `app/modules/audit` (frontend).
 | 7 — Inventory Management | Done | Done |
 | 8 — Dashboard | Done | Done |
 | 9 — Audit Log UI | Done | Done |
-| 10 — Polish & Hardening | Done | Done |
+| 10 — Polish & Hardening | Implemented; runtime validation pending | Implemented; manual visual checks pending |
 
 ### Compact inventory and invoice dimension additions
 
@@ -450,4 +457,16 @@ Not implemented: configurable repeat intervals, first/optional end dates, due/ov
 
 ### Validation and invoice navigation refinement
 
-Implemented optional Egyptian mobile validation, preserved unchanged legacy phones, targeted phone-index check/repair, trimmed required-text/null guards, consistent opening/item monetary precision, and finite positive cubic write guards across the two repositories. Invoice navigation uses a mode selector and two arrows; export settings guidance is excluded from receipt outputs. Existing records are not rewritten. Manual English/Arabic/mobile checks remain user-run.
+Implemented optional Egyptian mobile validation, preserved unchanged legacy phones, partial phone indexes (the package-listed check/repair script is currently absent), trimmed required-text/null guards, consistent opening/item monetary precision, and finite positive cubic write guards across the two repositories. Invoice navigation uses a mode selector and labeled Previous/Next arrows; Arabic PDF guidance is also shown on public receipts and excluded from printed/downloaded output. Existing records are not rewritten. Manual English/Arabic/mobile checks remain user-run.
+
+
+### Current locale, phone and Finance controls
+
+- Arabic/RTL is the unprefixed default with locale detection disabled; explicit
+  English routes remain LTR. Theme and language switches live in the user menu.
+- Optional Egyptian mobiles accept local/+20 formats and use English digits.
+  The ten-digit international portion keeps generic `1XX XXX XXXX` guidance.
+  Errors appear on invalid submit attempts, not while typing or on blur.
+- Finance Custom From/To fields stay beside the preset selector on desktop,
+  with reserved width, and stack on smaller screens. Expense dates remain
+  date-only; no payment time has been added. Record creation is a separate timestamp.

@@ -30,7 +30,7 @@ export const AUDIT_ACTIONS_BY_ENTITY: Record<AuditEntityType, readonly string[]>
     "supplier_deleted",
     "supplier_merged",
   ],
-  SalesInvoice: ["invoice_created", "invoice_cancelled"],
+  SalesInvoice: ["invoice_created", "invoice_updated", "invoice_cancelled"],
   Payment: ["payment_recorded", "payment_cancelled"],
   PurchaseInvoice: ["purchase_created", "purchase_cancelled"],
   SupplierPayment: ["supplier_payment_recorded", "supplier_payment_cancelled"],
@@ -97,12 +97,17 @@ export const AUDIT_FIELD_KEYS = [
   "total",
   "discount",
   "paid",
+  "existingDebtPayment",
   "remaining",
   "status",
   "remainingReversed",
   "code",
   "categoryId",
   "pricingMode",
+  "dimensionDefaults",
+  "thickness",
+  "width",
+  "length",
   "unitPrice",
   "cost",
   "stockQuantity",
@@ -113,9 +118,15 @@ export const AUDIT_FIELD_KEYS = [
   "payee",
   "receiptReference",
   "notes",
-  "voidedAt",
-  "voidedBy",
 ] as const;
+
+export const AUDIT_VALUE_CODES_BY_FIELD: Record<string, readonly string[]> = {
+  role: ["super_admin", "admin"],
+  type: ["cash_sale", "customer_sale"],
+  status: ["saved", "cancelled"],
+  pricingMode: ["per_piece", "per_cubic_meter"],
+  method: ["cash", "instapay", "vodafone_cash", "bank_transfer", "check"],
+};
 
 export function isAuditEntityType(value: string): value is AuditEntityType {
   return (AUDIT_ENTITY_TYPES as readonly string[]).includes(value);

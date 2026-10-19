@@ -1,3 +1,6 @@
+import { receiptDisplayNumber } from "./receipt-format";
+import { prepareReceiptCanvasClone } from "./receipt-canvas";
+
 export async function downloadInvoicePdf(
   elementId: string,
   invoiceNumber: string,
@@ -8,9 +11,14 @@ export async function downloadInvoicePdf(
   await html2pdf()
     .set({
       margin: 0,
-      filename: `فاتورة-${invoiceNumber}.pdf`,
+      filename: `فاتورة-${receiptDisplayNumber(invoiceNumber)}.pdf`,
       image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: false },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        onclone: (document: Document) => prepareReceiptCanvasClone(document, elementId),
+      },
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
     })
     .from(element)

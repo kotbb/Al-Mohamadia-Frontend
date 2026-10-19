@@ -295,19 +295,17 @@ export function StockTable({
 
                               {/* Cost */}
                               <td className="whitespace-nowrap px-3 py-1 text-end tabular-nums text-text-secondary">
-                                {formatMoney(item.cost, locale)} {t("currency")}
+                                {formatMoney(item.cost, locale)}
                               </td>
 
                               {/* Selling Price */}
                               <td className="whitespace-nowrap px-3 py-1 text-end tabular-nums font-medium text-text-primary">
-                                {formatMoney(item.unitPrice, locale)}{" "}
-                                {t("currency")}
+                                {formatMoney(item.unitPrice, locale)}
                               </td>
 
                               {/* Valuation */}
                               <td className="whitespace-nowrap px-3 py-1 text-end tabular-nums font-medium text-text-primary">
-                                {formatMoney(item.valuationAtCost, locale)}{" "}
-                                {t("currency")}
+                                {formatMoney(item.valuationAtCost, locale)}
                               </td>
 
                               {/* Actions (3-dots menu containing Adjust Stock, Threshold, History) */}

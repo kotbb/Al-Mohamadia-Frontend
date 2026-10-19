@@ -1,3 +1,6 @@
+import { receiptDisplayNumber } from "./receipt-format";
+import { prepareReceiptCanvasClone } from "./receipt-canvas";
+
 export type InvoiceFileFormat = "pdf" | "png";
 
 export async function createInvoiceFile(
@@ -7,7 +10,7 @@ export async function createInvoiceFile(
 ): Promise<File> {
   await Promise.all(Array.from(element.querySelectorAll("img")).map((image) => image.decode().catch(() => undefined)));
   const html2pdf = (await import("html2pdf.js")).default;
-  const filename = `فاتورة-${invoiceNumber}.${format}`;
+  const filename = `فاتورة-${receiptDisplayNumber(invoiceNumber)}.${format}`;
   const worker = html2pdf().set({
     margin: 0,
     filename,
@@ -16,13 +19,7 @@ export async function createInvoiceFile(
       scale: 2,
       useCORS: true,
       logging: false,
-      onclone: (document: Document) => {
-        const clonedSheet = document.getElementById(element.id);
-        if (clonedSheet) {
-          clonedSheet.dir = "rtl";
-          clonedSheet.style.direction = "rtl";
-        }
-      },
+      onclone: (document: Document) => prepareReceiptCanvasClone(document, element.id),
     },
     jsPDF: { unit: "mm", format: format === "pdf" ? "a4" : "a5", orientation: "portrait" },
   }).from(element);

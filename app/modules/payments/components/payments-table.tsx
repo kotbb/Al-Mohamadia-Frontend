@@ -41,7 +41,6 @@ export function PaymentsTable({
   const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
-  const currency = t("currency");
 
   if (status === "loading" || status === "idle") {
     return <LoadingState message={tShared("loading")} />;
@@ -147,7 +146,7 @@ export function PaymentsTable({
                       : "text-text-primary"
                   }`}
                 >
-                  {formatMoney(payment.amount, locale)} {currency}
+                  {formatMoney(payment.amount, locale)}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
                   <PaymentMethodBadge method={payment.method} />

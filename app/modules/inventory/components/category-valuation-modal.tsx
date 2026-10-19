@@ -93,18 +93,17 @@ export function CategoryValuationModal({
                       {cat.itemsCount}
                     </td>
                     <td className="py-3 px-3 text-end tabular-nums font-medium text-text-primary">
-                      {formatMoney(cat.valuationAtCost, locale)} {t("currency")}
+                      {formatMoney(cat.valuationAtCost, locale)}
                     </td>
                     <td className="py-3 px-3 text-end tabular-nums font-medium text-text-primary">
-                      {formatMoney(cat.valuationAtSellingPrice, locale)}{" "}
-                      {t("currency")}
+                      {formatMoney(cat.valuationAtSellingPrice, locale)}
                     </td>
                     <td
                       className={`py-3 px-3 text-end tabular-nums font-semibold ${
                         profit < 0 ? "text-danger" : "text-success"
                       }`}
                     >
-                      {formatMoney(profit, locale)} {t("currency")}
+                      {formatMoney(profit, locale)}
                     </td>
                   </tr>
                 );

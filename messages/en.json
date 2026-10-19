@@ -34,7 +34,6 @@
     "arabic": "العربية",
     "english": "English",
     "logout": "Log out",
-    "profile": "Profile",
     "signedInAs": "Signed in as {username}"
   },
   "auth": {
@@ -1054,6 +1053,31 @@
     "prevPage": "Previous",
     "nextPage": "Next",
     "pageOf": "Page {page} of {totalPages}",
+    "summaryActionOnly": "{action}",
+    "summaryWithValue": "{action}: {value}",
+    "summaryMerged": "{action}: {sources} → {target}",
+    "summaryPaymentForCustomer": "{action}: {amount} for customer: {name}",
+    "summaryPaymentForSupplier": "{action}: {amount} for supplier: {name}",
+    "summaryPurchaseCreated": "Purchase invoice created: {number} for supplier: {supplier}",
+    "summaryPriceChanged": "{field}: {old} → {new}",
+    "summaryDimensionDefaultsUpdated": "Item dimension defaults updated: {name}",
+    "values": {
+      "true": "Yes",
+      "false": "No",
+      "super_admin": "Super admin",
+      "admin": "Admin",
+      "cash_sale": "Cash sale",
+      "customer_sale": "Customer sale",
+      "saved": "Saved",
+      "cancelled": "Cancelled",
+      "per_piece": "Per piece",
+      "per_cubic_meter": "Per cubic meter",
+      "cash": "Cash",
+      "instapay": "InstaPay",
+      "vodafone_cash": "Vodafone Cash",
+      "bank_transfer": "Bank transfer",
+      "check": "Check"
+    },
     "entities": {
       "User": "User",
       "Customer": "Customer",
@@ -1080,6 +1104,7 @@
       "supplier_deleted": "Supplier deleted",
       "supplier_merged": "Suppliers merged",
       "invoice_created": "Invoice created",
+      "invoice_updated": "Invoice updated",
       "invoice_cancelled": "Invoice cancelled",
       "payment_recorded": "Payment recorded",
       "payment_cancelled": "Payment cancelled",
@@ -1130,12 +1155,17 @@
       "total": "Total",
       "discount": "Discount",
       "paid": "Paid",
+      "existingDebtPayment": "Existing debt payment",
       "remaining": "Remaining",
       "status": "Status",
       "remainingReversed": "Remaining reversed",
       "code": "Code",
       "categoryId": "Category",
       "pricingMode": "Pricing mode",
+      "dimensionDefaults": "Dimension defaults",
+      "thickness": "Thickness",
+      "width": "Width",
+      "length": "Length",
       "unitPrice": "Unit price",
       "cost": "Cost",
       "stockQuantity": "Stock quantity",
@@ -1144,10 +1174,9 @@
       "reorderThreshold": "Reorder threshold",
       "expenseDate": "Expense date",
       "payee": "Payee",
+      "receiptReference": "Receipt reference",
       "optional": "Optional",
-      "notes": "Notes",
-      "voidedAt": "Voided at",
-      "voidedBy": "Voided by"
+      "notes": "Notes"
     }
   }
 }

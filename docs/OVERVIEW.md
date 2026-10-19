@@ -5,7 +5,7 @@
 
 **Wood store management** UI for a small timber shop. Shopkeepers create
 sales invoices, track inventory and debt, manage customers and suppliers,
-and watch daily sales — in **English (LTR, default)** or **Arabic (RTL)**,
+and watch daily sales — in **Arabic (RTL, default)** or **English (LTR)**,
 with **light** and **dark** themes.
 
 Product name in the UI: **Al-Mohamadia**.
@@ -109,7 +109,7 @@ flowchart LR
 
 | Area | Purpose |
 |------|---------|
-| Items & pricing | Categories, items, per-piece / per-m³, cost & unit price, price history *(Phase 2 — live; base reference price API kept for later UI)* |
+| Items & pricing | Categories, items, per-piece / per-m³, cost & unit price, price history *(Phase 2 — live; prices and costs are updated through item forms)* |
 | Inventory | Stock list, low/negative stock flags, manual جرد, inventory valuation at cost & selling *(Phase 7 — live)* |
 | Purchases | Restock invoices from suppliers; page-based creation and view-only detail *(Phase 6 — live)* |
 | Supplier payments | Standalone debt payments to suppliers + payments captured on purchases, debtor supplier picker *(Phase 6 — live)* |
@@ -127,7 +127,7 @@ flowchart LR
 
 | Concern | Behavior |
 |---------|----------|
-| Language | `en` (RTL, default) and `ar` (RTL), runtime switchable |
+| Language | `ar` (RTL, default) and `en` (LTR), switchable from the user menu; unprefixed visits always use Arabic |
 | Theme | Light & dark via tokens in [`DESIGN-SYSTEM.md`](./DESIGN-SYSTEM.md) |
 | Soft delete | Master data soft-deleted; history/audit append-only |
 
@@ -138,16 +138,17 @@ flowchart LR
 ```text
 app/[locale]/…/page.tsx     → thin URL routes (params/locale setup and feature-page composition)
 app/modules/{domain}/       → feature code (UI, hooks, services)
-app/layout/                 → App shell, sidebar, auth guard
+app/layout/                 → App shell, sidebar and user menu
 lib/                        → API client, auth helpers, env
-messages/ or locales/       → i18n dictionaries (ar / en)
+messages/                   → i18n dictionaries (ar / en)
 ```
 
-Exact locale routing is decided in Phase 0 — stay consistent once chosen.
+Locale routing uses `/ar` and `/en` prefixes. Automatic locale detection is
+disabled; unprefixed visits select Arabic even with English browser preferences.
 `dir` on `<html>` always follows locale (`ar` → `rtl`, `en` → `ltr`).
 
 Feature domains: `auth`, `dashboard`, `invoices`, `payments`, `supplier-payments`,
-`inventory`, `items`, `customers`, `suppliers`, `purchases`, `audit`, `shared`.
+`inventory`, `items`, `customers`, `suppliers`, `purchases`, `operating-expenses`, `audit`, `shared`.
 
 ### 3-Hub Navigation Structure
 
@@ -157,7 +158,7 @@ The admin shell organizes primary navigation into 3 domain hubs with horizontal 
 2. **Purchases & Suppliers** (`/purchases`, `/suppliers`, `/supplier-payments`)
 3. **Inventory & Catalog** (`/inventory`, `/items`, `/categories`)
 
-Direct top-level routes: **Home / Dashboard** (`/`), **Finance / Operating expenses** (`/operating-expenses`), **Users** (`/users`).
+Direct top-level routes: **Home / Dashboard** (`/`), **Finance / Operating expenses** (`/operating-expenses`), **Audit log** (`/audit`), **Users** (`/users`).
 Detail views (`/customers/[id]`, `/suppliers/[id]`) accept `?from=...` to contextually route the "Back to list" action back to the user's originating list.
 
 - **HTTP:** native `fetch` via a shared client under `lib/api/` — Bearer
@@ -175,7 +176,8 @@ Detail views (`/customers/[id]`, `/suppliers/[id]`) accept `?from=...` to contex
 - Native `fetch` API client (no Axios / React Query unless explicitly added)
 - i18n: Arabic + English; theme: light + dark
 
-Scripts: `npm run start:dev`, `build`, `start`, `lint`.
+Scripts: `npm run start:dev`, `build`, `start`, `lint`, `check:architecture`,
+`test:architecture`, `test:forms` (alias: `test:dimensions`).
 
 ---
 
@@ -209,7 +211,7 @@ needed:
 
 ```bash
 npm install
-npm run start:dev -- -p 3001
+npm run start:dev
 ```
 
 Open [http://localhost:3001](http://localhost:3001).
@@ -227,7 +229,7 @@ Open [http://localhost:3001](http://localhost:3001).
 
 ## Auth integration (summary)
 
-Planned from Phase 1 (see [`PHASES.md`](./PHASES.md)):
+Implemented since Phase 1 (see [`PHASES.md`](./PHASES.md)):
 
 - **Access token** — used as Bearer on API requests via the shared client.
 - **Refresh** — rotation via refresh token; client refreshes on 401 with a
@@ -239,7 +241,7 @@ Planned from Phase 1 (see [`PHASES.md`](./PHASES.md)):
 - **API is the authority** — hiding a nav item is not security; the backend
   enforces roles.
 
-### Manual verification (once Phase 1 is done)
+### Manual verification (authentication)
 
 1. Log in as seeded super admin.
 2. Create an admin → log in as that admin → confirm no user-management UI/API.
@@ -302,7 +304,10 @@ Sales create/edit and purchase create use compact desktop line rows, a second ro
 ### Optional phones and item dimension presets
 
 Customer/supplier phones are nullable and optional in forms and API types.
-Blank input sends `null`, including edits. Merge dialogs offer an explicit phone
+Blank changed input sends `null`; unchanged phones are omitted from edit requests,
+preserving legacy values. New/changed phones must be Egyptian mobiles starting
+with 010/011/012/015 (11 local digits), or the equivalent +20 form. Landlines and
+0020 input are rejected. Merge dialogs offer an explicit phone
 override checkbox; unchecked preserves the target phone, checked with blank
 input clears it. Missing phones are omitted from selector subtitles and shown
 as a dash in list/details.
@@ -337,11 +342,11 @@ all business logic or ownership decisions correct.
 
 Sales create/edit and purchase create offer a dropdown for every dimension, including empty and single presets. The final Add value action saves a positive meter value for future invoices through POST /items/:id/dimension-defaults; custom typing stays local. Successful additions select the current value and merge sorted choices across the form. Late responses cannot update switched or removed lines.
 
-Inventory retains eight columns and its existing actions inside compact category tables. Counts describe the loaded page. See [Manual verification](./NAVIGATION-RECEIPT-VERIFICATION.md) for manual checks.
+Inventory retains eight columns and its existing actions inside compact category tables. Counts describe the loaded page. See [the current workflow checklist](#manual-verification-current-workflows).
 
 ## Current export, loading and expense flows
 
-Invoice editing uses `/invoices/:id/edit`; Save opens details and Save & Print opens `/invoices/:id/export`. Export starts with PNG A5, with PDF A4, price visibility, print and download controls. PNG sharing uses supported browser file sharing or copy/download fallback; PDF sharing sends the public receipt link.
+Invoice editing uses `/invoices/:id/edit`; Save opens details and Save & Print opens `/invoices/:id/export`. Export starts with PNG A5, with PDF A4, price visibility, print and download controls. PNG sharing uses supported browser file sharing or copy/download fallback; PDF sharing sends the public receipt link. Format-specific yellow print guidance stays outside the exported receipt. Public URLs use the Arabic PDF guidance and standard primary/outline buttons.
 
 Route/auth loading uses shared loading surfaces. Localized/global fallback pages cover errors and unknown routes. Shared numeric inputs prevent mouse-wheel value changes while focused.
 
@@ -349,9 +354,45 @@ Operating expenses are already-paid entries with category management, date/metho
 
 ## Row navigation and invoice presentation
 
-Both sales/purchase sidebar hubs open invoices first. Customer, supplier and sales/purchase invoice row clicks open details, with primary-link brown hover across the row and independent nested actions. Operating expenses retain modal details and share a stable localized date-only formatter. Invoice details now provide numeric ledger neighbors alongside customer chronology. Receipts calculate cubic per-piece display from saved meter volume/rate; rates and stored totals stay unchanged. See [manual verification](./NAVIGATION-RECEIPT-VERIFICATION.md).
+Both sales/purchase sidebar hubs open invoices first. Customer, supplier and sales/purchase invoice row clicks open details, with primary-link brown hover across the row and independent nested actions. Operating expenses retain modal details and share a stable localized date-only formatter. Invoice details use one labeled Previous/Next pair with an Invoice number /
+Same customer selector; selected mode is carried in neighbor URLs. Receipts calculate cubic per-piece display from saved meter volume/rate; rates and stored totals stay unchanged. See [the current workflow checklist](#manual-verification-current-workflows).
 
 
 ### Mobile validation and invoice presentation
 
-Invoice details use one Previous/Next pair with an Invoice number / Same customer selector. Export guidance follows PDF A4 / PNG A5 without appearing in outputs. Customer/supplier forms use a fixed Egypt +20 field with a ten-digit limit. See [behavior and manual checks](PHONE-AND-PRINT-VERIFICATION.md).
+Invoice details use one Previous/Next pair with an Invoice number / Same customer selector. Export guidance follows PDF A4 / PNG A5 without appearing in outputs. Customer/supplier forms use a fixed Egypt +20 field with a ten-digit limit. Validation is submit-triggered, and generic `1XX XXX XXXX` guidance remains
+visible at unfilled positions. See [the current workflow checklist](#manual-verification-current-workflows).
+
+
+## Manual verification (current workflows)
+
+Visual and interaction checks are user-run; agents do not access the frontend in
+a browser unless explicitly requested. Automated checks do not prove visual
+layout, printer settings or browser sharing behavior.
+
+1. Open an unprefixed URL with English browser preferences: Arabic/RTL opens.
+   Explicit `/en` remains English/LTR. Switch language/theme from the user menu
+   and check both languages, dark/light themes and mobile layout.
+2. Create multiple customers/suppliers without phones; edit/clear phones and
+   preserve unchanged legacy values. Enter/paste local and +20 mobiles; check
+   generic guidance, spacing, caret editing and the ten-digit input limit.
+   Invalid phones should show a field error only after Submit; editing clears it.
+3. Check inventory category counts, collapse, horizontal scrolling, eight columns,
+   stock history/adjustment actions, KPI cards, and item creation/edit pages.
+   Stock-correction presets use wording about an incorrectly recorded quantity.
+4. Verify single/multiple/empty dimension presets, inline Add value, retry and
+   custom typing. Check piece/cubic totals, invoice editing and saved dimensions.
+5. Click customer/supplier/invoice rows and nested menus/links independently.
+   Switch invoice navigation mode and follow several Previous/Next links,
+   including boundaries, cash and cancelled invoices; check RTL arrow direction.
+6. In Finance, choose Custom: From/To stay beside visible period buttons on
+   desktop and stack on mobile. Switch back to a preset. Expense date stays
+   date-only and is not combined with the record creation time.
+7. Verify public/preview/print/PDF A4/PNG A5 cubic per-piece prices and unchanged
+   totals, price hiding, sharing and Save & Print. Yellow print guidance must
+   appear on screen and remain absent from printed/downloaded receipts.
+
+Run `npm run test:forms`, architecture checks, TypeScript and the production
+build for automated verification. Backend API regressions cover persisted
+pricing, stock reversal and validation. No data reset or migration is required
+for these UI checks.

@@ -11,6 +11,7 @@
   --primary: #6f4428;
   --primary-hover: #5a3620;
   --primary-foreground: #ffffff;
+  --receipt-header: #6f4428;
   --focus-ring: #6f4428;
   --focus-ring-offset: #ffffff;
   --success: #2e8f52;
@@ -68,6 +69,7 @@
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-foreground: var(--primary-foreground);
+  --color-receipt-header: var(--receipt-header);
   --color-focus-ring: var(--focus-ring);
   --color-focus-ring-offset: var(--focus-ring-offset);
   --color-success: var(--success);
@@ -276,6 +278,15 @@ select:disabled {
 
 .animate-progress-slide {
   animation: progress-slide 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.invoice-receipt th,
+.invoice-receipt td {
+  overflow-wrap: anywhere;
+}
+
+@page {
+  margin: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

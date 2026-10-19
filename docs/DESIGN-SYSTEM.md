@@ -2,7 +2,7 @@
 
 ### Al-Mohamadia Wood Store Operations System
 
-**Version 2.2 (shell refresh — mockup-aligned palette + Cairo)**
+**Version 2.3 (current shell, Noto typography, compact workflows)**
 
 ---
 
@@ -190,13 +190,13 @@ Focus is never indicated by `primary` alone or by a border-color change alone �
 | `text-xl`   | 22px | page titles                                                 |
 | `text-2xl`  | 28px | dashboard KPI numbers only                                  |
 
-**Line-height:** Arabic — 1.7 at body sizes, 1.4 at heading sizes. English/Latin — 1.5 at body sizes, 1.3 at heading sizes (used only for stray Latin words/codes).
+**Line-height:** Arabic — 1.7 at body sizes, 1.4 at heading sizes. English/Latin — 1.5 at body sizes, 1.3 at heading sizes; English pages use LTR layout.
 
 **Numbers:** Western (Latin) digits throughout, in every context — matches real Arabic business/ERP/invoicing convention and stays unambiguous at small sizes.
 
 **Tabular figures:** enabled everywhere numbers appear in a column — invoice line totals, price lists, balances, dashboard KPIs — so digits align vertically. Not required in inline prose numbers.
 
-**Mixed RTL/LTR behavior:** paragraph/field direction follows Arabic (RTL); embedded numerals, currency, and item codes render as LTR runs within the RTL flow (standard Unicode bidi behavior) — never force-mirrored, never manually reversed. Currency (م.ج) sits as a fixed suffix directly after the number, same run.
+**Mixed RTL/LTR behavior:** paragraph/field direction follows the locale (`ar` RTL, `en` LTR); embedded numerals, currency, and item codes render as LTR runs within the RTL flow (standard Unicode bidi behavior) — never force-mirrored, never manually reversed. Currency (ج.م) sits as a fixed suffix directly after the number, same run.
 
 ---
 
@@ -215,7 +215,7 @@ Two tiers, sharing the same token scale — only the values assigned to spacing/
 | Form field vertical spacing | 20px                                           |
 | Section spacing             | 32–48px                                        |
 
-### Compact (opt-in, per-table, pointer/desktop only)
+### Compact (screen-specific desktop layout)
 
 | Element                     | Value                                          |
 | --------------------------- | ---------------------------------------------- |
@@ -248,19 +248,23 @@ Font size floor:
   14px minimum in both densities — never reduced further to fit more rows.
 ```
 
-**Density is a per-table, per-user preference — never a single global app-wide setting.** Expose a small, persistent density toggle in the toolbar of each eligible table, remembered per user.
+**Current implementation:** compact inventory and invoice layouts are selected by
+the screen, not a persisted per-user density toggle. No density-switch preference
+is implemented. Retain readable labels, horizontal overflow where needed, and
+44px touch-important actions; treat the sizing tables above as design targets.
 
 ---
 
 ## 7.1 App Shell Layout (v2.2)
 
-Authenticated pages use a **two-rail shell** aligned to the Users mockup:
+Authenticated pages use a sidebar plus scrolling workspace, with the global
+user-menu header inside the main workspace:
 
 | Region                                      | Tokens / rules                                                                                                                                                       |
 | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Global header** (full width, above rails) | User menu only (initials avatar + dropdown). Theme and language live **inside** the profile menu — not as permanent header pills. Never inside the page title block. |
+| **Global header** (inside the main workspace) | User menu only (initials avatar + dropdown). Theme and language live **inside** the profile menu — not as permanent header pills. Never inside the page title block. |
 | **Sidebar rail**                            | `sidebar` background, `rounded-shell`, brand in `sidebar-foreground`. Active nav: `sidebar-active` fill + `sidebar-active-foreground` text — no leading border bar.  |
-| **Main workspace card**                     | `surface` + `rounded-shell` + Elevation 1 shadow. Page title/subtitle in a bordered header strip; content below.                                                     |
+| **Main workspace card**                     | `background` canvas with a scrolling main column and centered max-width content. Page title/actions appear below hub navigation; feature cards provide their own surfaces/borders.                                                     |
 | **Inner cards / tables**                    | `rounded-shell` on table wrappers and `SurfaceCard` components.                                                                                                      |
 | **User avatar**                             | `primary` circle, two-character initials (`getInitials`), dropdown with profile + logout.                                                                            |
 
@@ -299,7 +303,9 @@ Design and implementation proceed in this strict order, each stage validated bef
 4. **Tablet responsiveness** — layouts adapted for tablet, reusing the same components with responsive spacing/breakpoints.
 5. **Dark mode** — only after 1–4 are stable, following the derivation-and-validation process in §2.
 
-No component ships until it has been screenshot-reviewed in light mode + RTL + desktop before dark mode or tablet variants are even opened.
+Visual review covers light/dark, Arabic RTL, English LTR, desktop and mobile.
+It is a manual user check; do not infer completed screenshot verification from
+TypeScript/tests/builds or access a browser unless explicitly requested.
 
 ---
 
@@ -310,6 +316,8 @@ No component ships until it has been screenshot-reviewed in light mode + RTL + d
 **Inputs:** 44px height (Comfortable), `border` at rest, `primary` border + `focus-ring`/`focus-ring-offset` on focus, `danger` border + inline message below the field on error. Numeric fields right-aligned internally even inside an RTL form.
 
 **Tables:** `surface` base with `surface-muted` zebra striping; sticky header row in `text-secondary` Medium weight (never bold); numeric columns right-aligned; row height per the density system (§7); selected row gets a `primary`-tinted (8–10% opacity) background plus a leading 2px `primary` border bar — never a full solid-color row fill.
+
+Show monetary values in table cells as formatted numbers without a repeated `ج.م`/`EGP` suffix. Amounts outside tables retain their currency labels.
 
 **Cards:** `surface` + `border`, Elevation 0 (no shadow), 12px radius, used only for dashboard KPIs and entity-summary panels — one big `text-2xl` number, one `text-muted` label, nothing more per card.
 
@@ -345,11 +353,11 @@ One neutral, warm-tinted foundation (background/surface/border/text). One brand 
 
 ### Typography
 
-Cairo, single family, system-wide, for both Arabic and Latin/numeral content. Western tabular digits throughout. Four-weight system (400/500/600/700), disciplined type scale from 12px to 28px, generous 1.7 line-height for Arabic body text.
+Noto Sans Arabic paired with Noto Sans, loaded through `app/fonts.ts`, for Arabic and Latin/numeral content. Western tabular digits throughout. Four-weight system (400/500/600/700), disciplined type scale from 12px to 28px, generous 1.7 line-height for Arabic body text.
 
 ### Density
 
-Comfortable (44–52px components) required for New Invoice and any touch-primary surface, and the default everywhere else. Compact (36–40px components) as an explicit, per-table, user-controlled, pointer/desktop-only option on Invoice List, Inventory, and Audit Log.
+Comfortable (44–52px components) required for New Invoice and any touch-primary surface, and the default everywhere else. Compact spacing is screen-specific; there is no user density toggle. Invoice and inventory layouts retain 44px touch-important controls.
 
 ### Component Style
 
@@ -374,6 +382,30 @@ Inventory KPI cards keep four desktop columns, 12px padding and 20px figures. De
 The dedicated invoice export page initially selects PNG A5; PDF A4 remains an
 option. Keep format and price visibility controls together, with Print, Download
 and WhatsApp actions. Reuse invoice receipt presentation for exports and sharing.
+Both sizes use a white receipt with a fixed light-theme primary (`#6F4428`)
+item header and white labels. Browser printing includes the header color when
+Background graphics is enabled and lets the browser omit it when disabled.
+The invoice number and remaining balance use the receipt's orange accent
+(`#b85d19`). Receipt print pages use zero page margins so Chromium has no room
+to add its automatic time, title, and URL, even if Headers and footers is
+enabled. Printed receipts fill the paper width selected in the browser and
+use an 8 mm internal inset; the A4 PDF and A5 PNG download sizes remain fixed.
+User print settings can override page CSS. In RTL order, show item, quantity,
+thickness, width, length, cubic volume when applicable, unit price and line
+total; omit meter suffixes in the dimension headers. Cubic volume uses the
+saved pricing mode and six-decimal calculation, displayed to five decimals.
+The volume sum sits in the table footer directly above the `الإجمالي` row,
+under the cubic column, including when prices are hidden. A4 cells use 12 px
+horizontal padding; A5 cells use 11 px. Download sheets use 12 mm A4 and 3 mm
+A5 padding to give the columns more room while retaining standard page sizes.
+Header labels use centered single-line content with smaller header-only side
+padding; the canvas clone corrects html2canvas's lower Arabic header baseline
+without changing the live preview or print. Long item cells may wrap without
+changing table font sizes. Customer-facing
+receipts, filenames and share text show the invoice number without its `INV-`
+prefix and display the creation date and time in Cairo time. Internal invoice
+identifiers retain the prefix. Item labels separate Western digits from adjacent
+Arabic text and isolate number runs so the image export matches the preview.
 Numeric shared inputs ignore wheel changes while focused. In the preset editor,
 Add value appears above Cancel with clear saving/error feedback.
 
@@ -381,3 +413,20 @@ Shared loading screens cover route and authentication transitions. Localized and
 global fallback screens keep recovery actions visible. Paid expense tables and
 forms reuse existing card, filter, money and confirmation patterns. Recurring
 Due/Overdue sections are planned and must not be presented as implemented UI.
+
+
+### Current phone, date and invoice navigation controls
+
+- Egyptian mobile input: fixed Egypt/+20 prefix, English digits, 3/3/4 grouping,
+  ten editable digits, and persistent generic `1XX XXX XXXX` guidance in unfilled
+  positions. Invalid changed phones are checked on Submit, not typing/blur;
+  editing clears the message. The guidance is never a submitted value.
+- Invoice neighbors: mode selector plus one labeled Previous/Next pair, 44px
+  targets, RTL-aware arrows and disabled unavailable directions. Carry mode in
+  neighbor URLs. Avoid reverting to four simultaneous navigation buttons.
+- Export/public print notice: yellow warning tokens, icon plus explanatory text,
+  outside the captured invoice and hidden on print. Public receipts use Arabic
+  PDF guidance. Download is primary brown; Print is the standard outline action.
+- Finance custom dates: reserve width beside the desktop period selector so it
+  remains visible; stack on smaller screens. Date-only expense values never
+  imply a time of payment.

@@ -47,7 +47,7 @@ export function PublicInvoicePageClient({
             />
           </div>
           <span className="text-sm font-bold text-[#1a1a1a]">
-            المحمدية لتجارة الأخشاب
+            المحمدية لتجارة الأخشاب والألواح
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -107,7 +107,8 @@ export function PublicInvoicePageClient({
             top: 0 !important;
             width: 100% !important;
             margin: 0 !important;
-            padding: 12mm 15mm !important;
+            box-sizing: border-box !important;
+            padding: 8mm !important;
             border: none !important;
             box-shadow: none !important;
             background: white !important;

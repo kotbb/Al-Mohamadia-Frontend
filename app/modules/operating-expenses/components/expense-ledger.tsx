@@ -86,7 +86,7 @@ export function ExpenseLedger({
                     {row.payee || "—"}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 font-semibold tabular-nums text-danger">
-                    {formatMoney(row.amount, locale)} {t("currency")}
+                    {formatMoney(row.amount, locale)}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3">
                     <PaymentMethodBadge method={row.method} />
