@@ -124,7 +124,7 @@ export const AUDIT_VALUE_CODES_BY_FIELD: Record<string, readonly string[]> = {
   role: ["super_admin", "admin"],
   type: ["cash_sale", "customer_sale"],
   status: ["saved", "cancelled"],
-  pricingMode: ["per_piece", "per_cubic_meter"],
+  pricingMode: ["per_piece", "per_cubic_meter", "free_amount"],
   method: ["cash", "instapay", "vodafone_cash", "bank_transfer", "check"],
 };
 

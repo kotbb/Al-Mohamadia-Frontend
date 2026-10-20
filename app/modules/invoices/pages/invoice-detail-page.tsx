@@ -217,10 +217,10 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
                             ) : null}
                           </td>
                           <td className="px-4 py-3 text-center font-medium text-text-primary">
-                            {line.quantity}
+                            {line.pricingModeSnapshot === "free_amount" ? "" : line.quantity}
                           </td>
                           <td className="px-4 py-3 text-end whitespace-nowrap text-text-primary">
-                            {formatMoney(line.piecePrice, locale)}
+                            {line.pricingModeSnapshot === "free_amount" ? "" : formatMoney(line.piecePrice, locale)}
                           </td>
                           <td className="px-4 py-3 text-end whitespace-nowrap font-medium text-text-primary">
                             {formatMoney(line.lineTotal, locale)}

@@ -1,4 +1,4 @@
-export type PricingMode = "per_piece" | "per_cubic_meter";
+export type PricingMode = "per_piece" | "per_cubic_meter" | "free_amount";
 
 export interface DimensionDefaults {
   thickness: number[];
@@ -86,7 +86,6 @@ export interface UpdateItemInput {
   name?: string;
   categoryId?: string;
   isWood?: boolean;
-  pricingMode?: PricingMode;
   reorderThreshold?: number;
   isActive?: boolean;
 }

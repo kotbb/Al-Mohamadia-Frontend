@@ -438,14 +438,16 @@ test("mixed cubic receipts show the volume column and summary even without price
         const html = renderToStaticMarkup(React.createElement(PublicInvoiceSheet, { invoice: { ...shared, customerName: null }, compact, showPrices }));
         const headings = receiptHeadings(html);
         assert.deepEqual(headings, showPrices ? expected : expected.slice(0, 6));
-        assert.match(html, /إجمالي المكعب/);
+        assert.doesNotMatch(html, /إجمالي المكعب/);
         const footer = html.match(/<tfoot>([\s\S]*?)<\/tfoot>/)?.[1];
         assert.ok(footer);
-        assert.match(footer, /إجمالي المكعب[\s\S]*?0\.04500[\s\S]*?الإجمالي/);
-        const cubicFooterCells = [...footer.match(/<tr[^>]*>([\s\S]*?)<\/tr>/)[1].matchAll(/<td([^>]*)>([\s\S]*?)<\/td>/g)];
-        assert.match(cubicFooterCells[1][1], /colSpan="4"/);
-        assert.match(cubicFooterCells[2][2], /0\.04500/);
-        assert.doesNotMatch(html.split("</tfoot>")[1], /إجمالي المكعب/);
+        const footerRows = [...footer.matchAll(/<tr([^>]*)>([\s\S]*?)<\/tr>/g)];
+        assert.equal(footerRows.length, 1);
+        assert.match(footerRows[0][1], /border-t-2/);
+        const cubicFooterCells = [...footerRows[0][2].matchAll(/<td([^>]*)>([\s\S]*?)<\/td>/g)];
+        assert.match(cubicFooterCells[0][2], /الإجمالي/);
+        assert.match(cubicFooterCells[2][1], /colSpan="3"/);
+        assert.match(cubicFooterCells[3][2], /0\.04500/);
         assert.equal([...html.matchAll(/0\.04500/g)].length, 2);
         assert.match(html, /receipt-volume-cell/);
         assert.match(html, /قطعة[\s\S]*?receipt-volume-cell[^>]*><\/td>/);
@@ -458,14 +460,16 @@ test("mixed cubic receipts show the volume column and summary even without price
       initialInvoice: { ...shared, id: "one", lines: [cubic, piece] },
     }));
     assert.deepEqual(receiptHeadings(preview), expected);
-    assert.match(preview, /إجمالي المكعب/);
+    assert.doesNotMatch(preview, /إجمالي المكعب/);
     const previewFooter = preview.match(/<tfoot>([\s\S]*?)<\/tfoot>/)?.[1];
     assert.ok(previewFooter);
-    assert.match(previewFooter, /إجمالي المكعب[\s\S]*?0\.04500[\s\S]*?الإجمالي/);
-    const previewCubicCells = [...previewFooter.match(/<tr[^>]*>([\s\S]*?)<\/tr>/)[1].matchAll(/<td([^>]*)>([\s\S]*?)<\/td>/g)];
-    assert.match(previewCubicCells[1][1], /colSpan="4"/);
-    assert.match(previewCubicCells[2][2], /0\.04500/);
-    assert.doesNotMatch(preview.split("</tfoot>")[1], /إجمالي المكعب/);
+    const previewRows = [...previewFooter.matchAll(/<tr([^>]*)>([\s\S]*?)<\/tr>/g)];
+    assert.equal(previewRows.length, 1);
+    assert.match(previewRows[0][1], /border-t-2/);
+    const previewCubicCells = [...previewRows[0][2].matchAll(/<td([^>]*)>([\s\S]*?)<\/td>/g)];
+    assert.match(previewCubicCells[0][2], /الإجمالي/);
+    assert.match(previewCubicCells[2][1], /colSpan="3"/);
+    assert.match(previewCubicCells[3][2], /0\.04500/);
     assert.equal([...preview.matchAll(/0\.04500/g)].length, 2);
   } finally {
     overrides.delete("next-intl");
@@ -627,6 +631,47 @@ test("line validation rejects zero rounded volumes and overflow, preserving desc
   assert.equal(isUsableLine({ ...base, thicknessM: 0.000001, widthM: 0.000001, lengthM: 0.000001 }), false);
   assert.equal(isUsableLine({ ...base, quantity: 1e308 }), false);
   assert.equal(isUsableLine({ ...base, pricingMode: "per_piece", thicknessM: 0, widthM: 0, lengthM: 0 }), true);
+});
+
+test("free-amount lines charge once without quantity or dimensions", () => {
+  const { lineTotalForPricing } = load("@/app/modules/shared/utils/invoice-math");
+  const { isUsableLine } = load("@/app/modules/shared/utils/line-validation");
+  const { lineTotalForFormLine } = load("@/app/modules/invoices/utils/invoice-form");
+  const item = { id: "charge", pricingMode: "free_amount" };
+  const line = { itemId: "charge", quantity: "", piecePrice: "125.50", thickness: "", width: "", length: "" };
+  assert.equal(lineTotalForPricing({ pricingMode: "free_amount", quantity: 10, piecePrice: 125.5 }), 125.5);
+  assert.equal(lineTotalForFormLine(line, new Map([[item.id, item]])), 125.5);
+  assert.equal(isUsableLine({ pricingMode: "free_amount", quantity: 0, piecePrice: 125.5, thicknessM: 0, widthM: 0, lengthM: 0 }), true);
+  assert.equal(isUsableLine({ pricingMode: "free_amount", quantity: 1, piecePrice: 0, thicknessM: 0, widthM: 0, lengthM: 0 }), false);
+});
+
+test("mixed receipts hide canonical fields for free-amount lines", () => {
+  const React = nativeRequire("react");
+  const { renderToStaticMarkup } = nativeRequire("react-dom/server");
+  overrides.set("next/image", { default: () => null });
+  overrides.set("next-intl", { useTranslations: () => (key) => key });
+  try {
+    const { PublicInvoiceSheet } = load("@/app/modules/invoices/components/public-invoice-sheet");
+    const { InvoicePreviewModal } = load("@/app/modules/invoices/components/invoice-preview-modal");
+    const physical = { itemId: "wood", itemLabel: "خشب", pricingModeSnapshot: "per_piece", quantity: 2, thickness: 0.2, width: 0.1, length: 1, piecePrice: 100, lineTotal: 200, note: null };
+    const charge = { itemId: "charge", itemLabel: "تصنيع مكتب", pricingModeSnapshot: "free_amount", quantity: 1, thickness: null, width: null, length: null, piecePrice: 125.5, lineTotal: 125.5, note: "ملاحظة" };
+    const invoice = { id: "one", invoiceNumber: "INV-0001", createdAt: "2026-10-15T14:33:00.000Z", type: "cash_sale", status: "saved", customerName: null, total: 325.5, discount: 0, paid: 325.5, remaining: 0, lines: [physical, charge] };
+    for (const compact of [false, true]) for (const showPrices of [false, true]) {
+      const html = renderToStaticMarkup(React.createElement(PublicInvoiceSheet, { invoice, compact, showPrices }));
+      const row = html.match(/تصنيع مكتب[\s\S]*?<\/tr>/)?.[0];
+      assert.ok(row);
+      assert.match(row, /ملاحظة/);
+      const cells = [...row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map((match) => match[1].replace(/<[^>]*>/g, "").trim());
+      assert.deepEqual(cells.slice(0, 4), ["", "", "", ""]);
+      assert.match(html.match(/<tfoot>[\s\S]*?<\/tfoot>/)?.[0] ?? "", />2<\/td>/);
+      if (showPrices) assert.match(row, /125\.50/);
+    }
+    const preview = renderToStaticMarkup(React.createElement(InvoicePreviewModal, { open: true, invoiceId: "one", initialInvoice: invoice }));
+    const previewRow = preview.match(/ملاحظة[\s\S]*?<\/tr>/)?.[0];
+    assert.ok(previewRow);
+    assert.match(previewRow, /ملاحظة/);
+    assert.match(previewRow, /125\.50/);
+  } finally { overrides.delete("next/image"); overrides.delete("next-intl"); }
 });
 
 test("invoice navigation carries its selected mode to both destinations and disables customer mode for cash sales", () => {

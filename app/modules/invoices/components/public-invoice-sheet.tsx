@@ -113,7 +113,7 @@ export function PublicInvoiceSheet({
         <span className="font-bold text-[#111]">
           {invoice.type === "cash_sale"
             ? "نقدي"
-            : (invoice.customerName ?? "—")}
+            : (invoice.customerName ?? "")}
         </span>
       </div>
 
@@ -191,24 +191,24 @@ export function PublicInvoiceSheet({
                   )}
                 </td>
                 <td className={`${compact ? "py-1.5" : "py-2.5"} ${cellPadding} text-center align-top font-bold text-[#1a1a1a]`}>
-                  {line.quantity}
+                  {line.pricingModeSnapshot === "free_amount" ? "" : line.quantity}
                 </td>
                 {hasDimensions && (
                   <>
                     <td
                       className={`${compact ? "py-1.5" : "py-2.5"} ${cellPadding} text-center align-top text-[#1a1a1a]`}
                     >
-                      {line.thickness ?? "—"}
+                      {line.pricingModeSnapshot === "free_amount" ? "" : line.thickness ?? ""}
                     </td>
                     <td
                       className={`${compact ? "py-1.5" : "py-2.5"} ${cellPadding} text-center align-top text-[#1a1a1a]`}
                     >
-                      {line.width ?? "—"}
+                      {line.pricingModeSnapshot === "free_amount" ? "" : line.width ?? ""}
                     </td>
                     <td
                       className={`${compact ? "py-1.5" : "py-2.5"} ${cellPadding} text-center align-top text-[#1a1a1a]`}
                     >
-                      {line.length ?? "—"}
+                      {line.pricingModeSnapshot === "free_amount" ? "" : line.length ?? ""}
                     </td>
                   </>
                 )}
@@ -222,7 +222,7 @@ export function PublicInvoiceSheet({
                     <td
                       className={`${cellPadding} text-center align-top text-[#1a1a1a] ${compact ? "py-1.5" : "py-2.5"}`}
                     >
-                      {money(receiptUnitPrice(line))}
+                      {line.pricingModeSnapshot === "free_amount" ? "" : money(receiptUnitPrice(line))}
                     </td>
                     <td
                       className={`${cellPadding} text-center align-top font-bold text-[#1a1a1a] ${compact ? "py-1.5" : "py-2.5"}`}
@@ -236,27 +236,21 @@ export function PublicInvoiceSheet({
           })}
         </tbody>
         <tfoot>
-          {hasCubic && (
-            <tr className="border-t-2 border-[#222] font-bold text-[#111]">
-              <td className={`${cellPadding} py-2 text-right`}>إجمالي المكعب</td>
-              <td colSpan={hasDimensions ? 4 : 1} />
-              <td className={`${cellPadding} py-2 text-center`}>
-                {formatReceiptCubicVolume(receiptTotalCubicVolume(invoice.lines))}
-              </td>
-              {showPrices && <td colSpan={2} />}
-            </tr>
-          )}
-          <tr className={`${hasCubic ? "" : "border-t-2 border-[#222]"} font-bold text-[#111]`}>
+          <tr className="border-t-2 border-[#222] font-bold text-[#111]">
             <td
               className={`${cellPadding} py-2 text-right`}
             >
               الإجمالي
             </td>
             <td className={`${cellPadding} py-2 text-center`}>
-              {invoice.lines.reduce((sum, line) => sum + line.quantity, 0)}
+              {invoice.lines.reduce((sum, line) => sum + (line.pricingModeSnapshot === "free_amount" ? 0 : line.quantity), 0)}
             </td>
             {hasDimensions && <td colSpan={3} />}
-            {hasCubic && <td className={`${cellPadding} py-2`} />}
+            {hasCubic && (
+              <td className={`${cellPadding} py-2 text-center`}>
+                {formatReceiptCubicVolume(receiptTotalCubicVolume(invoice.lines))}
+              </td>
+            )}
             {showPrices && (
               <>
                 <td className={`${cellPadding} py-2`} />

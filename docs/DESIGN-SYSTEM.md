@@ -377,7 +377,7 @@ Inventory category tables use muted headers, a brown accent, count pill, rounded
 
 Inventory KPI cards keep four desktop columns, 12px padding and 20px figures. Desktop cards have a 144px minimum height and grow naturally for wrapped alert labels; mobile cards have no minimum height. Alert filter badges share a horizontal wrapping row with 44px targets. Preserve the existing values, semantic colors and filter actions.
 
-### Current export, loading and expense surfaces
+### Current export and loading surfaces
 
 The dedicated invoice export page initially selects PNG A5; PDF A4 remains an
 option. Keep format and price visibility controls together, with Print, Download
@@ -394,8 +394,10 @@ User print settings can override page CSS. In RTL order, show item, quantity,
 thickness, width, length, cubic volume when applicable, unit price and line
 total; omit meter suffixes in the dimension headers. Cubic volume uses the
 saved pricing mode and six-decimal calculation, displayed to five decimals.
-The volume sum sits in the table footer directly above the `الإجمالي` row,
-under the cubic column, including when prices are hidden. A4 cells use 12 px
+The volume sum sits in the `الإجمالي` table-footer row under the cubic column,
+including when prices are hidden. Free-amount (مبلغ حر) lines show only item,
+optional note, and total; quantity, dimensions, and unit price cells stay blank.
+The physical quantity/cubic footer totals exclude those lines. A4 cells use 12 px
 horizontal padding; A5 cells use 11 px. Download sheets use 12 mm A4 and 3 mm
 A5 padding to give the columns more room while retaining standard page sizes.
 Header labels use centered single-line content with smaller header-only side
@@ -410,9 +412,9 @@ Numeric shared inputs ignore wheel changes while focused. In the preset editor,
 Add value appears above Cancel with clear saving/error feedback.
 
 Shared loading screens cover route and authentication transitions. Localized and
-global fallback screens keep recovery actions visible. Paid expense tables and
-forms reuse existing card, filter, money and confirmation patterns. Recurring
-Due/Overdue sections are planned and must not be presented as implemented UI.
+global fallback screens keep recovery actions visible. Free-amount item forms
+omit price, cost, dimensions, stock, and reorder controls. Sales lines use one
+required EGP amount and an optional note, with no quantity or unit-price input.
 
 
 ### Current phone, date and invoice navigation controls
@@ -427,6 +429,3 @@ Due/Overdue sections are planned and must not be presented as implemented UI.
 - Export/public print notice: yellow warning tokens, icon plus explanatory text,
   outside the captured invoice and hidden on print. Public receipts use Arabic
   PDF guidance. Download is primary brown; Print is the standard outline action.
-- Finance custom dates: reserve width beside the desktop period selector so it
-  remains visible; stack on smaller screens. Date-only expense values never
-  imply a time of payment.

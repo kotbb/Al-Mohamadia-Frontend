@@ -5,8 +5,6 @@ export type { SalesInvoicePeriod };
 export interface DashboardToday {
   sales: number;
   estimatedProfit: number;
-  operatingExpenses: number;
-  estimatedNetProfit: number;
   invoiceCount: number;
   collected: number;
 }
@@ -38,7 +36,7 @@ export interface DashboardTopSellingItem {
 
 export interface DashboardResponse {
   today: DashboardToday;
-  periodFinancials: { sales: number; estimatedGrossProfit: number; operatingExpenses: number; estimatedNetProfit: number };
+  periodFinancials: { sales: number; estimatedGrossProfit: number };
   debt: DashboardDebt;
   period: DashboardPeriod;
   salesSeries: DashboardSalesSeriesPoint[];

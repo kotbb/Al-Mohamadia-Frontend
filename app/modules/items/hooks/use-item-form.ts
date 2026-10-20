@@ -140,6 +140,7 @@ export function useItemForm(itemId?: string): UseItemFormResult {
 
   const setField = useCallback(
     <K extends keyof ItemFormValues>(key: K, value: ItemFormValues[K]) => {
+      if (isEdit && key === "pricingMode") return;
       if (key === "code") {
         setCodeIsManual(true);
         setValues((current) => ({ ...current, code: value as string }));
@@ -190,9 +191,10 @@ export function useItemForm(itemId?: string): UseItemFormResult {
   }, [isEdit, codeIsManual, existingCodes, categories]);
 
   const submit = useCallback(async (): Promise<boolean> => {
-    const numericValues = [values.unitPrice, values.cost, values.reorderThreshold, ...(!isEdit ? [values.stockQuantity] : [])];
+    const isFreeAmount = values.pricingMode === "free_amount";
+    const numericValues = isFreeAmount ? [] : [values.unitPrice, values.cost, values.reorderThreshold, ...(!isEdit ? [values.stockQuantity] : [])];
     if (numericValues.some((value) => value.trim() && (!Number.isFinite(Number(value)) || Number(value) < 0)) ||
-      [values.unitPrice, values.cost].some((value) => value.trim() && !isMoneyAmount(Number(value)))) {
+      (!isFreeAmount && [values.unitPrice, values.cost].some((value) => value.trim() && !isMoneyAmount(Number(value))))) {
       setSubmitError(shared("validationNumbers"));
       return false;
     }
@@ -209,9 +211,9 @@ export function useItemForm(itemId?: string): UseItemFormResult {
     const stockQuantity = parseOptionalNumber(values.stockQuantity);
 
     try {
-      const dimensionDefaults = parseDimensionDefaults(
-        values.dimensionDefaults,
-      );
+      const dimensionDefaults = isFreeAmount
+        ? { thickness: [], width: [], length: [] }
+        : parseDimensionDefaults(values.dimensionDefaults);
       if (!dimensionDefaults) {
         setSubmitError(t("validationDimensionDefaults"));
         return false;
@@ -225,16 +227,12 @@ export function useItemForm(itemId?: string): UseItemFormResult {
           generateItemCode(category?.name ?? "", values.name, existingCodes);
 
         const input: CreateItemInput = {
-          dimensionDefaults,
           code,
           name: values.name.trim(),
           categoryId: values.categoryId,
           pricingMode: values.pricingMode,
           isActive: values.isActive,
-          unitPrice,
-          cost,
-          reorderThreshold,
-          stockQuantity,
+          ...(!isFreeAmount && { dimensionDefaults, unitPrice: unitPrice ?? undefined, cost: cost ?? undefined, reorderThreshold: reorderThreshold ?? undefined, stockQuantity: stockQuantity ?? undefined }),
         };
         await createItem(input);
         return true;
@@ -243,13 +241,11 @@ export function useItemForm(itemId?: string): UseItemFormResult {
       if (!itemId) return false;
 
       const masterInput: UpdateItemInput = {
-        dimensionDefaults,
         code: values.code.trim(),
         name: values.name.trim(),
         categoryId: values.categoryId,
-        pricingMode: values.pricingMode,
         isActive: values.isActive,
-        reorderThreshold,
+        ...(!isFreeAmount && { dimensionDefaults, reorderThreshold: reorderThreshold ?? undefined }),
       };
       await updateItem(itemId, masterInput);
 
@@ -259,7 +255,7 @@ export function useItemForm(itemId?: string): UseItemFormResult {
         nextUnitPrice !== initialPricing.unitPrice ||
         nextCost !== initialPricing.cost;
 
-      if (pricingChanged) {
+      if (pricingChanged && !isFreeAmount) {
         await updatePricing(itemId, {
           unitPrice: nextUnitPrice,
           cost: nextCost,

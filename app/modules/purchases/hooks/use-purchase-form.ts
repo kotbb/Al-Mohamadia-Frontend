@@ -66,7 +66,7 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
     const controller = new AbortController();
     listItems({ isActive: true }, controller.signal)
       .then((result) => {
-        setItems(result);
+        setItems(result.filter((item) => item.pricingMode !== "free_amount"));
         setItemsStatus("success");
         setItemsError(null);
       })
@@ -298,7 +298,7 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
     for (const line of snapshotLines) {
       if (!line.itemId) continue;
       const item = itemsById.get(line.itemId);
-      if (!item) return t("validationItem");
+      if (!item || item.pricingMode === "free_amount") return t("validationItem");
       if (parsePositive(line.quantity) === null) return t("validationQuantity");
       if (parsePositive(line.unitCost) === null) return t("validationUnitCost");
       if (

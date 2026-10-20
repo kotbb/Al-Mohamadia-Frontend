@@ -8,11 +8,10 @@ import type { DashboardResponse } from "../types/dashboard.types";
 export function DashboardPeriodFinancials({ financials }: { financials: DashboardResponse["periodFinancials"] }) {
   const t = useTranslations("dashboard");
   const locale = useLocale();
-  return <div className="grid grid-cols-1 gap-3 sm:grid-cols-3" aria-label={t("periodFinancialsTitle")}>
+  return <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" aria-label={t("periodFinancialsTitle")}>
     {([
       ["periodSales", financials.sales],
       ["periodGrossProfit", financials.estimatedGrossProfit],
-      ["periodNetProfit", financials.estimatedNetProfit],
     ] as const).map(([key, value]) => <SurfaceCard key={key} padding="none" className="p-4">
       <p className="text-sm font-medium text-text-secondary">{t(key)}</p>
       <p className={`mt-1 text-xl font-bold tabular-nums ${value < 0 ? "text-danger" : key === "periodSales" ? "text-text-primary" : "text-success"}`}>{formatMoney(value, locale)} <span className="text-xs text-text-muted">{t("currency")}</span></p>

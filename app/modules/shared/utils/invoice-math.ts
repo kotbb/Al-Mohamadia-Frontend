@@ -27,6 +27,7 @@ export function lineTotalForPricing(params: {
   widthM?: number | null;
   lengthM?: number | null;
 }): number {
+  if (params.pricingMode === "free_amount") return params.piecePrice;
   if (params.pricingMode === "per_piece") {
     return params.quantity * params.piecePrice;
   }

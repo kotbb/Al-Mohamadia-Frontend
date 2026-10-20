@@ -43,10 +43,11 @@ export function InvoiceLineRow({
   const locale = useLocale();
   const selected = items.find((item) => item.id === line.itemId);
   const isCubic = selected?.pricingMode === "per_cubic_meter";
+  const isFreeAmount = selected?.pricingMode === "free_amount";
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-border bg-surface-muted/30 p-3">
-      <div className="grid items-end gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_minmax(4rem,.65fr)_minmax(5.5rem,1fr)_minmax(0,1.5fr)_minmax(6.5rem,1fr)_6rem]">
+      <div className={`grid items-end gap-2 sm:grid-cols-2 ${isFreeAmount ? "lg:grid-cols-[minmax(0,2fr)_minmax(7rem,1fr)_minmax(0,1.5fr)_minmax(6.5rem,1fr)_minmax(4rem,.5fr)]" : "lg:grid-cols-[minmax(0,2fr)_minmax(4rem,.65fr)_minmax(5.5rem,1fr)_minmax(0,1.5fr)_minmax(6.5rem,1fr)_6rem]"}`}>
         <label className="flex min-w-0 w-full flex-col gap-1 sm:col-span-2 lg:col-span-1">
           <span className="text-sm font-medium text-text-secondary">
             {t("fieldItem")}
@@ -61,7 +62,7 @@ export function InvoiceLineRow({
           </select>
         </label>
 
-        <Input
+        {!isFreeAmount && <Input
           density="compact"
           name={`qty-${line.key}`}
           label={t("fieldQty")}
@@ -70,14 +71,14 @@ export function InvoiceLineRow({
           step="any"
           value={line.quantity}
           onChange={(event) => onChange({ quantity: event.target.value })}
-        />
+        />}
         <Input
           density="compact"
           name={`price-${line.key}`}
-          label={t("fieldPrice")}
+          label={t(isFreeAmount ? "fieldFreeAmount" : "fieldPrice")}
           type="number"
-          min={0}
-          step="any"
+          min={isFreeAmount ? 0.01 : 0}
+          step="0.01"
           value={line.piecePrice}
           onChange={(event) => onChange({ piecePrice: event.target.value })}
           onBlur={() => {
@@ -140,7 +141,7 @@ export function InvoiceLineRow({
           ) : null}
         </div>
       </div>
-      {selected ? (
+      {selected && !isFreeAmount ? (
         <div className="grid gap-2 sm:grid-cols-3 lg:max-w-xl">
           <DimensionInput
             key={`${line.itemId}-thickness`}

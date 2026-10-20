@@ -5,7 +5,7 @@ export type SalesInvoicePeriod = "day" | "week" | "month" | "year";
 export interface SalesInvoiceLine {
   itemId: string;
   quantity: number;
-  pricingModeSnapshot?: "per_piece" | "per_cubic_meter";
+  pricingModeSnapshot?: "per_piece" | "per_cubic_meter" | "free_amount";
   width: number | null;
   length: number | null;
   thickness: number | null;
@@ -94,7 +94,7 @@ export interface InvoiceNeighbors {
 }
 
 export interface PublicInvoiceLine {
-  pricingModeSnapshot: "per_piece" | "per_cubic_meter";
+  pricingModeSnapshot: "per_piece" | "per_cubic_meter" | "free_amount";
   itemLabel: string;
   quantity: number;
   width: number | null;

@@ -83,12 +83,6 @@ export function DashboardTodayKpis({ today, debt }: DashboardTodayKpisProps) {
         </div>
       </SurfaceCard>
 
-      <SurfaceCard padding="none" className="flex flex-col justify-between p-5 sm:p-6">
-        <span className="text-base font-medium text-text-secondary">{t("kpiNetProfit")}</span>
-        <div className={`mt-3 text-2xl font-bold tabular-nums ${today.estimatedNetProfit < 0 ? "text-danger" : "text-success"}`}>{formatMoney(today.estimatedNetProfit, locale)} <span className="text-sm text-text-muted">{t("currency")}</span></div>
-        <p className="mt-4 border-t border-border/40 pt-3 text-sm text-text-muted">{t("kpiNetHint")}</p>
-      </SurfaceCard>
-
       <SurfaceCard
         padding="none"
         className="flex flex-col justify-between p-5 sm:p-6"

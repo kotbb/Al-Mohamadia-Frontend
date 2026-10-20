@@ -301,10 +301,11 @@ export function useInvoiceForm() {
       (selectionVersions.current.get(key) ?? 0) + 1,
     );
     const item = itemsById.get(itemId);
-    const dimensions = initialDimensions(item?.dimensionDefaults);
+    const dimensions = item?.pricingMode === "free_amount" ? { thickness: "", width: "", length: "" } : initialDimensions(item?.dimensionDefaults);
     updateLine(key, {
       itemId,
-      piecePrice: item ? String(item.unitPrice) : "",
+      quantity: "1",
+      piecePrice: item && item.pricingMode !== "free_amount" ? String(item.unitPrice) : "",
       ...dimensions,
     });
   }
@@ -329,9 +330,9 @@ export function useInvoiceForm() {
       if (!line.itemId) continue;
       const item = itemsById.get(line.itemId);
       if (!item) return t("validationItem");
-      if (parsePositive(line.quantity) === null) return t("validationItem");
+      if (item.pricingMode !== "free_amount" && parsePositive(line.quantity) === null) return t("validationItem");
       if (parsePositive(line.piecePrice) === null) return t("validationItem");
-      if (
+      if (item.pricingMode !== "free_amount" &&
         [line.thickness, line.width, line.length].some(
           (value) => value.trim() && parsePositive(value) === null,
         )
@@ -371,14 +372,16 @@ export function useInvoiceForm() {
     const payloadLines = snapshotLines
       .filter((line) => line.itemId)
       .map((line) => {
+        const item = itemsById.get(line.itemId);
+        const freeAmount = item?.pricingMode === "free_amount";
         const base = {
           itemId: line.itemId,
-          quantity: parsePositive(line.quantity)!,
+          quantity: freeAmount ? 1 : parsePositive(line.quantity)!,
           piecePrice: roundMoney(parsePositive(line.piecePrice)!),
           note: line.note.trim() || undefined,
-          thickness: parsePositive(line.thickness) ?? undefined,
-          width: parsePositive(line.width) ?? undefined,
-          length: parsePositive(line.length) ?? undefined,
+          thickness: freeAmount ? undefined : parsePositive(line.thickness) ?? undefined,
+          width: freeAmount ? undefined : parsePositive(line.width) ?? undefined,
+          length: freeAmount ? undefined : parsePositive(line.length) ?? undefined,
         };
         return base;
       });

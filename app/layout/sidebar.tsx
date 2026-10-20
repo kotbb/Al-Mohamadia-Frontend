@@ -11,7 +11,6 @@ interface NavItem {
     | "hubSales"
     | "hubProcurement"
     | "hubInventory"
-    | "hubFinance"
     | "audit"
     | "users";
   href: string;
@@ -43,12 +42,6 @@ const NAV_ITEMS: NavItem[] = [
     key: "hubInventory",
     href: "/inventory",
     matchPrefixes: ["/inventory", "/items", "/categories"],
-    enabled: true,
-  },
-  {
-    key: "hubFinance",
-    href: "/operating-expenses",
-    matchPrefixes: ["/operating-expenses"],
     enabled: true,
   },
   {
@@ -131,26 +124,6 @@ function NavIcon({ name }: { name: NavItem["key"] }) {
             d="M4 8.5 12 13l8-4.5M12 13v7"
             stroke="currentColor"
             strokeWidth="1.75"
-          />
-        </svg>
-      );
-    case "hubFinance":
-      return (
-        <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden>
-          <rect
-            x="3"
-            y="6"
-            width="18"
-            height="14"
-            rx="2"
-            stroke="currentColor"
-            strokeWidth="1.75"
-          />
-          <path
-            d="M3 10h18M7 3h10"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
           />
         </svg>
       );

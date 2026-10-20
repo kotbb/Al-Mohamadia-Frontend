@@ -21,9 +21,11 @@ function pricingModeLabel(
   mode: Item["pricingMode"],
   t: ReturnType<typeof useTranslations>,
 ): string {
-  return mode === "per_cubic_meter"
-    ? t("unitPerCubicMeter")
-    : t("unitPerPiece");
+  return mode === "free_amount"
+    ? t("unitFreeAmount")
+    : mode === "per_cubic_meter"
+      ? t("unitPerCubicMeter")
+      : t("unitPerPiece");
 }
 
 export function CategoryItemsTable({
@@ -127,12 +129,16 @@ export function CategoryItemsTable({
                   <td
                     className={`${cell} align-middle text-end pe-6 tabular-nums text-text-secondary`}
                   >
-                    {formatMoney(item.cost, locale)}
+                    {item.pricingMode === "free_amount"
+                      ? ""
+                      : formatMoney(item.cost, locale)}
                   </td>
                   <td
                     className={`${cell} align-middle text-end pe-6 font-medium tabular-nums text-text-primary`}
                   >
-                    {formatMoney(item.unitPrice, locale)}
+                    {item.pricingMode === "free_amount"
+                      ? ""
+                      : formatMoney(item.unitPrice, locale)}
                   </td>
                   <td className={`${cell} align-middle text-center`}>
                     <RowActionsMenu label={t("colActions")} items={actions} />

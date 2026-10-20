@@ -45,6 +45,7 @@ export function ItemForm({
   const pricingOptions: Array<{ value: PricingMode; label: string }> = [
     { value: "per_piece", label: t("pricingPerPiece") },
     { value: "per_cubic_meter", label: t("pricingPerCubicMeter") },
+    { value: "free_amount", label: t("pricingFreeAmount") },
   ];
 
   const gap = compact ? "gap-4" : "gap-6";
@@ -91,9 +92,10 @@ export function ItemForm({
         value={values.pricingMode}
         options={pricingOptions}
         onChange={(value) => onFieldChange("pricingMode", value)}
-        disabled={isSubmitting}
+        disabled={isSubmitting || isEdit}
       />
 
+      {values.pricingMode !== "free_amount" && <>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <DimensionDefaultsEditor
@@ -123,7 +125,6 @@ export function ItemForm({
           disabled={isSubmitting}
         />
       </div>
-
       <div className={`grid gap-4 ${isEdit ? "" : "sm:grid-cols-2"}`}>
         <Input
           name="reorderThreshold"
@@ -153,6 +154,7 @@ export function ItemForm({
           />
         ) : null}
       </div>
+      </>}
 
       <label className="inline-flex items-center gap-2 text-base text-text-secondary">
         <input

@@ -1,6 +1,6 @@
 # Al-Mohamadia
 
-Next.js admin UI for a wood store. Shopkeepers sign in, sell wood, collect customer debt, restock from suppliers, record operating expenses, watch stock, and review an audit trail. A **super admin** manages admin accounts. Users cannot self-register.
+Next.js admin UI for a wood store. Shopkeepers sign in, sell wood, collect customer debt, restock from suppliers, watch stock, and review an audit trail. A **super admin** manages admin accounts. Users cannot self-register.
 
 The UI is Arabic (RTL, default) or English (LTR), with light and dark themes. It talks only to the [Al-Mohamadia backend](https://github.com/kotbb/Al-Mohamadia-Backend) under `/api/v1`.
 
@@ -21,7 +21,6 @@ app/
     suppliers/
     purchases/
     supplier-payments/
-    operating-expenses/
     inventory/
     items/
     audit/
@@ -47,7 +46,7 @@ lib/
 
 ### Dashboard (`/`)
 
-- Today's sales, estimated gross profit, operating expenses, estimated net profit, collections, and invoice count
+- Today's sales, estimated gross profit, collections, and invoice count
 - Outstanding customer debt
 - Period financial summaries, chart, and top-selling items with day/week/month/year or custom dates
 
@@ -62,7 +61,7 @@ lib/
 ### Sales invoices (`/invoices`)
 
 - Create and update invoices with real-time stock and customer debt reconciliation
-- Cash or customer sale, with piece or cubic-meter lines
+- Cash or customer sale, with piece, cubic-meter, or مبلغ حر amount-only lines
 - Discount, paid, and remaining
 - Dedicated creation and editing pages with compact rows and category-grouped item choices
 - Meter dimensions for piece and cubic items; single defaults auto-fill, multiple defaults offer editable choices
@@ -114,20 +113,10 @@ lib/
 ### Items and categories (`/items`, `/categories`)
 
 - Categories: create, edit, soft-delete
-- Items: piece or per-cubic-meter pricing, cost and selling price
+- Items: piece, per-cubic-meter, or مبلغ حر pricing; free-amount items have no editable cost, price, or stock
 - Price history
 - Edit and soft-delete items
 - Dedicated Add/Edit pages with multiple dimension defaults per axis
-
-### Operating expenses (`/operating-expenses`)
-
-- Record paid expenses with category, amount, Cairo date, method, optional payee and notes
-- Manage expense categories; view, edit, and soft-delete expenses with confirmation
-- Current Cairo month by default, date/category/method/search filters, paginated ledger, and filtered summaries
-- Custom dates stay beside the period selector on desktop and stack on smaller screens; the selector remains available
-- Paid expenses appear in dashboard expense and estimated net profit figures
-- Ledger/detail expense dates use localized month names, Latin digits and the full year without timezone shifts; no payment time is stored or fabricated
-- Recurring schedules and due/overdue reminders are planned; no recurrence or email reminders exist yet
 
 ### Audit log (`/audit`)
 
@@ -238,7 +227,6 @@ Unauthenticated users are sent to `/login`. The **Users** screen is `super_admin
 | `/purchases/:id`           | Both        | Purchase detail     |
 | `/supplier-payments`       | Both        | Supplier payments   |
 | `/inventory`               | Both        | Stock levels        |
-| `/operating-expenses`      | Both        | Paid expense ledger |
 | `/items`                   | Both        | Item list           |
 | `/items/new`               | Both        | New item            |
 | `/items/:id/edit`          | Both        | Edit item           |
@@ -253,13 +241,13 @@ The sidebar groups those screens into three hubs:
 2. **Purchases & Suppliers** - purchase invoices, suppliers, supplier payments
 3. **Inventory** - stock, items, categories
 
-Dashboard, Finance / Operating Expenses, audit, and users sit outside those hubs.
+Dashboard, audit, and users sit outside those hubs.
 
 ## Roles
 
 | Role        | Value         | Notes                                                                                              |
 | ----------- | ------------- | -------------------------------------------------------------------------------------------------- |
-| Admin       | `admin`       | Shop screens: dashboard, sales, purchases, inventory, expenses, audit. The Users item is hidden. |
+| Admin       | `admin`       | Shop screens: dashboard, sales, purchases, inventory, audit. The Users item is hidden. |
 | Super admin | `super_admin` | Everything an admin sees, plus Users.                                                              |
 
 The API is the authority. Hiding a nav item does not grant access.

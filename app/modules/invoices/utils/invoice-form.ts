@@ -26,7 +26,7 @@ export function lineTotalForFormLine(
 ): number {
   const item = itemsById.get(line.itemId);
   if (!item) return 0;
-  const quantity = parsePositive(line.quantity);
+  const quantity = item.pricingMode === "free_amount" ? 1 : parsePositive(line.quantity);
   const piecePrice = parsePositive(line.piecePrice);
   if (quantity === null || piecePrice === null) return 0;
   const thickness =

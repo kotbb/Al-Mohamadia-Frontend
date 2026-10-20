@@ -80,8 +80,7 @@ flowchart LR
 1. **Auth** — Login with JWT access + refresh. Post-login lands on the
    dashboard (or the first permitted route). Super admin can manage admin
    accounts; admins cannot.
-2. **Sell** — Create cash or customer invoice, multi-line items (piece or
-   m³), discount, paid/remaining → save / save & print → A4 PDF or A5-width PNG; share PDF via a URL-only WhatsApp message using the existing public receipt link, or share PNG through the system share sheet or WhatsApp paste/download fallback.
+2. **Sell** — Create cash or customer invoice, multi-line items (piece, m³, or مبلغ حر amount), discount, paid/remaining → save / save & print → A4 PDF or A5-width PNG; share PDF via a URL-only WhatsApp message using the existing public receipt link, or share PNG through the system share sheet or WhatsApp paste/download fallback.
 3. **Collect** — Record standalone payments against existing customer debt.
 4. **Restock** — Purchase invoices from suppliers (dedicated creation page, view details); stock up, amount owed up.
 5. **Settle** — Record standalone debt payments to suppliers.
@@ -102,14 +101,13 @@ flowchart LR
 |------|---------|
 | Sales invoices | Cash / customer sale, lines, discount, paid/remaining, cancel, PDF / WhatsApp *(Phase 4 — live)* |
 | Customer payments | Standalone debt payments + payments captured on new sales, debtor customer picker *(Phase 5 — live)* |
-| Dashboard | Today's sales / gross profit / estimated net profit / collected / invoice count, debt totals, selected-period sales and profit, period chart, top items, "فاتورة جديدة" *(Phase 8 — live)* |
-| Operating expenses | Finance sidebar ledger with Cairo period, category, method and search filters; category management and audited edit/soft delete actions |
+| Dashboard | Today's sales / gross profit / collected / invoice count, debt totals, selected-period sales and gross profit, period chart, top items, "فاتورة جديدة" *(Phase 8 — live)* |
 
 ### Stock & catalog
 
 | Area | Purpose |
 |------|---------|
-| Items & pricing | Categories, items, per-piece / per-m³, cost & unit price, price history *(Phase 2 — live; prices and costs are updated through item forms)* |
+| Items & pricing | Categories, items, per-piece / per-m³ / مبلغ حر; cost, unit price and price history for stocked items *(Phase 2 — live)* |
 | Inventory | Stock list, low/negative stock flags, manual جرد, inventory valuation at cost & selling *(Phase 7 — live)* |
 | Purchases | Restock invoices from suppliers; page-based creation and view-only detail *(Phase 6 — live)* |
 | Supplier payments | Standalone debt payments to suppliers + payments captured on purchases, debtor supplier picker *(Phase 6 — live)* |
@@ -148,7 +146,7 @@ disabled; unprefixed visits select Arabic even with English browser preferences.
 `dir` on `<html>` always follows locale (`ar` → `rtl`, `en` → `ltr`).
 
 Feature domains: `auth`, `dashboard`, `invoices`, `payments`, `supplier-payments`,
-`inventory`, `items`, `customers`, `suppliers`, `purchases`, `operating-expenses`, `audit`, `shared`.
+`inventory`, `items`, `customers`, `suppliers`, `purchases`, `audit`, `shared`.
 
 ### 3-Hub Navigation Structure
 
@@ -158,7 +156,7 @@ The admin shell organizes primary navigation into 3 domain hubs with horizontal 
 2. **Purchases & Suppliers** (`/purchases`, `/suppliers`, `/supplier-payments`)
 3. **Inventory & Catalog** (`/inventory`, `/items`, `/categories`)
 
-Direct top-level routes: **Home / Dashboard** (`/`), **Finance / Operating expenses** (`/operating-expenses`), **Audit log** (`/audit`), **Users** (`/users`).
+Direct top-level routes: **Home / Dashboard** (`/`), **Audit log** (`/audit`), **Users** (`/users`).
 Detail views (`/customers/[id]`, `/suppliers/[id]`) accept `?from=...` to contextually route the "Back to list" action back to the user's originating list.
 
 - **HTTP:** native `fetch` via a shared client under `lib/api/` — Bearer
@@ -323,6 +321,14 @@ not affect quantity-based totals/stock; cubic dimensions remain required.
 Snapshots are server-controlled and returned as `pricingModeSnapshot`; legacy
 responses infer the old mode. No database migration is included.
 
+`free_amount` (مبلغ حر) items are chosen in the sales item picker and show one
+required positive EGP amount plus an optional note. The form hides quantity,
+dimensions, and unit price. The server stores canonical quantity 1 and the amount
+as `piecePrice`, with zero cost and no stock movement. Preview/export leave those
+internal columns blank, while including the charge in the invoice total. Physical
+quantity and cubic footer totals exclude free-amount lines. These items are absent
+from purchase and inventory flows.
+
 
 ## Architecture maintenance
 
@@ -344,17 +350,17 @@ Sales create/edit and purchase create offer a dropdown for every dimension, incl
 
 Inventory retains eight columns and its existing actions inside compact category tables. Counts describe the loaded page. See [the current workflow checklist](#manual-verification-current-workflows).
 
-## Current export, loading and expense flows
+## Current export and loading flows
 
 Invoice editing uses `/invoices/:id/edit`; Save opens details and Save & Print opens `/invoices/:id/export`. Export starts with PNG A5, with PDF A4, price visibility, print and download controls. PNG sharing uses supported browser file sharing or copy/download fallback; PDF sharing sends the public receipt link. Format-specific yellow print guidance stays outside the exported receipt. Public URLs use the Arabic PDF guidance and standard primary/outline buttons.
 
 Route/auth loading uses shared loading surfaces. Localized/global fallback pages cover errors and unknown routes. Shared numeric inputs prevent mouse-wheel value changes while focused.
 
-Operating expenses are already-paid entries with category management, date/method/category/search filtering, paginated rows and full-filter active summaries. Dashboard figures show paid expenses and estimated net profit for today and the selected period. Recurring dues and email reminders are planned only; see [the proposed design](../../Al-Mohamadia-Backend/docs/PHASES.md#planned-recurring-operating-expenses).
+The operating-expense feature is retired. The backend retains historical expense audit entries. Expense and category collections are removed only by the explicit backend cleanup command: first `npm run cleanup:expenses` for counts, then `npm run cleanup:expenses -- --apply --confirm=DELETE-EXPENSE-DATA` against the intended database.
 
 ## Row navigation and invoice presentation
 
-Both sales/purchase sidebar hubs open invoices first. Customer, supplier and sales/purchase invoice row clicks open details, with primary-link brown hover across the row and independent nested actions. Operating expenses retain modal details and share a stable localized date-only formatter. Invoice details use one labeled Previous/Next pair with an Invoice number /
+Both sales/purchase sidebar hubs open invoices first. Customer, supplier and sales/purchase invoice row clicks open details, with primary-link brown hover across the row and independent nested actions. Invoice details use one labeled Previous/Next pair with an Invoice number /
 Same customer selector; selected mode is carried in neighbor URLs. Receipts calculate cubic per-piece display from saved meter volume/rate; rates and stored totals stay unchanged. See [the current workflow checklist](#manual-verification-current-workflows).
 
 
@@ -385,12 +391,12 @@ layout, printer settings or browser sharing behavior.
 5. Click customer/supplier/invoice rows and nested menus/links independently.
    Switch invoice navigation mode and follow several Previous/Next links,
    including boundaries, cash and cancelled invoices; check RTL arrow direction.
-6. In Finance, choose Custom: From/To stay beside visible period buttons on
-   desktop and stack on mobile. Switch back to a preset. Expense date stays
-   date-only and is not combined with the record creation time.
-7. Verify public/preview/print/PDF A4/PNG A5 cubic per-piece prices and unchanged
+6. Verify public/preview/print/PDF A4/PNG A5 cubic per-piece prices and unchanged
    totals, price hiding, sharing and Save & Print. Yellow print guidance must
    appear on screen and remain absent from printed/downloaded receipts.
+7. Create a مبلغ حر item and a mixed sales invoice. Check amount-only fields,
+   no inventory movement, blank quantity/dimension/unit-price receipt cells,
+   physical-only quantity/cubic totals, and matching Arabic/English previews.
 
 Run `npm run test:forms`, architecture checks, TypeScript and the production
 build for automated verification. Backend API regressions cover persisted
