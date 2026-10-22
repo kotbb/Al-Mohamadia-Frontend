@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { AppShell } from "@/app/layout/app-shell";
@@ -19,7 +20,8 @@ export function NewInvoicePage({ invoiceId }: { invoiceId?: string }) {
   const t = useTranslations("invoices");
   const tShared = useTranslations("shared");
   const router = useRouter();
-  const form = useInvoiceForm();
+  const searchParams = useSearchParams();
+  const form = useInvoiceForm({ initialCustomerId: invoiceId ? null : searchParams.get("customerId") });
   const [editStatus, setEditStatus] = useState<"loading" | "success" | "error">(
     invoiceId ? "loading" : "success",
   );
@@ -67,11 +69,11 @@ export function NewInvoicePage({ invoiceId }: { invoiceId?: string }) {
       density="compact"
       actions={
         <Link
-          href={invoiceId ? `/invoices/${invoiceId}` : "/invoices"}
+          href="/invoices"
           className="ds-focus-ring inline-flex w-fit items-center gap-2 text-sm font-medium text-primary underline-offset-2 hover:underline"
         >
           <BackIcon />
-          {t(invoiceId ? "backToInvoice" : "backToList")}
+          {t("backToList")}
         </Link>
       }
     >
@@ -161,6 +163,8 @@ export function NewInvoicePage({ invoiceId }: { invoiceId?: string }) {
               onDiscountChange={form.setDiscountInput}
               onPaidChange={form.setPaidInput}
               paidReadOnly={form.type === "cash_sale"}
+              additionalAmount={form.accountPaymentAmount}
+              accountBalance={form.accountBalance}
             />
 
             {form.submitError ? (
@@ -196,7 +200,7 @@ export function NewInvoicePage({ invoiceId }: { invoiceId?: string }) {
                     ? t("saveChanges")
                     : t("save")}
               </Button>
-              <Button
+              {!invoiceId ? <Button
                 type="button"
                 variant="primary"
                 disabled={form.isSubmitting}
@@ -209,7 +213,7 @@ export function NewInvoicePage({ invoiceId }: { invoiceId?: string }) {
                   : invoiceId
                     ? t("saveChangesAndPrint")
                     : t("saveAndPrint")}
-              </Button>
+              </Button> : null}
             </div>
           </>
         )}

@@ -71,6 +71,7 @@ export function CustomersList({
   const tAudit = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
+  const account = useTranslations("accountDetails");
 
   if (status === "loading" || status === "idle") {
     return <LoadingState message={tShared("loading")} />;
@@ -137,6 +138,7 @@ export function CustomersList({
                     id: "activate",
                     label: t("activate"),
                     onSelect: () => onActivate(customer),
+                    tone: "success",
                   },
               {
                 id: "delete",
@@ -179,6 +181,7 @@ export function CustomersList({
                     }
                   >
                     {formatMoney(customer.balance, locale)}
+                    {customer.balance < 0 ? <span className="ms-2 text-xs font-normal">{account("customerCredit")}</span> : null}
                   </span>
                 </td>
                 <td className="px-4 py-3">
@@ -198,12 +201,6 @@ export function CustomersList({
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-center gap-2">
-                    <Link
-                      href={`/customers/${customer.id}`}
-                      className="ds-focus-ring rounded-lg px-2 py-1 text-sm font-medium text-primary hover:underline"
-                    >
-                      {t("view")}
-                    </Link>
                     <RowActionsMenu label={t("colActions")} items={actions} />
                   </div>
                 </td>

@@ -16,6 +16,7 @@ export interface SalesInvoiceLine {
 }
 
 export interface SalesInvoice {
+  accountPaymentAmount?: number;
   id: string;
   invoiceNumber: string;
   type: SalesInvoiceType;
@@ -48,6 +49,7 @@ export interface SalesInvoiceListResponse {
 }
 
 export interface ListSalesInvoicesFilters {
+  customerId?: string;
   q?: string;
   status?: SalesInvoiceStatus;
   period?: SalesInvoicePeriod;
@@ -69,6 +71,7 @@ export interface CreateSalesInvoiceLineInput {
 }
 
 export interface CreateSalesInvoiceInput {
+  accountPaymentAmount?: number;
   type: SalesInvoiceType;
   customerId?: string;
   lines: CreateSalesInvoiceLineInput[];
@@ -106,6 +109,7 @@ export interface PublicInvoiceLine {
 }
 
 export interface PublicInvoice {
+  accountPaymentAmount?: number;
   invoiceNumber: string;
   createdAt: string;
   status: string;

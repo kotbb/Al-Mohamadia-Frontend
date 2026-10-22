@@ -57,7 +57,7 @@ export function PurchaseLineRow({
             onChange={(e) => onSelectItem(e.target.value)}
           >
             <option value="">{t("fieldItemPlaceholder")}</option>
-            <CategorizedItemOptions items={items} locale={locale} />
+            <CategorizedItemOptions items={items.filter((item) => item.isActive || item.id === line.itemId)} locale={locale} />
           </select>
         </label>
 

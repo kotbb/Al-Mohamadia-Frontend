@@ -1,5 +1,7 @@
 "use client";
 
+import { InvoicePaidAmount } from "@/app/modules/shared/components/invoice-paid-amount";
+
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { AppShell } from "@/app/layout/app-shell";
@@ -237,8 +239,8 @@ export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
                     <p className="text-xs font-medium text-text-secondary">
                       {t("paid")}
                     </p>
-                    <p className="mt-1 text-lg font-bold text-danger">
-                      {formatMoney(purchase.paid, locale)} {currency}
+                    <p className="mt-1 text-lg font-bold text-success">
+                      <InvoicePaidAmount paid={purchase.paid} accountPaymentAmount={purchase.accountPaymentAmount} currency={currency} />
                     </p>
                   </div>
                 </div>
@@ -272,6 +274,12 @@ export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
 
             {purchase.status === "saved" ? (
               <div className="flex flex-wrap items-center gap-3 border-t border-border pt-6">
+                <Link
+                  href={`/purchases/${purchase.id}/edit`}
+                  className="ds-focus-ring inline-flex min-h-10 items-center rounded-lg border border-border bg-surface px-4 text-sm font-medium text-primary hover:bg-surface-muted"
+                >
+                  {t("edit")}
+                </Link>
                 <Button
                   type="button"
                   variant="danger"

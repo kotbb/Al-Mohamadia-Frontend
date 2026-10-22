@@ -130,18 +130,17 @@ export function CustomerFormModal({
           disabled={isSubmitting}
           autoComplete="off"
         />
-        {!isEdit ? (
-          <Input
-            name="customerBalance"
-            label={t("fieldOpeningBalance")}
-            type="number"
-            min={0}
-            step="0.01"
-            value={balance}
-            onChange={(event) => onBalanceChange(event.target.value)}
-            disabled={isSubmitting}
-          />
-        ) : null}
+        <Input
+          name="customerBalance"
+          label={isEdit ? t("fieldBalance") : t("fieldStartingBalance")}
+          type="number"
+          step="0.01"
+          required={isEdit}
+          hint={t("fieldBalanceHint")}
+          value={balance}
+          onChange={(event) => onBalanceChange(event.target.value)}
+          disabled={isSubmitting}
+        />
         {error ? (
           <p
             className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger"

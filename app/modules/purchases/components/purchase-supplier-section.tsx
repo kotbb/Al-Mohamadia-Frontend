@@ -10,6 +10,7 @@ interface PurchaseSupplierSectionProps {
   allSuppliers: Supplier[];
   allSuppliersLoading: boolean;
   selectedSupplier: Supplier | null;
+  originalSupplier?: Supplier | null;
   onSelectSupplierId: (id: string) => void;
   onClearSupplier: () => void;
   notes: string;
@@ -20,6 +21,7 @@ export function PurchaseSupplierSection({
   allSuppliers,
   allSuppliersLoading,
   selectedSupplier,
+  originalSupplier,
   onSelectSupplierId,
   onClearSupplier,
   notes,
@@ -27,6 +29,8 @@ export function PurchaseSupplierSection({
 }: PurchaseSupplierSectionProps) {
   const t = useTranslations("purchases");
   const locale = useLocale();
+  const includeOriginal = originalSupplier && !originalSupplier.isDeleted &&
+    !allSuppliers.some((supplier) => supplier.id === originalSupplier.id);
 
   return (
     <SurfaceCard padding="sm">
@@ -88,6 +92,11 @@ export function PurchaseSupplierSection({
                     {s.name} {s.phone ? `(${s.phone})` : ""}
                   </option>
                 ))}
+                {includeOriginal ? (
+                  <option value={originalSupplier.id}>
+                    {originalSupplier.name} {originalSupplier.phone ? `(${originalSupplier.phone})` : ""}
+                  </option>
+                ) : null}
               </select>
             </label>
           </div>

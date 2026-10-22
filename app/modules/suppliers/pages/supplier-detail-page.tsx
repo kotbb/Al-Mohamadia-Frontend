@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -9,13 +9,13 @@ import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { RecordSupplierPaymentModal } from "@/app/modules/supplier-payments/components/record-supplier-payment-modal";
 import { useRecordSupplierPayment } from "@/app/modules/supplier-payments/hooks/use-record-supplier-payment";
 import { SupplierFormModal } from "@/app/modules/suppliers/components/supplier-form-modal";
-import { SupplierMergeModal } from "@/app/modules/suppliers/components/supplier-merge-modal";
 import { useSupplierDetail } from "@/app/modules/suppliers/hooks/use-supplier-detail";
 import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { Button } from "@/app/modules/shared/components/button";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
 import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
+import { AccountFinancialSummary } from "@/app/modules/shared/components/account-financial-summary";
 import { ConfirmDialog } from "@/app/modules/shared/components/row-actions-menu";
 import { Toast } from "@/app/modules/shared/components/toast";
 import { PurchasesTable } from "@/app/modules/purchases/components/purchases-table";
@@ -30,6 +30,7 @@ interface SupplierDetailPageProps {
 export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
   const t = useTranslations("suppliers");
   const tShared = useTranslations("shared");
+  const account = useTranslations("accountDetails");
   const locale = useLocale();
   const searchParams = useSearchParams();
   const fromParam = searchParams.get("from");
@@ -66,28 +67,16 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
     isSaving,
     formError,
     submitForm,
-    isMergeOpen,
-    openMerge,
-    closeMerge,
-    mergeTargetId,
-    setMergeTargetId,
-    mergeSourceIds,
-    toggleMergeSource,
-    mergeOptions,
-    isMerging,
-    mergeError,
-    submitMerge,
-    confirmKind,
-    isConfirming,
-    confirmError,
-    openDeactivateConfirm,
-    openActivateConfirm,
-    openDeleteConfirm,
-    closeConfirm,
-    submitConfirm,
     toast,
     clearToast,
   } = useSupplierDetail(supplierId);
+
+  const refreshPayments = supplierPayments.refresh;
+  const refreshPurchases = supplierPurchases.refresh;
+  useEffect(() => {
+    refreshPayments();
+    refreshPurchases();
+  }, [supplier?.amountOwed, refreshPayments, refreshPurchases]);
 
   const toastMessage =
     toast?.kind === "updated"
@@ -101,29 +90,6 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
             : toast?.kind === "merged"
               ? t("mergeSuccess")
               : "";
-
-  const confirmTitle =
-    confirmKind === "delete"
-      ? t("confirmDeleteTitle")
-      : confirmKind === "deactivate"
-        ? t("confirmDeactivateTitle")
-        : confirmKind === "activate"
-          ? t("confirmActivateTitle")
-          : "";
-  const confirmDescription =
-    confirmKind === "delete"
-      ? t("confirmDeleteBody", { name: supplier?.name ?? "" })
-      : confirmKind === "deactivate"
-        ? t("confirmDeactivateBody", { name: supplier?.name ?? "" })
-        : confirmKind === "activate"
-          ? t("confirmActivateBody", { name: supplier?.name ?? "" })
-          : "";
-  const confirmLabel =
-    confirmKind === "delete"
-      ? t("delete")
-      : confirmKind === "deactivate"
-        ? t("deactivate")
-        : t("activate");
 
   if (status === "loading") {
     return (
@@ -149,7 +115,6 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
   return (
     <AppShell
       title={supplier.name}
-      subtitle={supplier.phone ?? "-"}
       actions={
         <div className="flex flex-wrap items-center gap-2">
           <Link
@@ -158,14 +123,17 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
           >
             {t("backToList")}
           </Link>
+          {supplier.isActive ? (
+            <Link href={`/purchases/new?supplierId=${supplier.id}`}
+              className="ds-focus-ring inline-flex min-h-11 items-center rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary-hover">
+              {account("newInvoice")}
+            </Link>
+          ) : null}
           <Button
             type="button"
-            variant="primary"
+            variant="secondary"
             size="sm"
-            disabled={supplier.amountOwed <= 0 || !supplier.isActive}
-            title={
-              supplier.amountOwed <= 0 ? t("recordPaymentDisabled") : undefined
-            }
+            disabled={!supplier.isActive}
             onClick={() =>
               recordPaymentHook.open({
                 id: supplier.id,
@@ -176,12 +144,6 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
           >
             {t("recordPayment")}
           </Button>
-          <Link
-            href={`/purchases/new?supplierId=${supplier.id}`}
-            className="ds-focus-ring inline-flex min-h-10 items-center rounded-lg border border-border bg-surface px-3.5 text-sm font-medium text-text-secondary hover:bg-surface-muted"
-          >
-            {t("newPurchase")}
-          </Link>
           <Button
             type="button"
             variant="secondary"
@@ -190,6 +152,7 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
           >
             {t("edit")}
           </Button>
+
         </div>
       }
     >
@@ -220,39 +183,9 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
         onSubmit={submitForm}
       />
 
-      <SupplierMergeModal
-        open={isMergeOpen}
-        onClose={closeMerge}
-        options={mergeOptions}
-        targetId={mergeTargetId}
-        onTargetChange={setMergeTargetId}
-        sourceIds={mergeSourceIds}
-        onToggleSource={toggleMergeSource}
-        isSubmitting={isMerging}
-        error={mergeError}
-        onSubmit={submitMerge}
-      />
 
-      <ConfirmDialog
-        open={confirmKind !== null}
-        title={confirmTitle}
-        description={
-          <div className="flex flex-col gap-2">
-            <p>{confirmDescription}</p>
-            {confirmError ? (
-              <p className="text-danger" role="alert">
-                {confirmError}
-              </p>
-            ) : null}
-          </div>
-        }
-        confirmLabel={confirmLabel}
-        cancelLabel={t("modalCancel")}
-        confirming={isConfirming}
-        tone={confirmKind === "activate" ? "primary" : "danger"}
-        onConfirm={() => void submitConfirm()}
-        onCancel={closeConfirm}
-      />
+
+
 
       <ConfirmDialog
         open={supplierPurchases.confirmPurchase !== null}
@@ -278,6 +211,7 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
         onConfirm={() =>
           void supplierPurchases.submitCancel(() => {
             refresh();
+            supplierPayments.refresh();
           })
         }
         onCancel={supplierPurchases.closeCancelConfirm}
@@ -312,43 +246,17 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
           void supplierPayments.submitCancel(() => {
             setPaymentToast("cancelled");
             refresh();
+            supplierPurchases.refresh();
           })
         }
         onCancel={supplierPayments.closeCancelConfirm}
       />
 
       <div className="flex flex-col gap-4">
-        <SurfaceCard padding="lg">
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div>
-              <h2 className="text-sm font-medium text-text-secondary">
-                {t("personalDetails")}
-              </h2>
-              <dl className="mt-3 flex flex-col gap-3 text-base">
-                <div>
-                  <dt className="text-text-muted">{t("detailPhone")}</dt>
-                  <dd className="font-medium text-text-primary">
-                    {supplier.phone ?? "-"}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-text-muted">{t("detailAddress")}</dt>
-                  <dd className="font-medium text-text-primary">
-                    {supplier.address?.trim() ? supplier.address : "-"}
-                  </dd>
-                </div>
-              </dl>
-            </div>
-            <div className="lg:text-end">
-              <p className="text-sm text-text-secondary">
-                {t("currentAmountOwed")}
-              </p>
-              <p className={`mt-2 text-3xl font-bold ${supplier.amountOwed > 0 ? "text-danger" : "text-text-primary"}`}>
-                {formatMoney(supplier.amountOwed, locale)} {t("currency")}
-              </p>
-            </div>
-          </div>
-        </SurfaceCard>
+        <AccountFinancialSummary
+          totalInvoiced={supplier.financialSummary?.totalInvoiced ?? 0}
+          totalPaid={supplier.financialSummary?.totalPaid ?? 0}
+          currentBalance={supplier.amountOwed} party="supplier" currency={t("currency")} />
 
         {/* Purchases History Section */}
         <SurfaceCard padding="lg">
@@ -463,44 +371,7 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
           </div>
         </SurfaceCard>
 
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            onClick={() => void openMerge()}
-          >
-            {t("mergeButton")}
-          </Button>
-          {supplier.isActive ? (
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={openDeactivateConfirm}
-            >
-              {t("deactivate")}
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={openActivateConfirm}
-            >
-              {t("activate")}
-            </Button>
-          )}
-          <Button
-            type="button"
-            variant="danger"
-            size="sm"
-            disabled={supplier.amountOwed !== 0}
-            onClick={openDeleteConfirm}
-          >
-            {supplier.amountOwed !== 0 ? t("deleteBlocked") : t("delete")}
-          </Button>
-        </div>
+
       </div>
 
       <RecordSupplierPaymentModal
@@ -520,6 +391,7 @@ export function SupplierDetailPage({ supplierId }: SupplierDetailPageProps) {
             setPaymentToast("recorded");
             refresh();
             supplierPayments.refresh();
+            supplierPurchases.refresh();
           });
         }}
       />

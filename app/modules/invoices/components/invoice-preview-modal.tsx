@@ -1,4 +1,6 @@
 "use client";
+
+import { ReceiptPaidAmount } from "./receipt-paid-amount";
 import { receiptUnitPrice } from "../utils/receipt-unit-price";
 import { ReceiptItemLabel } from "./receipt-item-label";
 import {
@@ -485,35 +487,33 @@ export function InvoicePreviewModal({
 
               {/* Totals Section */}
               <div className="mt-4 flex justify-start">
-                <div className="w-[240px]">
-                  <div className="flex justify-between items-baseline gap-4 text-[13px] mb-2">
+                <div className={(invoice.accountPaymentAmount ?? 0) > 0 ? "w-full max-w-[26rem]" : "w-[240px]"}>
+                  <div className="grid grid-cols-[max-content_minmax(0,1fr)_4rem] items-baseline gap-x-2 text-[13px] mb-2">
                     <span className="font-bold text-[#555]">المطلوب:</span>
-                    <span className="font-bold text-[#111] whitespace-nowrap">
+                    <span className="col-start-3 text-end font-bold text-[#111] whitespace-nowrap">
                       {formatMoneyValue(invoice.total)}
                     </span>
                   </div>
 
                   {invoice.discount > 0 && (
-                    <div className="flex justify-between items-baseline gap-4 text-[13px] mb-2">
+                    <div className="grid grid-cols-[max-content_minmax(0,1fr)_4rem] items-baseline gap-x-2 text-[13px] mb-2">
                       <span className="font-bold text-[#555]">الخصم:</span>
-                      <span className="font-bold text-[#111] whitespace-nowrap">
+                      <span className="col-start-3 text-end font-bold text-[#111] whitespace-nowrap">
                         {formatMoneyValue(invoice.discount)}
                       </span>
                     </div>
                   )}
 
-                  <div className="flex justify-between items-baseline gap-4 text-[13px] mb-2">
+                  <div className="grid grid-cols-[max-content_minmax(0,1fr)_4rem] items-baseline gap-x-2 text-[13px] mb-2">
                     <span className="font-bold text-[#555]">المدفوع:</span>
-                    <span className="font-bold text-[#111] whitespace-nowrap">
-                      {formatMoneyValue(invoice.paid)}
-                    </span>
+                    <ReceiptPaidAmount paid={invoice.paid} accountPaymentAmount={invoice.accountPaymentAmount} />
                   </div>
 
                   <hr className="border-0 border-t-[1.5px] border-[#222] my-1.5 mb-2.5" />
 
-                  <div className="flex justify-between items-baseline gap-4 text-[16px] font-bold mb-0">
+                  <div className="grid grid-cols-[max-content_minmax(0,1fr)_4rem] items-baseline gap-x-2 text-[16px] font-bold mb-0">
                     <span className="text-[#111]">المتبقي:</span>
-                    <span className="text-[#b85d19] text-[17px] whitespace-nowrap">
+                    <span className="col-start-3 text-end text-[#b85d19] text-[17px] whitespace-nowrap">
                       {formatMoneyValue(invoice.remaining)}
                     </span>
                   </div>

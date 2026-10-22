@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -8,20 +9,41 @@ import { PurchaseLineRow } from "@/app/modules/purchases/components/purchase-lin
 import { PurchaseSupplierSection } from "@/app/modules/purchases/components/purchase-supplier-section";
 import { PurchaseTotals } from "@/app/modules/purchases/components/purchase-totals";
 import { usePurchaseForm } from "@/app/modules/purchases/hooks/use-purchase-form";
+import { getPurchase } from "@/app/modules/purchases/services/purchases.service";
 import { AddInvoiceLineButton } from "@/app/modules/invoices/components/add-invoice-line-button";
 import { Button } from "@/app/modules/shared/components/button";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
 import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
 
-export function NewPurchasePage() {
+export function NewPurchasePage({ purchaseId }: { purchaseId?: string }) {
   const t = useTranslations("purchases");
   const tShared = useTranslations("shared");
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialSupplierId = searchParams.get("supplierId");
+  const initialSupplierId = purchaseId ? null : searchParams.get("supplierId");
 
   const form = usePurchaseForm({ initialSupplierId });
+  const [editStatus, setEditStatus] = useState<"loading" | "success" | "error">(purchaseId ? "loading" : "success");
+  const [editError, setEditError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!purchaseId) return;
+    const controller = new AbortController();
+    getPurchase(purchaseId, controller.signal)
+      .then(async (purchase) => {
+        if (controller.signal.aborted) return;
+        if (purchase.status !== "saved") { setEditStatus("error"); return; }
+        await form.initializeForEdit(purchase);
+        if (!controller.signal.aborted) setEditStatus("success");
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        setEditError(error instanceof Error ? error.message : null);
+        setEditStatus("error");
+      });
+    return () => controller.abort();
+  }, [purchaseId, form.initializeForEdit]);
 
   async function handleSubmit() {
     const id = await form.submit({
@@ -34,8 +56,8 @@ export function NewPurchasePage() {
 
   return (
     <AppShell
-      title={t("newTitle")}
-      subtitle={t("newSubtitle")}
+      title={purchaseId ? t("editTitle", { number: form.editInvoice?.invoiceNumber ?? "" }) : t("newTitle")}
+      subtitle={purchaseId ? undefined : t("newSubtitle")}
       density="compact"
       actions={
         <Link
@@ -48,12 +70,12 @@ export function NewPurchasePage() {
       }
     >
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
-        {form.itemsStatus === "loading" || form.itemsStatus === "idle" ? (
+        {editStatus === "loading" || form.itemsStatus === "loading" || form.itemsStatus === "idle" ? (
           <LoadingState message={tShared("loading")} />
-        ) : form.itemsStatus === "error" ? (
+        ) : editStatus === "error" || form.itemsStatus === "error" ? (
           <ErrorState
             title={t("listError")}
-            message={form.itemsError ?? undefined}
+            message={editError ?? form.itemsError ?? undefined}
           />
         ) : (
           <>
@@ -62,6 +84,7 @@ export function NewPurchasePage() {
               allSuppliers={form.allSuppliers}
               allSuppliersLoading={form.allSuppliersLoading}
               selectedSupplier={form.selectedSupplier}
+              originalSupplier={form.originalSupplier}
               onSelectSupplierId={form.selectSupplierById}
               onClearSupplier={form.clearSupplier}
               notes={form.notes}
@@ -111,8 +134,8 @@ export function NewPurchasePage() {
               paidInput={form.paidInput}
               onPaidChange={form.setPaidInput}
               remaining={form.remaining}
-              totalDue={form.totalDue}
-              supplierBalance={form.selectedSupplier?.amountOwed}
+              additionalAmount={form.accountPaymentAmount}
+              accountBalance={form.accountBalance}
             />
 
             {form.submitError ? (
@@ -137,7 +160,7 @@ export function NewPurchasePage() {
                 disabled={form.isSubmitting}
                 onClick={() => void handleSubmit()}
               >
-                {form.isSubmitting ? t("saving") : t("save")}
+                {form.isSubmitting ? t("saving") : purchaseId ? t("saveChanges") : t("save")}
               </Button>
             </div>
           </>

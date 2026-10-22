@@ -6,15 +6,15 @@ import {
   roundMoneyAmount,
 } from "@/app/modules/shared/utils/format-money";
 import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
-import { roundMoney } from "@/app/modules/shared/utils/invoice-math";
+import { AccountPaymentSummary } from "@/app/modules/shared/components/account-payment-summary";
 
 interface PurchaseTotalsProps {
   total: number;
   paidInput: string;
   onPaidChange: (value: string) => void;
   remaining: number;
-  totalDue: number;
-  supplierBalance?: number;
+  additionalAmount: number;
+  accountBalance?: number;
 }
 
 export function PurchaseTotals({
@@ -22,14 +22,12 @@ export function PurchaseTotals({
   paidInput,
   onPaidChange,
   remaining,
-  totalDue,
-  supplierBalance,
+  additionalAmount,
+  accountBalance,
 }: PurchaseTotalsProps) {
   const t = useTranslations("purchases");
   const locale = useLocale();
-  const paid = Number(paidInput) || 0;
-  const priorDebtPayment = Math.max(0, paid - total);
-  const priorDebtRemaining = Math.max(0, (supplierBalance ?? 0) - priorDebtPayment);
+  const tPayments = useTranslations("invoicePayments");
 
   return (
     <SurfaceCard>
@@ -53,7 +51,7 @@ export function PurchaseTotals({
               htmlFor="purchase-paid-input"
               className="text-sm text-text-secondary"
             >
-              {t("paid")}
+              {tPayments("paidAmount")}
             </label>
             <div className="relative mt-2 flex items-center">
               <input
@@ -61,12 +59,11 @@ export function PurchaseTotals({
                 name="paid"
                 type="number"
                 min={0}
-                max={totalDue}
                 step="any"
                 value={paidInput}
                 onChange={(e) => {
                   const value = e.target.value;
-                  onPaidChange(value !== "" && Number(value) > totalDue ? String(totalDue) : value);
+                  onPaidChange(value);
                 }}
                 onBlur={() => {
                   const rounded = roundMoneyAmount(paidInput);
@@ -95,17 +92,9 @@ export function PurchaseTotals({
             </p>
           </div>
         </div>
-        {supplierBalance !== undefined ? (
-          <div className="rounded-xl border border-border bg-surface-muted p-4">
-            <div className="text-sm text-text-secondary">
-              <span>{t("priorDebtRemaining")}: {formatMoney(priorDebtRemaining, locale)} {t("currency")}</span>
-            </div>
-            <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2 border-t border-border pt-3">
-              <span className="font-semibold text-text-primary">{t("supplierTotalDue")}</span>
-              <strong className="text-xl tabular-nums text-danger">{formatMoney(roundMoney(priorDebtRemaining + remaining), locale)} {t("currency")}</strong>
-            </div>
-          </div>
-        ) : null}
+        <AccountPaymentSummary additionalAmount={additionalAmount}
+          invoicePaid={Math.max(0, (Number(paidInput) || 0) - additionalAmount)}
+          accountBalance={accountBalance} accountKind="supplier" />
       </div>
     </SurfaceCard>
   );

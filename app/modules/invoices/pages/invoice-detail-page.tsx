@@ -1,5 +1,7 @@
 "use client";
 
+import { InvoicePaidAmount } from "@/app/modules/shared/components/invoice-paid-amount";
+
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -256,8 +258,8 @@ export function InvoiceDetailPage({ invoiceId }: InvoiceDetailPageProps) {
                     <p className="text-xs font-medium text-text-secondary">
                       {t("paid")}
                     </p>
-                    <p className="mt-1 text-lg font-bold text-text-primary">
-                      {formatMoney(invoice.paid, locale)} {currency}
+                    <p className="mt-1 text-lg font-bold text-success">
+                      <InvoicePaidAmount paid={invoice.paid} accountPaymentAmount={invoice.accountPaymentAmount} currency={currency} />
                     </p>
                   </div>
                 </div>

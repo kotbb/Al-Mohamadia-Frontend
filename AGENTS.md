@@ -41,7 +41,7 @@ requested.
 | Language | TypeScript (strict) |
 | Styling | Tailwind CSS v4 (`app/globals.css` tokens + `@theme`) |
 | HTTP | Native `fetch` via a single API client under `lib/api/` |
-| i18n | English (default, LTR) + Arabic (RTL), runtime switchable |
+| i18n | Arabic (default, RTL) + English (LTR), runtime switchable |
 | Theme | Light + Dark via CSS variables + `.dark`, independent of locale |
 | Auth | JWT access + refresh (consumed by the API client) |
 | Currency | EGP (ج.م) only |
@@ -68,7 +68,7 @@ messages/ or locales/             → i18n dictionaries (ar / en)
 
 Exact locale routing (`/[locale]/…` vs middleware) is decided in Phase 0 —
 pick one approach and stay consistent. `dir` on `<html>` always follows
-locale (`ar` → `rtl`, `en` → `ltr`; English is the default locale).
+locale (`ar` → `rtl`, `en` → `ltr`; Arabic is the default locale).
 
 ## Feature module layout
 
@@ -355,6 +355,18 @@ is never surprised:
 - On-invoice payment: shows on the invoice / payment history — does **not**
   reduce customer balance again (debt was already set to remaining).
 - Standalone debt payment: **does** reduce customer balance.
+- Sales/purchase forms have one entered paid amount on create and edit. Split
+  it into capped invoice `paid` and excess `accountPaymentAmount` for the API.
+  Remaining never becomes negative; explain any excess inline and retain the
+  resulting debt/credit preview. Invoice modal/receipt/print/PDF show combined paid with a conditional
+  invoice/previous-debt breakdown using active origin-linked account payments. Reopening initializes the field to invoice paid, so previous
+  independent account payments are not replayed. Sales default to Customer Sale
+  with one searchable customer picker. Detail pages have no Account actions
+  button; customer-detail invoice history omits the customer column.
+- One Balance field sets an optional starting amount at creation and the actual
+  current amount when editing. Send customer `balance` / supplier `amountOwed`,
+  accepting signed finite two-decimal debt/credit values. Omit unchanged balance
+  on contact-only edits. Details show three KPIs: invoiced, paid, current balance.
 - Saving a sales invoice deducts stock; cancelling reverses stock and the
   debt increase applied at save.
 - Saving a purchase invoice increases stock and supplier amount owed.
@@ -389,7 +401,7 @@ the UI; do not expect translated strings from the API.
 - [ ] Layout matches the relevant `UI/*.png` structure (shell, sections, CTAs)
 - [ ] No mockup navy/orange hexes — only `docs/DESIGN-SYSTEM.md` token variables
 - [ ] Loading / empty / error handled
-- [ ] Works in `en` (default, LTR) and `ar` (RTL); no hardcoded strings
+- [ ] Works in `ar` (default, RTL) and `en` (LTR); no hardcoded strings
 - [ ] Light and dark both use token variables from `docs/DESIGN-SYSTEM.md`
 - [ ] Focus and keyboard path are sane
 - [ ] Motion has a reason and a reduced-motion path

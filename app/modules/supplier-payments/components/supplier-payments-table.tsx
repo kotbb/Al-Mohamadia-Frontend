@@ -1,5 +1,7 @@
 "use client";
 
+import { PaymentNotes } from "@/app/modules/shared/components/payment-notes";
+
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
@@ -152,7 +154,7 @@ export function SupplierPaymentsTable({
                   className="max-w-[14rem] truncate px-4 py-3 text-text-secondary"
                   title={payment.notes ?? ""}
                 >
-                  {payment.notes?.trim() ? payment.notes : "-"}
+                    <PaymentNotes notes={payment.notes} isAdditional={!payment.purchaseInvoiceId && (Boolean(payment.sourcePurchaseInvoiceId) || !payment.notes?.trim())} />
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
                   <Badge variant={payment.isReversed ? "danger" : "success"}>

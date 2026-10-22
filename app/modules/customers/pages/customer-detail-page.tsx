@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { AppShell } from "@/app/layout/app-shell";
 import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
+import { CustomerInvoiceHistory } from "@/app/modules/customers/components/customer-invoice-history";
 import { CustomerFormModal } from "@/app/modules/customers/components/customer-form-modal";
-import { CustomerMergeModal } from "@/app/modules/customers/components/customer-merge-modal";
 import { useCustomerDetail } from "@/app/modules/customers/hooks/use-customer-detail";
 import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { PaymentsTable } from "@/app/modules/payments/components/payments-table";
@@ -18,6 +18,7 @@ import { Button } from "@/app/modules/shared/components/button";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
 import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
+import { AccountFinancialSummary } from "@/app/modules/shared/components/account-financial-summary";
 import { ConfirmDialog } from "@/app/modules/shared/components/row-actions-menu";
 import { Toast } from "@/app/modules/shared/components/toast";
 
@@ -28,6 +29,7 @@ interface CustomerDetailPageProps {
 export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
   const t = useTranslations("customers");
   const tShared = useTranslations("shared");
+  const account = useTranslations("accountDetails");
   const locale = useLocale();
   const searchParams = useSearchParams();
   const fromParam = searchParams.get("from");
@@ -60,28 +62,14 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
     isSaving,
     formError,
     submitForm,
-    isMergeOpen,
-    openMerge,
-    closeMerge,
-    mergeTargetId,
-    setMergeTargetId,
-    mergeSourceIds,
-    toggleMergeSource,
-    mergeOptions,
-    isMerging,
-    mergeError,
-    submitMerge,
-    confirmKind,
-    isConfirming,
-    confirmError,
-    openDeactivateConfirm,
-    openActivateConfirm,
-    openDeleteConfirm,
-    closeConfirm,
-    submitConfirm,
     toast,
     clearToast,
   } = useCustomerDetail(customerId);
+
+  const refreshPayments = customerPayments.refresh;
+  useEffect(() => {
+    refreshPayments();
+  }, [customer?.balance, refreshPayments]);
 
   const toastMessage =
     toast?.kind === "updated"
@@ -95,29 +83,6 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
             : toast?.kind === "merged"
               ? t("mergeSuccess")
               : "";
-
-  const confirmTitle =
-    confirmKind === "delete"
-      ? t("confirmDeleteTitle")
-      : confirmKind === "deactivate"
-        ? t("confirmDeactivateTitle")
-        : confirmKind === "activate"
-          ? t("confirmActivateTitle")
-          : "";
-  const confirmDescription =
-    confirmKind === "delete"
-      ? t("confirmDeleteBody", { name: customer?.name ?? "" })
-      : confirmKind === "deactivate"
-        ? t("confirmDeactivateBody", { name: customer?.name ?? "" })
-        : confirmKind === "activate"
-          ? t("confirmActivateBody", { name: customer?.name ?? "" })
-          : "";
-  const confirmLabel =
-    confirmKind === "delete"
-      ? t("delete")
-      : confirmKind === "deactivate"
-        ? t("deactivate")
-        : t("activate");
 
   if (status === "loading") {
     return (
@@ -143,7 +108,6 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
   return (
     <AppShell
       title={customer.name}
-      subtitle={customer.phone ?? undefined}
       actions={
         <div className="flex flex-wrap items-center gap-2">
           <Link
@@ -152,14 +116,17 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
           >
             {t("backToList")}
           </Link>
+          {customer.isActive ? (
+            <Link href={`/invoices/new?customerId=${customer.id}`}
+              className="ds-focus-ring inline-flex min-h-11 items-center rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary-hover">
+              {account("newInvoice")}
+            </Link>
+          ) : null}
           <Button
             type="button"
-            variant="primary"
+            variant="secondary"
             size="sm"
-            disabled={customer.balance <= 0 || !customer.isActive}
-            title={
-              customer.balance <= 0 ? t("recordPaymentDisabled") : undefined
-            }
+            disabled={!customer.isActive}
             onClick={() =>
               recordPaymentHook.open({
                 id: customer.id,
@@ -178,6 +145,7 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
           >
             {t("edit")}
           </Button>
+
         </div>
       }
     >
@@ -220,18 +188,7 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
         onSubmit={submitForm}
       />
 
-      <CustomerMergeModal
-        open={isMergeOpen}
-        onClose={closeMerge}
-        options={mergeOptions}
-        targetId={mergeTargetId}
-        onTargetChange={setMergeTargetId}
-        sourceIds={mergeSourceIds}
-        onToggleSource={toggleMergeSource}
-        isSubmitting={isMerging}
-        error={mergeError}
-        onSubmit={submitMerge}
-      />
+
 
       <RecordPaymentModal
         open={recordPaymentHook.isOpen}
@@ -254,26 +211,7 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
         }}
       />
 
-      <ConfirmDialog
-        open={confirmKind !== null}
-        title={confirmTitle}
-        description={
-          <div className="flex flex-col gap-2">
-            <p>{confirmDescription}</p>
-            {confirmError ? (
-              <p className="text-danger" role="alert">
-                {confirmError}
-              </p>
-            ) : null}
-          </div>
-        }
-        confirmLabel={confirmLabel}
-        cancelLabel={t("modalCancel")}
-        confirming={isConfirming}
-        tone={confirmKind === "activate" ? "primary" : "danger"}
-        onConfirm={() => void submitConfirm()}
-        onCancel={closeConfirm}
-      />
+
 
       <ConfirmDialog
         open={customerPayments.confirmPayment !== null}
@@ -310,37 +248,12 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
       />
 
       <div className="flex flex-col gap-6">
-        <SurfaceCard padding="lg">
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div>
-              <h2 className="text-sm font-medium text-text-secondary">
-                {t("personalDetails")}
-              </h2>
-              <dl className="mt-3 flex flex-col gap-3 text-base">
-                <div>
-                  <dt className="text-text-muted">{t("detailPhone")}</dt>
-                  <dd className="font-medium text-text-primary">
-                    {customer.phone ?? "-"}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-text-muted">{t("detailAddress")}</dt>
-                  <dd className="font-medium text-text-primary">
-                    {customer.address?.trim() ? customer.address : "-"}
-                  </dd>
-                </div>
-              </dl>
-            </div>
-            <div className="lg:text-end">
-              <p className="text-sm text-text-secondary">
-                {t("currentBalance")}
-              </p>
-              <p className="mt-2 text-3xl font-bold text-text-primary">
-                {formatMoney(customer.balance, locale)} {t("currency")}
-              </p>
-            </div>
-          </div>
-        </SurfaceCard>
+        <AccountFinancialSummary
+          totalInvoiced={customer.financialSummary?.totalInvoiced ?? 0}
+          totalPaid={customer.financialSummary?.totalPaid ?? 0}
+          currentBalance={customer.balance} party="customer" currency={t("currency")} />
+
+        <CustomerInvoiceHistory customerId={customerId} customerName={customer.name} onFinancialChange={() => { refresh(); customerPayments.refresh(); }} />
 
         {/* Payment History Section */}
         <SurfaceCard padding="lg">
@@ -396,44 +309,7 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
           </div>
         </SurfaceCard>
 
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            onClick={() => void openMerge()}
-          >
-            {t("mergeButton")}
-          </Button>
-          {customer.isActive ? (
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={openDeactivateConfirm}
-            >
-              {t("deactivate")}
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={openActivateConfirm}
-            >
-              {t("activate")}
-            </Button>
-          )}
-          <Button
-            type="button"
-            variant="danger"
-            size="sm"
-            disabled={customer.balance !== 0}
-            onClick={openDeleteConfirm}
-          >
-            {customer.balance !== 0 ? t("deleteBlocked") : t("delete")}
-          </Button>
-        </div>
+
       </div>
     </AppShell>
   );

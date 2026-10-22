@@ -14,6 +14,7 @@ import type {
 function buildListQuery(filters?: ListSalesInvoicesFilters): string {
   if (!filters) return "/sales-invoices";
   const params = new URLSearchParams();
+  if (filters.customerId) params.set("customerId", filters.customerId);
   if (filters.q?.trim()) params.set("q", filters.q.trim());
   if (filters.status) params.set("status", filters.status);
   if (filters.period) {

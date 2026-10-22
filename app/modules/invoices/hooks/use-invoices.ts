@@ -20,7 +20,9 @@ import { todayIsoDate } from "@/app/modules/invoices/utils/format-invoice-date";
 const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
 
-export function useInvoices() {
+export function useInvoices(options?: { customerId?: string; pageSize?: number }) {
+  const customerId = options?.customerId;
+  const pageSize = options?.pageSize ?? PAGE_SIZE;
   const describeError = useApiErrorMessage();
   const [invoices, setInvoices] = useState<SalesInvoice[]>([]);
   const [page, setPage] = useState(1);
@@ -46,6 +48,8 @@ export function useInvoices() {
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [loadedRequestKey, setLoadedRequestKey] = useState<string | null>(null);
   const requestKey = JSON.stringify([
+    customerId,
+    pageSize,
     debouncedQ,
     statusFilter,
     periodFilter,
@@ -81,6 +85,7 @@ export function useInvoices() {
 
     listSalesInvoices(
       {
+        customerId,
         q: debouncedQ || undefined,
         status: statusFilter === "all" ? undefined : statusFilter,
         period: periodFilter !== "off" && periodFilter !== "custom" ? periodFilter : undefined,
@@ -88,7 +93,7 @@ export function useInvoices() {
         from: periodFilter === "custom" ? customRange.from : undefined,
         to: periodFilter === "custom" ? customRange.to : undefined,
         page,
-        limit: PAGE_SIZE,
+        limit: pageSize,
       },
       controller.signal,
     )
@@ -110,6 +115,8 @@ export function useInvoices() {
 
     return () => controller.abort();
   }, [
+    customerId,
+    pageSize,
     debouncedQ,
     statusFilter,
     periodFilter,
@@ -154,7 +161,7 @@ export function useInvoices() {
     return () => controller.abort();
   }, [invoices, customerNames]);
 
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   function clearToast() {
     setToast(null);
@@ -171,7 +178,7 @@ export function useInvoices() {
     setConfirmError(null);
   }
 
-  async function submitCancel() {
+  async function submitCancel(onSuccess?: () => void) {
     if (!confirmInvoice) return;
     setIsConfirming(true);
     setConfirmError(null);
@@ -180,6 +187,7 @@ export function useInvoices() {
       setConfirmInvoice(null);
       setToast({ kind: "cancelled", variant: "success" });
       refresh();
+      onSuccess?.();
     } catch (error: unknown) {
       const message = describeError(error, "Cancel failed");
       setConfirmError(message);

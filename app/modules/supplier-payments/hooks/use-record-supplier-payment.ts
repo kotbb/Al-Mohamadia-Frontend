@@ -2,6 +2,7 @@
 
 import type { SupplierTarget } from "../types/use-record-supplier-payment.types";
 
+import { isMoneyAmount } from "@/app/modules/shared/utils/money-validation";
 import { useCallback, useState } from "react";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { roundMoneyAmount } from "@/app/modules/shared/utils/format-money";
@@ -74,17 +75,12 @@ export function useRecordSupplierPayment() {
     ): Promise<SupplierPayment | null> => {
       if (!supplier) return null;
 
-      const numAmount = roundMoneyAmount(amount);
-      if (numAmount === null || numAmount <= 0) {
+      const numAmount = Number(amount);
+      if (!amount.trim() || !isMoneyAmount(numAmount) || numAmount <= 0) {
         setError("amountInvalid");
         return null;
       }
       setAmount(String(numAmount));
-
-      if (numAmount > supplier.amountOwed) {
-        setError("amountExceedsDebt");
-        return null;
-      }
 
       setIsSubmitting(true);
       setError(null);

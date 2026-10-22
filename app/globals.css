@@ -15,6 +15,8 @@
   --focus-ring: #6f4428;
   --focus-ring-offset: #ffffff;
   --success: #2e8f52;
+  --success-action: #267344;
+  --success-action-foreground: #ffffff;
   --warning: #b8862b;
   --danger: #c13b2e;
   --info: #2e6fa6;
@@ -44,6 +46,8 @@
   --focus-ring: #e8b87f;
   --focus-ring-offset: #211d17;
   --success: #5fbb80;
+  --success-action: #5fbb80;
+  --success-action-foreground: #171410;
   --warning: #d9a854;
   --danger: #e27567;
   --info: #79add9;
@@ -73,6 +77,8 @@
   --color-focus-ring: var(--focus-ring);
   --color-focus-ring-offset: var(--focus-ring-offset);
   --color-success: var(--success);
+  --color-success-action: var(--success-action);
+  --color-success-action-foreground: var(--success-action-foreground);
   --color-danger: var(--danger);
   --color-warning: var(--warning);
   --color-info: var(--info);

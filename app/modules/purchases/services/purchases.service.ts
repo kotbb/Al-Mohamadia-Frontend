@@ -4,6 +4,7 @@ import type {
   ListPurchasesFilters,
   PurchaseInvoice,
   PurchaseInvoiceListResponse,
+  UpdatePurchaseInvoiceInput,
 } from "@/app/modules/purchases/types/purchases.types";
 
 function buildPurchasesQuery(filters?: ListPurchasesFilters): string {
@@ -47,6 +48,10 @@ export async function createPurchase(
   input: CreatePurchaseInvoiceInput,
 ): Promise<PurchaseInvoice> {
   return apiClient.post<PurchaseInvoice>("/purchases", input);
+}
+
+export async function updatePurchase(id: string, input: UpdatePurchaseInvoiceInput): Promise<PurchaseInvoice> {
+  return apiClient.patch<PurchaseInvoice>(`/purchases/${id}`, input);
 }
 
 export async function cancelPurchase(id: string): Promise<PurchaseInvoice> {

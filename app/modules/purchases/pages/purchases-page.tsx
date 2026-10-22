@@ -175,6 +175,7 @@ export function PurchasesPage() {
           error={listError}
           onRetry={refresh}
           onCancel={openCancelConfirm}
+          onEdit={(purchase) => router.push(`/purchases/${purchase.id}/edit`)}
           onHistory={(purchase) =>
             history.openRecord(purchase.id, purchase.invoiceNumber)
           }

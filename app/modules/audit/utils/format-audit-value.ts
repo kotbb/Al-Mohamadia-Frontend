@@ -62,6 +62,7 @@ const SIMPLE_SUMMARY_PREFIXES: Record<string, string> = {
   invoice_updated: "Invoice updated",
   invoice_cancelled: "Invoice cancelled",
   purchase_cancelled: "Purchase invoice cancelled",
+  purchase_updated: "Purchase invoice updated",
   item_created: "Item created",
   item_edited: "Item edited",
   item_deleted: "Item deleted",

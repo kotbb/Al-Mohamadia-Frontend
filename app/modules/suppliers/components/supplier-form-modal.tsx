@@ -130,18 +130,17 @@ export function SupplierFormModal({
           disabled={isSubmitting}
           autoComplete="off"
         />
-        {!isEdit ? (
-          <Input
-            name="supplierAmountOwed"
-            label={t("fieldOpeningAmountOwed")}
-            type="number"
-            min={0}
-            step="0.01"
-            value={amountOwed}
-            onChange={(event) => onAmountOwedChange(event.target.value)}
-            disabled={isSubmitting}
-          />
-        ) : null}
+        <Input
+          name="supplierAmountOwed"
+          label={isEdit ? t("fieldBalance") : t("fieldStartingBalance")}
+          type="number"
+          step="0.01"
+          required={isEdit}
+          hint={t("fieldBalanceHint")}
+          value={amountOwed}
+          onChange={(event) => onAmountOwedChange(event.target.value)}
+          disabled={isSubmitting}
+        />
         {error ? (
           <p
             className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger"

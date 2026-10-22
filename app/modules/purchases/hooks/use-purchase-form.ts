@@ -11,34 +11,38 @@ import { parsePositive } from "@/app/modules/shared/utils/form-numbers";
 import { moneyFieldString } from "@/app/modules/shared/utils/format-money";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   getSupplier,
   listSuppliers,
 } from "@/app/modules/suppliers/services/suppliers.service";
 import type { Supplier } from "@/app/modules/suppliers/types/suppliers.types";
-import { createPurchase } from "@/app/modules/purchases/services/purchases.service";
+import { createPurchase, updatePurchase } from "@/app/modules/purchases/services/purchases.service";
 import type {
   CreatePurchaseInvoiceInput,
   CreatePurchaseInvoiceLineInput,
   PurchaseLineFormState,
+  PurchaseInvoice,
 } from "@/app/modules/purchases/types/purchases.types";
 import { roundMoney } from "@/app/modules/shared/utils/invoice-math";
-import { listItems } from "@/app/modules/items/services/items.service";
+import { getItem, listItems } from "@/app/modules/items/services/items.service";
 import type { Item } from "@/app/modules/items/types/items.types";
 import { initialDimensions } from "@/app/modules/items/utils/dimension-defaults";
 import { roundMoneyAmount } from "@/app/modules/shared/utils/format-money";
+import { accountBalanceAfterInvoice, parseAccountPayment, splitInvoicePayment } from "@/app/modules/shared/utils/account-payment";
 
 const SEARCH_DEBOUNCE_MS = 300;
 
 export function usePurchaseForm(options?: UsePurchaseFormOptions) {
   const describeError = useApiErrorMessage();
+  const [editInvoice, setEditInvoice] = useState<PurchaseInvoice | null>(null);
   const [supplierId, setSupplierId] = useState<string | null>(
     options?.initialSupplierId ?? null,
   );
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(
     null,
   );
+  const [originalSupplier, setOriginalSupplier] = useState<Supplier | null>(null);
   const [allSuppliers, setAllSuppliers] = useState<Supplier[]>([]);
   const [allSuppliersLoading, setAllSuppliersLoading] = useState(true);
   const [supplierQuery, setSupplierQuery] = useState("");
@@ -66,7 +70,13 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
     const controller = new AbortController();
     listItems({ isActive: true }, controller.signal)
       .then((result) => {
-        setItems(result.filter((item) => item.pricingMode !== "free_amount"));
+        setItems((previous) => {
+          const merged = new Map(previous.map((item) => [item.id, item]));
+          for (const item of result) {
+            if (item.pricingMode !== "free_amount") merged.set(item.id, item);
+          }
+          return [...merged.values()];
+        });
         setItemsStatus("success");
         setItemsError(null);
       })
@@ -151,6 +161,35 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
     return map;
   }, [items]);
 
+  const initializeForEdit = useCallback(async (purchase: PurchaseInvoice) => {
+    const [supplier, loadedItems] = await Promise.all([
+      getSupplier(purchase.supplierId),
+      Promise.all([...new Set(purchase.lines.map((line) => line.itemId))].map((id) => getItem(id))),
+    ]);
+    setItems((previous) => {
+      const merged = new Map(previous.map((item) => [item.id, item]));
+      for (const item of loadedItems) merged.set(item.id, item);
+      return [...merged.values()];
+    });
+    setEditInvoice(purchase);
+    setSupplierId(supplier.id);
+    setSelectedSupplier(supplier);
+    setOriginalSupplier(supplier);
+    setLines(purchase.lines.map((line, index) => ({
+      key: `edit-${index}-${line.itemId}`,
+      itemId: line.itemId,
+      quantity: String(line.quantity),
+      unitCost: String(line.unitCost),
+      widthM: line.width == null ? "" : String(line.width),
+      lengthM: line.length == null ? "" : String(line.length),
+      thicknessM: line.thickness == null ? "" : String(line.thickness),
+      note: line.note ?? "",
+    })));
+    setPaidInput(String(purchase.paid));
+    setNotes(purchase.notes ?? "");
+    setSubmitError(null);
+  }, []);
+
   const lineTotals = useMemo(() => {
     return lines.map((line) => lineTotalForPurchaseLine(line, itemsById));
   }, [lines, itemsById]);
@@ -169,7 +208,12 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
   const remaining = useMemo(() => {
     return roundMoney(Math.max(0, total - paidValue));
   }, [total, paidValue]);
-  const totalDue = roundMoney(total + (selectedSupplier?.amountOwed ?? 0));
+  const originalRemainingInSelectedSupplier = editInvoice && editInvoice.supplierId === selectedSupplier?.id
+    ? editInvoice.remaining : 0;
+  const accountPaymentAmount = splitInvoicePayment(paidValue, total).accountPaymentAmount;
+  const accountBalance = selectedSupplier ? accountBalanceAfterInvoice(
+    selectedSupplier.amountOwed, remaining, accountPaymentAmount, originalRemainingInSelectedSupplier,
+  ) : undefined;
 
   function selectSupplier(supplier: Supplier) {
     setSupplierId(supplier.id);
@@ -292,6 +336,9 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
     if (!supplierId) {
       return t("validationSupplier");
     }
+    if (selectedSupplier && !selectedSupplier.isActive && selectedSupplier.id !== editInvoice?.supplierId) {
+      return t("validationSupplier");
+    }
     const filled = snapshotLines.filter((line) => line.itemId);
     if (filled.length === 0) return t("validationLines");
 
@@ -299,6 +346,7 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
       if (!line.itemId) continue;
       const item = itemsById.get(line.itemId);
       if (!item || item.pricingMode === "free_amount") return t("validationItem");
+      if (!item.isActive && !editInvoice?.lines.some((original) => original.itemId === line.itemId)) return t("validationItem");
       if (parsePositive(line.quantity) === null) return t("validationQuantity");
       if (parsePositive(line.unitCost) === null) return t("validationUnitCost");
       if (
@@ -325,9 +373,6 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
       if (!Number.isFinite(rawPaid) || rawPaid < 0) {
         return t("validationPaidNegative");
       }
-      if (rawPaid > roundMoney(snapshotTotal + (selectedSupplier?.amountOwed ?? 0))) {
-        return t("validationPaidExceedsTotal");
-      }
     }
 
     return null;
@@ -336,6 +381,11 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
   async function submit(opts: {
     t: (key: string) => string;
   }): Promise<string | null> {
+    if (isSubmitting) return null;
+    if (parseAccountPayment(paidInput) === null) {
+      setSubmitError(opts.t("validationPaidNegative"));
+      return null;
+    }
     const snapshotLines = lines.map((line) => ({
       ...line,
       unitCost: moneyFieldString(line.unitCost),
@@ -353,6 +403,7 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
       ),
     );
 
+    const snapshotPayment = splitInvoicePayment(snapshotPaid, snapshotTotal);
     setLines(snapshotLines);
     setPaidInput(snapshotPaidInput);
 
@@ -390,8 +441,8 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
     const payload: CreatePurchaseInvoiceInput = {
       supplierId,
       lines: payloadLines,
-      paid: roundMoney(Math.min(Number.isFinite(snapshotPaid) ? snapshotPaid : 0, snapshotTotal)),
-      existingDebtPayment: roundMoney(Math.max(0, (Number.isFinite(snapshotPaid) ? snapshotPaid : 0) - snapshotTotal)),
+      paid: snapshotPayment.paid,
+      accountPaymentAmount: snapshotPayment.accountPaymentAmount,
       notes: notes.trim() ? notes.trim() : undefined,
     };
 
@@ -399,10 +450,12 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
     setSubmitError(null);
 
     try {
-      const created = await createPurchase(payload);
-      return created.id;
+      const saved = editInvoice
+        ? await updatePurchase(editInvoice.id, { supplierId: payload.supplierId, lines: payload.lines, paid: payload.paid ?? 0, accountPaymentAmount: payload.accountPaymentAmount, notes: payload.notes })
+        : await createPurchase(payload);
+      return saved.id;
     } catch (e: unknown) {
-      const message = describeError(e, "Failed to create purchase invoice");
+      const message = describeError(e, editInvoice ? "Failed to update purchase invoice" : "Failed to create purchase invoice");
       setSubmitError(message);
       return null;
     } finally {
@@ -411,6 +464,8 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
   }
 
   function resetForm() {
+    setEditInvoice(null);
+    setOriginalSupplier(null);
     setSupplierId(null);
     setSelectedSupplier(null);
     setSupplierQuery("");
@@ -422,8 +477,11 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
   }
 
   return {
+    editInvoice,
+    initializeForEdit,
     supplierId,
     selectedSupplier,
+    originalSupplier,
     allSuppliers,
     allSuppliersLoading,
     supplierQuery,
@@ -450,13 +508,14 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
 
     paidInput,
     setPaidInput: handlePaidChange,
+    accountPaymentAmount,
+    accountBalance,
     notes,
     setNotes: handleNotesChange,
 
     total,
     paidValue,
     remaining,
-    totalDue,
 
     isSubmitting,
     submitError,

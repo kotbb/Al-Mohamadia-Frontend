@@ -4,6 +4,7 @@ export interface Supplier {
   phone: string | null;
   address: string | null;
   amountOwed: number;
+  financialSummary?: { totalInvoiced: number; totalPaid: number };
   isActive: boolean;
   isDeleted: boolean;
   createdAt?: string;
@@ -42,6 +43,7 @@ export interface CreateSupplierInput {
 }
 
 export interface UpdateSupplierInput {
+  amountOwed?: number;
   name?: string;
   phone?: string | null;
   address?: string;

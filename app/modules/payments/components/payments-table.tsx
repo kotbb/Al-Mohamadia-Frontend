@@ -5,6 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
 import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { PaymentMethodBadge } from "@/app/modules/payments/components/payment-method-badge";
+import { PaymentNotes } from "@/app/modules/shared/components/payment-notes";
 import type { Payment } from "@/app/modules/payments/types/payments.types";
 import { Badge } from "@/app/modules/shared/components/badge";
 import { EmptyState } from "@/app/modules/shared/components/empty-state";
@@ -155,7 +156,7 @@ export function PaymentsTable({
                   className="max-w-[14rem] truncate px-4 py-3 text-text-secondary"
                   title={payment.notes ?? ""}
                 >
-                  {payment.notes?.trim() ? payment.notes : "-"}
+                  <PaymentNotes notes={payment.notes} isAdditional={!payment.invoiceId && (Boolean(payment.sourceInvoiceId) || !payment.notes?.trim())} />
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
                   <Badge variant={payment.isReversed ? "danger" : "success"}>

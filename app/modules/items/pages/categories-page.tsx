@@ -136,7 +136,7 @@ export function CategoriesPage() {
         confirmLabel={confirmLabel}
         cancelLabel={t("modalCancel")}
         confirming={isConfirming}
-        tone={confirmKind === "activate" ? "primary" : "danger"}
+        tone={confirmKind === "activate" ? "success" : "danger"}
         onConfirm={() => void submitConfirm()}
         onCancel={closeConfirm}
       />

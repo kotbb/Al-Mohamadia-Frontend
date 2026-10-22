@@ -1,7 +1,7 @@
 "use client";
 
 import { isOptionalMobile, normalizeMobile } from "@/app/modules/shared/utils/egyptian-mobile";
-import { isMoneyAmount } from "@/app/modules/shared/utils/money-validation";
+import { isSignedMoneyAmount } from "@/app/modules/shared/utils/money-validation";
 import { useTranslations } from "next-intl";
 
 import type {
@@ -28,6 +28,7 @@ const SEARCH_DEBOUNCE_MS = 300;
 export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
   const describeError = useApiErrorMessage();
   const shared = useTranslations("shared");
+  const account = useTranslations("accountDetails");
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [totalDebt, setTotalDebt] = useState(0);
   const [debtorCount, setDebtorCount] = useState(0);
@@ -50,6 +51,7 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
   const [originalPhone, setOriginalPhone] = useState("");
   const [formAddress, setFormAddress] = useState("");
   const [formBalance, setFormBalance] = useState("");
+  const [originalBalance, setOriginalBalance] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -151,7 +153,8 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
     setFormPhone(customer.phone ?? "");
     setOriginalPhone(customer.phone ?? "");
     setFormAddress(customer.address ?? "");
-    setFormBalance("");
+    setFormBalance(String(customer.balance));
+    setOriginalBalance(customer.balance);
     setFormError(null);
     setIsFormOpen(true);
   }, []);
@@ -170,7 +173,7 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
       return;
     }
     if (!name) {
-      setFormError("Name is required");
+      setFormError(account("nameRequired"));
       return;
     }
 
@@ -179,19 +182,18 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
     setToast(null);
     try {
       const address = formAddress.trim();
+      const balanceValue = formMode === "create" && !formBalance.trim() ? undefined : Number(formBalance);
+      const balanceChanged = formMode === "create" || balanceValue !== originalBalance;
+      if (balanceValue !== undefined && (!formBalance.trim() || !isSignedMoneyAmount(balanceValue))) {
+        setFormError(account("invalidBalance"));
+        return;
+      }
       if (formMode === "create") {
-        const balanceRaw = formBalance.trim();
-        const balance = balanceRaw === "" ? undefined : Number(balanceRaw);
-        if (balance !== undefined && (!isMoneyAmount(balance))) {
-          setFormError(shared("validationNumbers"));
-          setIsSaving(false);
-          return;
-        }
         await createCustomer({
           name,
           phone: formPhone === originalPhone ? undefined : phone || null,
           address: address || undefined,
-          balance,
+          ...(balanceChanged && balanceValue !== undefined ? { balance: balanceValue } : {}),
         });
         setToast({ kind: "created", variant: "success" });
       } else if (editingId) {
@@ -199,6 +201,7 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
           name,
           phone: formPhone === originalPhone ? undefined : phone || null,
           address: address,
+          ...(balanceChanged && balanceValue !== undefined ? { balance: balanceValue } : {}),
         });
         setToast({ kind: "updated", variant: "success" });
       }
@@ -218,8 +221,10 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
     formPhone,
     originalPhone,
     shared,
+    account,
     formAddress,
     formBalance,
+    originalBalance,
     refresh,
     resetForm,
   ]);

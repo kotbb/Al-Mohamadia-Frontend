@@ -2,6 +2,7 @@
 
 import type { CustomerTarget } from "../types/use-record-payment.types";
 
+import { isMoneyAmount } from "@/app/modules/shared/utils/money-validation";
 import { useCallback, useState } from "react";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { roundMoneyAmount } from "@/app/modules/shared/utils/format-money";
@@ -68,17 +69,12 @@ export function useRecordPayment() {
     async (onSuccess?: (payment: Payment) => void): Promise<Payment | null> => {
       if (!customer) return null;
 
-      const numAmount = roundMoneyAmount(amount);
-      if (numAmount === null || numAmount <= 0) {
+      const numAmount = Number(amount);
+      if (!amount.trim() || !isMoneyAmount(numAmount) || numAmount <= 0) {
         setError("amountInvalid");
         return null;
       }
       setAmount(String(numAmount));
-
-      if (numAmount > customer.balance) {
-        setError("amountExceedsBalance");
-        return null;
-      }
 
       setIsSubmitting(true);
       setError(null);

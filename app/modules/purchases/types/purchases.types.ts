@@ -13,6 +13,7 @@ export interface PurchaseInvoiceLine {
 }
 
 export interface PurchaseInvoice {
+  accountPaymentAmount?: number;
   id: string;
   invoiceNumber: string;
   supplierId: string;
@@ -66,12 +67,15 @@ export interface CreatePurchaseInvoiceLineInput {
 }
 
 export interface CreatePurchaseInvoiceInput {
+  accountPaymentAmount?: number;
   supplierId: string;
   lines: CreatePurchaseInvoiceLineInput[];
   paid?: number;
   existingDebtPayment?: number;
   notes?: string;
 }
+
+export type UpdatePurchaseInvoiceInput = Omit<CreatePurchaseInvoiceInput, "existingDebtPayment" | "paid"> & { paid: number };
 
 export interface PurchaseLineFormState {
   key: string;

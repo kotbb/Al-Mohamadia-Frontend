@@ -17,7 +17,7 @@ export interface RowActionItem {
   id: string;
   label: string;
   onSelect: () => void;
-  tone?: "default" | "danger";
+  tone?: "default" | "success" | "danger";
   disabled?: boolean;
   title?: string;
 }
@@ -34,6 +34,7 @@ interface RowActionsMenuProps {
   items: RowActionItem[];
   disabled?: boolean;
   size?: "sm" | "default";
+  showLabel?: boolean;
 }
 
 interface MenuPosition {
@@ -46,6 +47,7 @@ export function RowActionsMenu({
   items,
   disabled = false,
   size = "sm",
+  showLabel = false,
 }: RowActionsMenuProps) {
   const menuId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -130,7 +132,7 @@ export function RowActionsMenu({
         ref={triggerRef}
         type="button"
         disabled={disabled}
-        className={`ds-focus-ring inline-flex ${size === "default" ? "h-11 w-11" : "h-8 w-8"} cursor-pointer items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary ${
+        className={`ds-focus-ring inline-flex ${showLabel ? "min-h-11 gap-2 border border-border px-3 text-sm font-medium" : size === "default" ? "h-11 w-11" : "h-8 w-8"} cursor-pointer items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary ${
           open ? "bg-surface-muted text-text-primary" : ""
         }`}
         aria-label={label}
@@ -139,6 +141,7 @@ export function RowActionsMenu({
         aria-controls={open ? menuId : undefined}
         onClick={() => setOpen((value) => !value)}
       >
+        {showLabel ? <span>{label}</span> : null}
         <KebabIcon />
       </button>
 
@@ -165,7 +168,9 @@ export function RowActionsMenu({
                   className={`ds-focus-ring flex ${size === "default" ? "min-h-11" : ""} w-full cursor-pointer items-center px-4 py-2.5 text-start text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                     item.tone === "danger"
                       ? "text-danger hover:bg-danger/10"
-                      : "text-text-primary hover:bg-surface-muted"
+                      : item.tone === "success"
+                        ? "text-success-action hover:bg-success/10"
+                        : "text-text-primary hover:bg-surface-muted"
                   }`}
                   onClick={() => {
                     if (item.disabled) return;
@@ -207,7 +212,7 @@ interface ConfirmDialogProps {
   cancelLabel: string;
   confirmingLabel?: string;
   confirming?: boolean;
-  tone?: "danger" | "primary";
+  tone?: "danger" | "primary" | "success";
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -242,7 +247,7 @@ export function ConfirmDialog({
           </Button>
           <Button
             type="button"
-            variant={tone === "danger" ? "danger" : "primary"}
+            variant={tone}
             disabled={confirming}
             onClick={onConfirm}
           >

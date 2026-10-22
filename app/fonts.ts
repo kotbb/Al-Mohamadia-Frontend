@@ -1,16 +1,18 @@
-import { Noto_Sans, Noto_Sans_Arabic } from "next/font/google";
+import localFont from "next/font/local";
 
-const notoSansArabic = Noto_Sans_Arabic({
+const notoSansArabic = localFont({
+  src: "./font-files/noto-sans-arabic.woff2",
   variable: "--font-noto-sans-arabic",
-  subsets: ["arabic"],
-  weight: ["400", "500", "600", "700"],
+  weight: "400 700",
+  style: "normal",
   display: "swap",
 });
 
-const notoSans = Noto_Sans({
+const notoSans = localFont({
+  src: "./font-files/noto-sans.woff2",
   variable: "--font-noto-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: "400 700",
+  style: "normal",
   display: "swap",
 });
 

@@ -37,12 +37,14 @@ import { getItem, listItems } from "@/app/modules/items/services/items.service";
 import type { Item } from "@/app/modules/items/types/items.types";
 import { initialDimensions } from "@/app/modules/items/utils/dimension-defaults";
 import { roundMoneyAmount } from "@/app/modules/shared/utils/format-money";
+import { accountBalanceAfterInvoice, parseAccountPayment, splitInvoicePayment } from "@/app/modules/shared/utils/account-payment";
+import type { UseInvoiceFormOptions } from "../types/use-invoice-form.types";
 
 const SEARCH_DEBOUNCE_MS = 300;
 
-export function useInvoiceForm() {
+export function useInvoiceForm(options?: UseInvoiceFormOptions) {
   const describeError = useApiErrorMessage();
-  const [type, setType] = useState<SalesInvoiceType>("cash_sale");
+  const [type, setType] = useState<SalesInvoiceType>("customer_sale");
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null,
@@ -65,13 +67,30 @@ export function useInvoiceForm() {
   const [mode, setMode] = useState<"create" | "edit">("create");
   const [invoiceId, setInvoiceId] = useState<string | null>(null);
   const [invoiceNumber, setInvoiceNumber] = useState<string | null>(null);
+  const [originalItemIds, setOriginalItemIds] = useState<string[]>([]);
 
   const [lines, setLines] = useState<InvoiceFormLine[]>([newLine()]);
   const [discountInput, setDiscountInput] = useState("0");
   const [paidInput, setPaidInput] = useState("0");
+  const [originalInvoice, setOriginalInvoice] = useState<SalesInvoice | null>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const initialCustomerId = options?.initialCustomerId;
+  useEffect(() => {
+    if (!initialCustomerId) return;
+    const controller = new AbortController();
+    setType("customer_sale");
+    getCustomer(initialCustomerId, controller.signal).then((customer) => {
+      if (controller.signal.aborted) return;
+      setCustomerId(customer.id);
+      setSelectedCustomer(customer);
+    }).catch((error: unknown) => {
+      if (!controller.signal.aborted) setSubmitError(describeError(error, "Failed to load customer"));
+    });
+    return () => controller.abort();
+  }, [initialCustomerId]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -112,6 +131,7 @@ export function useInvoiceForm() {
         controller.signal,
       )
         .then((result) => {
+          if (controller.signal.aborted) return;
           setCustomerResults(result.items);
         })
         .catch(() => {
@@ -187,12 +207,12 @@ export function useInvoiceForm() {
       if (!line.itemId || seen.has(line.itemId)) continue;
       seen.add(line.itemId);
       const item = itemsById.get(line.itemId);
-      if (item && !item.isActive) {
+      if (item && !item.isActive && !originalItemIds.includes(line.itemId)) {
         names.push(item.name);
       }
     }
     return names;
-  }, [lines, itemsById]);
+  }, [lines, itemsById, originalItemIds]);
 
   const lineTotals = useMemo(() => {
     return lines.map((line) => lineTotalForFormLine(line, itemsById));
@@ -200,11 +220,19 @@ export function useInvoiceForm() {
 
   const discountValue = parseNonNegative(discountInput) ?? 0;
   const paidValue = parseNonNegative(paidInput) ?? 0;
-  const totals = computeInvoiceTotals({
+  const enteredTotals = computeInvoiceTotals({
     lineTotals,
     discount: discountValue,
     paid: paidValue,
   });
+  const paymentParts = splitInvoicePayment(enteredTotals.paid, enteredTotals.net);
+  const totals = { ...enteredTotals, paid: paymentParts.paid, remaining: paymentParts.remaining };
+  const accountPaymentAmount = type === "customer_sale" ? paymentParts.accountPaymentAmount : 0;
+  const previousInvoiceRemaining = originalInvoice?.customerId === selectedCustomer?.id
+    ? originalInvoice?.remaining ?? 0 : 0;
+  const accountBalance = selectedCustomer ? accountBalanceAfterInvoice(
+    selectedCustomer.balance, totals.remaining, accountPaymentAmount, previousInvoiceRemaining,
+  ) : undefined;
 
   useEffect(() => {
     if (type === "cash_sale") {
@@ -228,6 +256,12 @@ export function useInvoiceForm() {
     setSelectedCustomer(customer);
     setCustomerQuery("");
     setCustomerResults([]);
+  }
+
+  function handleCustomerQueryChange(value: string) {
+    setCustomerQuery(value);
+    setCustomerResults([]);
+    setCustomersLoading(Boolean(value.trim()));
   }
 
   function clearCustomer() {
@@ -368,6 +402,7 @@ export function useInvoiceForm() {
     snapshotLines: InvoiceFormLine[],
     snapshotDiscount: number,
     snapshotPaid: number,
+    snapshotAccountPayment: number,
   ): CreateSalesInvoiceInput {
     const payloadLines = snapshotLines
       .filter((line) => line.itemId)
@@ -392,6 +427,7 @@ export function useInvoiceForm() {
       lines: payloadLines,
       discount: roundMoney(snapshotDiscount),
       paid: roundMoney(snapshotPaid),
+      accountPaymentAmount: type === "customer_sale" ? snapshotAccountPayment : undefined,
     };
   }
 
@@ -399,6 +435,11 @@ export function useInvoiceForm() {
     print: boolean;
     t: (key: string) => string;
   }): Promise<string | null> {
+    if (isSubmitting) return null;
+    if (type === "customer_sale" && parseAccountPayment(paidInput) === null) {
+      setSubmitError(options.t("validationCalculation"));
+      return null;
+    }
     if ([discountInput, ...(type === "customer_sale" ? [paidInput] : [])].some((value) => value.trim() && parseNonNegative(value) === null)) {
       setSubmitError(options.t("validationCalculation"));
       return null;
@@ -431,10 +472,12 @@ export function useInvoiceForm() {
         : paidRounded === null
           ? paidInput
           : String(paidRounded);
+    const snapshotPayment = splitInvoicePayment(snapshotPaid, preview.net);
+    const snapshotAccountPayment = type === "customer_sale" ? snapshotPayment.accountPaymentAmount : 0;
     const snapshotTotals = computeInvoiceTotals({
       lineTotals: snapshotLineTotals,
       discount: snapshotDiscount,
-      paid: snapshotPaid,
+      paid: snapshotPayment.paid,
     });
 
     setLines(snapshotLines);
@@ -444,7 +487,7 @@ export function useInvoiceForm() {
     const error = validationError(
       snapshotLines,
       snapshotDiscount,
-      snapshotPaid,
+      snapshotPayment.paid,
       snapshotTotals,
       options.t,
     );
@@ -458,12 +501,12 @@ export function useInvoiceForm() {
       if (mode === "edit" && invoiceId) {
         const updated = await updateSalesInvoice(
           invoiceId,
-          buildPayload(snapshotLines, snapshotDiscount, snapshotPaid),
+          buildPayload(snapshotLines, snapshotDiscount, snapshotPayment.paid, snapshotAccountPayment),
         );
         return updated.id;
       }
       const created = await createSalesInvoice(
-        buildPayload(snapshotLines, snapshotDiscount, snapshotPaid),
+        buildPayload(snapshotLines, snapshotDiscount, snapshotPayment.paid, snapshotAccountPayment),
       );
       return created.id;
     } catch (error: unknown) {
@@ -479,8 +522,10 @@ export function useInvoiceForm() {
   const initializeForEdit = useCallback(
     async (invoice: SalesInvoice, customer?: Customer | null) => {
       setMode("edit");
+      setOriginalInvoice(invoice);
       setInvoiceId(invoice.id);
       setInvoiceNumber(invoice.invoiceNumber);
+      setOriginalItemIds(invoice.lines.map((line) => line.itemId));
       setType(invoice.type);
       setCustomerId(invoice.customerId);
       setSelectedCustomer(customer ?? null);
@@ -516,9 +561,11 @@ export function useInvoiceForm() {
 
   const resetForm = useCallback(() => {
     setMode("create");
+    setOriginalInvoice(null);
     setInvoiceId(null);
     setInvoiceNumber(null);
-    setType("cash_sale");
+    setOriginalItemIds([]);
+    setType("customer_sale");
     setCustomerId(null);
     setSelectedCustomer(null);
     setCustomerQuery("");
@@ -543,7 +590,7 @@ export function useInvoiceForm() {
     allCustomers,
     allCustomersLoading,
     customerQuery,
-    setCustomerQuery,
+    setCustomerQuery: handleCustomerQueryChange,
     customerResults,
     customersLoading,
     selectCustomer,
@@ -565,6 +612,8 @@ export function useInvoiceForm() {
     setDiscountInput,
     paidInput,
     setPaidInput,
+    accountPaymentAmount,
+    accountBalance,
     totals,
     isSubmitting,
     submitError,

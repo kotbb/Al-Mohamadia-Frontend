@@ -4,7 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import type { InvoiceFormLine } from "@/app/modules/invoices/types/use-invoice-form.types";
 import type { DimensionName } from "@/app/modules/items/types/items.types";
 import type { Item } from "@/app/modules/items/types/items.types";
-import { CategorizedItemOptions } from "@/app/modules/items/components/categorized-item-options";
+import { InvoiceItemCombobox } from "@/app/modules/invoices/components/invoice-item-combobox";
 import {
   formatMoney,
   roundMoneyAmount,
@@ -48,19 +48,12 @@ export function InvoiceLineRow({
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-border bg-surface-muted/30 p-3">
       <div className={`grid items-end gap-2 sm:grid-cols-2 ${isFreeAmount ? "lg:grid-cols-[minmax(0,2fr)_minmax(7rem,1fr)_minmax(0,1.5fr)_minmax(6.5rem,1fr)_minmax(4rem,.5fr)]" : "lg:grid-cols-[minmax(0,2fr)_minmax(4rem,.65fr)_minmax(5.5rem,1fr)_minmax(0,1.5fr)_minmax(6.5rem,1fr)_6rem]"}`}>
-        <label className="flex min-w-0 w-full flex-col gap-1 sm:col-span-2 lg:col-span-1">
-          <span className="text-sm font-medium text-text-secondary">
-            {t("fieldItem")}
-          </span>
-          <select
-            className="ds-focus-input min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm text-text-primary"
-            value={line.itemId}
-            onChange={(event) => onSelectItem(event.target.value)}
-          >
-            <option value="">{t("fieldItemPlaceholder")}</option>
-            <CategorizedItemOptions items={items} locale={locale} />
-          </select>
-        </label>
+        <InvoiceItemCombobox
+          items={items}
+          value={line.itemId}
+          name={`item-${line.key}`}
+          onSelect={onSelectItem}
+        />
 
         {!isFreeAmount && <Input
           density="compact"

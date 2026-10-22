@@ -6,7 +6,6 @@ import { listCustomers } from "@/app/modules/customers/services/customers.servic
 import type { Customer } from "@/app/modules/customers/types/customers.types";
 import {
   formatMoney,
-  roundMoneyAmount,
 } from "@/app/modules/shared/utils/format-money";
 import type { PaymentMethod } from "@/app/modules/payments/types/payments.types";
 import { Button } from "@/app/modules/shared/components/button";
@@ -58,15 +57,16 @@ export function RecordPaymentModal({
 }: RecordPaymentModalProps) {
   const t = useTranslations("payments");
   const locale = useLocale();
+  const account = useTranslations("accountDetails");
   const currency = t("currency");
 
-  const [debtorCustomers, setDebtorCustomers] = useState<Customer[]>([]);
-  const [isLoadingDebtors, setIsLoadingDebtors] = useState(false);
+  const [availableCustomers, setAvailableCustomers] = useState<Customer[]>([]);
+  const [isLoadingAccounts, setIsLoadingAccounts] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Customer[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  // Load list of customers with outstanding debt when modal opens without a customer
+  // Load active customers when selecting an account.
   useEffect(() => {
     if (!open || customer) {
       setSearchQuery("");
@@ -75,19 +75,19 @@ export function RecordPaymentModal({
     }
 
     const controller = new AbortController();
-    setIsLoadingDebtors(true);
+    setIsLoadingAccounts(true);
     listCustomers(
-      { isActive: true, hasDebt: true, page: 1, limit: 100 },
+      { isActive: true, page: 1, limit: 100 },
       controller.signal,
     )
       .then((res) => {
-        setDebtorCustomers(res.items);
+        setAvailableCustomers(res.items);
       })
       .catch(() => {
-        if (!controller.signal.aborted) setDebtorCustomers([]);
+        if (!controller.signal.aborted) setAvailableCustomers([]);
       })
       .finally(() => {
-        if (!controller.signal.aborted) setIsLoadingDebtors(false);
+        if (!controller.signal.aborted) setIsLoadingAccounts(false);
       });
 
     return () => controller.abort();
@@ -106,7 +106,7 @@ export function RecordPaymentModal({
     const timer = window.setTimeout(() => {
       setIsSearching(true);
       listCustomers(
-        { q, isActive: true, hasDebt: true, page: 1, limit: 10 },
+        { q, isActive: true, page: 1, limit: 10 },
         controller.signal,
       )
         .then((res) => {
@@ -130,12 +130,7 @@ export function RecordPaymentModal({
 
   let errorMessage: string | null = null;
   if (error === "amountInvalid") {
-    errorMessage = t("amountInvalid");
-  } else if (error === "amountExceedsBalance" && customer) {
-    errorMessage = t("amountExceedsBalance", {
-      balance: formatMoney(customer.balance, locale),
-      currency,
-    });
+    errorMessage = account("invalidPaymentAmount");
   } else if (error) {
     errorMessage = error;
   }
@@ -182,10 +177,7 @@ export function RecordPaymentModal({
               <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-text-secondary">
                 {customer.phone ? <span>{customer.phone}</span> : null}
                 <span className="font-semibold text-primary">
-                  {t("currentBalance", {
-                    amount: formatMoney(customer.balance, locale),
-                    currency,
-                  })}
+                  {account(customer.balance < 0 ? "customerCredit" : "currentBalance")}: {formatMoney(customer.balance, locale)} {currency}
                 </span>
               </div>
             </div>
@@ -213,7 +205,7 @@ export function RecordPaymentModal({
                   className="ds-focus-input min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm text-text-primary"
                   value=""
                   onChange={(e) => {
-                    const found = debtorCustomers.find(
+                    const found = availableCustomers.find(
                       (c) => c.id === e.target.value,
                     );
                     if (found && onSelectCustomer) {
@@ -226,14 +218,14 @@ export function RecordPaymentModal({
                       setSearchQuery("");
                     }
                   }}
-                  disabled={isLoadingDebtors || isSubmitting}
+                  disabled={isLoadingAccounts || isSubmitting}
                 >
                   <option value="">
-                    {isLoadingDebtors
+                    {isLoadingAccounts
                       ? t("loadingCustomers")
                       : t("selectCustomerPlaceholder")}
                   </option>
-                  {debtorCustomers.map((c) => (
+                  {availableCustomers.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name} ({formatMoney(c.balance, locale)} {currency})
                     </option>
@@ -284,7 +276,6 @@ export function RecordPaymentModal({
                               {c.name}
                             </span>
                             <span className="text-xs text-text-secondary">
-                              {c.phone ? `${c.phone} • ` : ""}
                               <strong className="text-primary font-medium">
                                 {formatMoney(c.balance, locale)} {currency}
                               </strong>
@@ -312,23 +303,13 @@ export function RecordPaymentModal({
           <Input
             name="paymentAmount"
             type="number"
-            step="any"
+            step="0.01"
             min="0.01"
-            max={
-              customer && customer.balance > 0
-                ? String(customer.balance)
-                : undefined
-            }
             label={t("fieldAmount", { currency })}
             value={amount}
             onChange={(e) => onAmountChange(e.target.value)}
-            onBlur={() => {
-              const rounded = roundMoneyAmount(amount);
-              if (rounded === null) return;
-              onAmountChange(String(rounded));
-            }}
             disabled={isSubmitting || !customer}
-            placeholder={customer ? String(customer.balance) : ""}
+            placeholder="0.00"
             required
           />
         </div>

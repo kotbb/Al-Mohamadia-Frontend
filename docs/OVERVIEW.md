@@ -81,9 +81,9 @@ flowchart LR
    dashboard (or the first permitted route). Super admin can manage admin
    accounts; admins cannot.
 2. **Sell** — Create cash or customer invoice, multi-line items (piece, m³, or مبلغ حر amount), discount, paid/remaining → save / save & print → A4 PDF or A5-width PNG; share PDF via a URL-only WhatsApp message using the existing public receipt link, or share PNG through the system share sheet or WhatsApp paste/download fallback.
-3. **Collect** — Record standalone payments against existing customer debt.
-4. **Restock** — Purchase invoices from suppliers (dedicated creation page, view details); stock up, amount owed up.
-5. **Settle** — Record standalone debt payments to suppliers.
+3. **Collect** — Record standalone customer payments for debt settlement or advance credit, at any current balance.
+4. **Restock** — Create/edit purchase invoices on dedicated pages; reconcile stock, supplier debt, and the invoice payment.
+5. **Settle** — Record standalone supplier payments, including advance credit.
 6. **Control** — Manual جرد adjustments, low-stock flags, price history,
    read-only audit log.
 
@@ -100,7 +100,7 @@ flowchart LR
 | Area | Purpose |
 |------|---------|
 | Sales invoices | Cash / customer sale, lines, discount, paid/remaining, cancel, PDF / WhatsApp *(Phase 4 — live)* |
-| Customer payments | Standalone debt payments + payments captured on new sales, debtor customer picker *(Phase 5 — live)* |
+| Customer payments | Standalone debt/advance payments + payments captured on sales create/edit, active customer picker *(Phase 5 — live)* |
 | Dashboard | Today's sales / gross profit / collected / invoice count, debt totals, selected-period sales and gross profit, period chart, top items, "فاتورة جديدة" *(Phase 8 — live)* |
 
 ### Stock & catalog
@@ -109,8 +109,8 @@ flowchart LR
 |------|---------|
 | Items & pricing | Categories, items, per-piece / per-m³ / مبلغ حر; cost, unit price and price history for stocked items *(Phase 2 — live)* |
 | Inventory | Stock list, low/negative stock flags, manual جرد, inventory valuation at cost & selling *(Phase 7 — live)* |
-| Purchases | Restock invoices from suppliers; page-based creation and view-only detail *(Phase 6 — live)* |
-| Supplier payments | Standalone debt payments to suppliers + payments captured on purchases, debtor supplier picker *(Phase 6 — live)* |
+| Purchases | Restock invoices from suppliers; dedicated create/edit pages and detail *(Phase 6 — live)* |
+| Supplier payments | Standalone debt/advance payments + payments captured on purchases, active supplier picker *(Phase 6 — live)* |
 
 ### People & trust
 
@@ -277,7 +277,7 @@ API: [Backend PHASES.md — Phase 8](../../Al-Mohamadia-Backend/docs/PHASES.md#p
 
 Invoice filters keep the last successful table and total visible during refresh, with an Updating indicator. Row actions and pagination are disabled until the selected filters load successfully. Refresh failures retain the previous results with a retry message; aborted requests cannot overwrite newer results.
 
-Sales create/edit and purchase create use compact desktop line rows, a second row for meter dimensions, and one dashed Add line button below the rows. Controls stack on mobile and keep 44px touch targets.
+Sales and purchase create/edit use compact desktop line rows, a second row for meter dimensions, and one dashed Add line button below the rows. Controls stack on mobile and keep 44px touch targets.
 
 ## Related repositories
 
@@ -307,8 +307,7 @@ preserving legacy values. New/changed phones must be Egyptian mobiles starting
 with 010/011/012/015 (11 local digits), or the equivalent +20 form. Landlines and
 0020 input are rejected. Merge dialogs offer an explicit phone
 override checkbox; unchecked preserves the target phone, checked with blank
-input clears it. Missing phones are omitted from selector subtitles and shown
-as a dash in list/details.
+input clears it. Customer search choices show names only; supplier selectors may include contact data. Missing phones display as a dash in list contact columns. Customer/supplier detail pages omit contact displays while Edit preserves contact management.
 
 Items store `dimensionDefaults: { thickness: number[], width: number[], length: number[] }`
 in meters. Creation/editing supports multiple values per axis, validates positive
@@ -346,17 +345,17 @@ all business logic or ownership decisions correct.
 
 ### Saved dimension choices from invoices
 
-Sales create/edit and purchase create offer a dropdown for every dimension, including empty and single presets. The final Add value action saves a positive meter value for future invoices through POST /items/:id/dimension-defaults; custom typing stays local. Successful additions select the current value and merge sorted choices across the form. Late responses cannot update switched or removed lines.
+Sales and purchase create/edit offer a dropdown for every dimension, including empty and single presets. The final Add value action saves a positive meter value for future invoices through POST /items/:id/dimension-defaults; custom typing stays local. Successful additions select the current value and merge sorted choices across the form. Late responses cannot update switched or removed lines.
 
 Inventory retains eight columns and its existing actions inside compact category tables. Counts describe the loaded page. See [the current workflow checklist](#manual-verification-current-workflows).
 
 ## Current export and loading flows
 
-Invoice editing uses `/invoices/:id/edit`; Save opens details and Save & Print opens `/invoices/:id/export`. Export starts with PNG A5, with PDF A4, price visibility, print and download controls. PNG sharing uses supported browser file sharing or copy/download fallback; PDF sharing sends the public receipt link. Format-specific yellow print guidance stays outside the exported receipt. Public URLs use the Arabic PDF guidance and standard primary/outline buttons.
+Sales editing uses `/invoices/:id/edit` with Save Changes and a back link to the invoices list; sales creation retains Save & Print to open `/invoices/:id/export`. Purchase editing uses `/purchases/:id/edit`, reconciles stock, supplier debt and its linked payment, and leaves standalone older-debt payments with their original supplier. Export starts with PNG A5, with PDF A4, price visibility, print and download controls. PNG sharing uses supported browser file sharing or copy/download fallback; PDF sharing sends the public receipt link. Format-specific yellow print guidance stays outside the exported receipt. Public URLs use the Arabic PDF guidance and standard primary/outline buttons.
 
 Route/auth loading uses shared loading surfaces. Localized/global fallback pages cover errors and unknown routes. Shared numeric inputs prevent mouse-wheel value changes while focused.
 
-The operating-expense feature is retired. The backend retains historical expense audit entries. Expense and category collections are removed only by the explicit backend cleanup command: first `npm run cleanup:expenses` for counts, then `npm run cleanup:expenses -- --apply --confirm=DELETE-EXPENSE-DATA` against the intended database.
+The operating-expense feature is retired. The backend retains historical expense audit entries. No cleanup command is shipped; existing expense/category collections remain untouched unless a separate maintenance operation is reviewed and explicitly run.
 
 ## Row navigation and invoice presentation
 
@@ -402,3 +401,25 @@ Run `npm run test:forms`, architecture checks, TypeScript and the production
 build for automated verification. Backend API regressions cover persisted
 pricing, stock reversal and validation. No data reset or migration is required
 for these UI checks.
+
+
+### Account balance and payment workflow
+
+Customer/supplier detail pages show three KPIs: lifetime net invoice totals, active payments, and signed current balance, followed by separate invoice and payment histories. Create accepts an optional starting Balance. Edit shows the actual current Balance and saves an intentional correction directly, with old/new amounts and the difference recorded automatically in the same transaction. Corrections do not change invoices, payments, or their totals. Negative balances represent credit. There is no separate opening balance, legacy derivation, migration, or backfill; existing database records are untouched.
+
+Invoice creation and editing expose one **Paid amount** field. The form caps the invoice payment at net, keeps remaining at zero when overpaid, and automatically records the difference as an additional account payment, explained inline. The resulting account debt/credit preview remains visible. Saved invoice details, modal, print/PDF and public receipt show the combined paid total and, when an origin-linked extra exists, a parenthesized invoice-plus-previous-debt breakdown; the additional amount reduces account debt or creates advance credit. It is recorded in payment history and remains active if that invoice is edited, reassigned, or cancelled. Cancel it separately when necessary. Standalone payments can also create credit. Existing credit offsets future account debt without changing individual invoice settlement.
+
+Sales creation defaults to Customer Sale, with a single searchable customer selection field rather than separate search and select controls.
+
+
+Additional account payments now retain source-invoice provenance (`Payment.sourceInvoiceId`, `SupplierPayment.sourcePurchaseInvoiceId`) separately from lifecycle links. Invoice/public responses expose active same-party `accountPaymentAmount`; the UI combines it with invoice `paid` for display only. Earlier payments without provenance are not inferred or backfilled from matching timestamps/amounts. Selected customers use the same muted summary panel as suppliers and a Change customer action to reopen the single search dropdown.
+
+### Sales selection and name-only customer lookup
+
+Customer searches on sales creation, customer management, and customer payments match names only. The shared customer API no longer searches phone numbers; contact editing is unchanged. Sales item rows now have one searchable combobox matching item or category names, with category headings grouping their items and keyboard selection. Paid amount comes before Discount in locale reading order.
+
+Manual checks (English/Arabic, light/dark, desktop/mobile): search customers by name and confirm a phone-only query does not match; search items by item/category, choose using mouse/touch or arrows/Enter, check category headings, no-results and Escape/blur, and confirm reopening or reselecting the same item preserves the line price/dimensions. Verify the swapped Paid/Discount order and unchanged overpayment calculation. Browser verification remains user-run.
+
+### Bundled production fonts
+
+`app/fonts.ts` loads the bundled Noto Sans Arabic / Noto Sans variable WOFF2 files through `next/font/local`, preserving both CSS variables and weights 400–700. Builds do not fetch Google Fonts. Include `app/font-files/` and its license notices when committing or uploading for Vercel/Docker. Asset provenance is documented in [the font README](../app/font-files/README.md).

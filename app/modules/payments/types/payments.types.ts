@@ -11,6 +11,7 @@ export interface Payment {
   id: string;
   customerId: string | null;
   invoiceId: string | null;
+  sourceInvoiceId?: string | null;
   amount: number;
   method: PaymentMethod;
   notes: string | null;

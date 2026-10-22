@@ -149,9 +149,6 @@ export function PaymentsFilters({
                   <span className="font-medium text-text-primary">
                     {c.name}
                   </span>
-                  <span className="text-xs text-text-secondary">
-                    {c.phone || ""}
-                  </span>
                 </button>
               ))}
             </div>

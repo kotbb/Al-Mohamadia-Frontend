@@ -8,3 +8,7 @@ export interface InvoiceFormLine {
   length: string;
   note: string;
 }
+
+export interface UseInvoiceFormOptions {
+  initialCustomerId?: string | null;
+}

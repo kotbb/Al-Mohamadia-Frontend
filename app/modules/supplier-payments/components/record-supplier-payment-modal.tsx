@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
   formatMoney,
-  roundMoneyAmount,
 } from "@/app/modules/shared/utils/format-money";
 import { listSuppliers } from "@/app/modules/suppliers/services/suppliers.service";
 import type { Supplier } from "@/app/modules/suppliers/types/suppliers.types";
@@ -58,10 +57,11 @@ export function RecordSupplierPaymentModal({
 }: RecordSupplierPaymentModalProps) {
   const t = useTranslations("supplierPayments");
   const locale = useLocale();
+  const account = useTranslations("accountDetails");
   const currency = t("currency");
 
-  const [debtorSuppliers, setDebtorSuppliers] = useState<Supplier[]>([]);
-  const [isLoadingDebtors, setIsLoadingDebtors] = useState(false);
+  const [availableSuppliers, setAvailableSuppliers] = useState<Supplier[]>([]);
+  const [isLoadingAccounts, setIsLoadingAccounts] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Supplier[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -75,19 +75,19 @@ export function RecordSupplierPaymentModal({
     }
 
     const controller = new AbortController();
-    setIsLoadingDebtors(true);
+    setIsLoadingAccounts(true);
     listSuppliers(
-      { isActive: true, hasDebt: true, page: 1, limit: 100 },
+      { isActive: true, page: 1, limit: 100 },
       controller.signal,
     )
       .then((res) => {
-        setDebtorSuppliers(res.items);
+        setAvailableSuppliers(res.items);
       })
       .catch(() => {
-        if (!controller.signal.aborted) setDebtorSuppliers([]);
+        if (!controller.signal.aborted) setAvailableSuppliers([]);
       })
       .finally(() => {
-        if (!controller.signal.aborted) setIsLoadingDebtors(false);
+        if (!controller.signal.aborted) setIsLoadingAccounts(false);
       });
 
     return () => controller.abort();
@@ -106,7 +106,7 @@ export function RecordSupplierPaymentModal({
     const timer = window.setTimeout(() => {
       setIsSearching(true);
       listSuppliers(
-        { q, isActive: true, hasDebt: true, page: 1, limit: 10 },
+        { q, isActive: true, page: 1, limit: 10 },
         controller.signal,
       )
         .then((res) => {
@@ -130,12 +130,7 @@ export function RecordSupplierPaymentModal({
 
   let errorMessage: string | null = null;
   if (error === "amountInvalid") {
-    errorMessage = t("amountInvalid");
-  } else if (error === "amountExceedsDebt" && supplier) {
-    errorMessage = t("amountExceedsDebt", {
-      debt: formatMoney(supplier.amountOwed, locale),
-      currency,
-    });
+    errorMessage = account("invalidPaymentAmount");
   } else if (error) {
     errorMessage = error;
   }
@@ -182,10 +177,7 @@ export function RecordSupplierPaymentModal({
               <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-text-secondary">
                 {supplier.phone ? <span>{supplier.phone}</span> : null}
                 <span className="font-semibold text-primary">
-                  {t("currentDebt", {
-                    amount: formatMoney(supplier.amountOwed, locale),
-                    currency,
-                  })}
+                  {account(supplier.amountOwed < 0 ? "supplierCredit" : "currentBalance")}: {formatMoney(supplier.amountOwed, locale)} {currency}
                 </span>
               </div>
             </div>
@@ -213,7 +205,7 @@ export function RecordSupplierPaymentModal({
                   className="ds-focus-input min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm text-text-primary"
                   value=""
                   onChange={(e) => {
-                    const found = debtorSuppliers.find(
+                    const found = availableSuppliers.find(
                       (s) => s.id === e.target.value,
                     );
                     if (found && onSelectSupplier) {
@@ -226,14 +218,14 @@ export function RecordSupplierPaymentModal({
                       setSearchQuery("");
                     }
                   }}
-                  disabled={isLoadingDebtors || isSubmitting}
+                  disabled={isLoadingAccounts || isSubmitting}
                 >
                   <option value="">
-                    {isLoadingDebtors
+                    {isLoadingAccounts
                       ? t("loadingSuppliers")
                       : t("selectSupplierPlaceholder")}
                   </option>
-                  {debtorSuppliers.map((s) => (
+                  {availableSuppliers.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name} ({formatMoney(s.amountOwed, locale)} {currency})
                     </option>
@@ -312,23 +304,13 @@ export function RecordSupplierPaymentModal({
           <Input
             name="paymentAmount"
             type="number"
-            step="any"
+            step="0.01"
             min="0.01"
-            max={
-              supplier && supplier.amountOwed > 0
-                ? String(supplier.amountOwed)
-                : undefined
-            }
             label={t("fieldAmount", { currency })}
             value={amount}
             onChange={(e) => onAmountChange(e.target.value)}
-            onBlur={() => {
-              const rounded = roundMoneyAmount(amount);
-              if (rounded === null) return;
-              onAmountChange(String(rounded));
-            }}
             disabled={isSubmitting || !supplier}
-            placeholder={supplier ? String(supplier.amountOwed) : ""}
+            placeholder="0.00"
             required
           />
         </div>

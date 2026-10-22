@@ -157,6 +157,7 @@ export function CategoriesList({
                     id: "activate",
                     label: t("activate"),
                     onSelect: () => onActivate(category),
+                    tone: "success",
                   },
               {
                 id: "delete",

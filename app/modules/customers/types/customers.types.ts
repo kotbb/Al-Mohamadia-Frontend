@@ -4,6 +4,7 @@ export interface Customer {
   phone: string | null;
   address: string | null;
   balance: number;
+  financialSummary?: { totalInvoiced: number; totalPaid: number };
   isActive: boolean;
   isDeleted: boolean;
   createdAt?: string;
@@ -42,6 +43,7 @@ export interface CreateCustomerInput {
 }
 
 export interface UpdateCustomerInput {
+  balance?: number;
   name?: string;
   phone?: string | null;
   address?: string;

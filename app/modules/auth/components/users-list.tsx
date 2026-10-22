@@ -158,6 +158,7 @@ export function UsersList({
                     id: "activate",
                     label: t("activate"),
                     onSelect: () => onActivate(user),
+                    tone: "success",
                   },
               {
                 id: "delete",

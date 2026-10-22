@@ -52,18 +52,21 @@ lib/
 
 ### Customers (`/customers`)
 
-- List, search, and filter by debt or active status
+- List, search by customer name only, and filter by debt or active status
 - Create, edit, and soft-delete customers
-- Customer detail with balance (مديونية)
+- Detail with three lifetime KPIs (net invoiced, active payments, current debt/credit), separate paginated invoice/payment histories, and header actions
+- Optional starting balance on create; actual signed current balance editable with automatic adjustment auditing
 - Merge duplicate customers
 - Optional Egyptian mobile field with fixed Egypt/+20 prefix, automatic spacing, a ten-digit limit and persistent generic guidance; errors appear only after a submit attempt, and existing phones can be cleared
 
 ### Sales invoices (`/invoices`)
 
 - Create and update invoices with real-time stock and customer debt reconciliation
-- Cash or customer sale, with piece, cubic-meter, or مبلغ حر amount-only lines
-- Discount, paid, and remaining
-- Dedicated creation and editing pages with compact rows and category-grouped item choices
+- Customer Sale by default, or Cash Sale, with piece, cubic-meter, or free amount-only lines
+- One searchable customer field with name-only lookup and a selected-account debt/credit panel
+- One Paid amount field before Discount; excess above invoice net becomes an independent account payment and remaining stays zero
+- Payment allocation and resulting account debt/credit preview; details, modal, receipts and exports show combined paid with a conditional invoice/previous-debt breakdown
+- Dedicated creation/editing pages with compact rows and item/category search inside a grouped dropdown
 - Meter dimensions for piece and cubic items; single defaults auto-fill, multiple defaults offer editable choices
 - Save a new dimension preset inline or type a custom value without saving it
 - Saving presets preserves other line fields; failed entries remain available for retry
@@ -79,28 +82,32 @@ lib/
 
 ### Customer payments (`/payments`)
 
-- Record a payment against an invoice or against standing debt
+- Record standalone payments for active customers with debt, zero balance, or credit; no debt-based maximum
+- Invoice-linked payments are captured through invoice create/edit; independent extras stay separate in history
+- Customer search matches names only; additional-payment notes identify previous-debt payments
 - List and cancel payments
 
 ### Suppliers (`/suppliers`)
 
 - List, search, and filter suppliers
 - Create, edit, and soft-delete suppliers
-- Supplier detail with amount owed
+- Detail with three lifetime KPIs (purchases, active payments, current debt/credit) and separate paginated purchase/payment histories
+- Optional starting balance on create; actual signed current balance editable with automatic adjustment auditing
 - Merge duplicate suppliers
 - Optional Egyptian mobile numbers with the shared Egypt/+20 field
 
 ### Purchases (`/purchases`)
 
-- Create purchases on a dedicated page (stock and amount owed go up)
+- Create and edit purchases on dedicated pages with stock, supplier debt, and linked-payment reconciliation
+- One Paid amount field splits invoice payment from independent excess; preview resulting supplier debt/credit
 - Category-grouped items, meter dimensions, and inline saved dimension defaults
 - Purchase list and detail
 - Cancel a purchase
 
 ### Supplier payments (`/supplier-payments`)
 
-- Record a payment to a supplier
-- List and cancel payments
+- Record standalone payments to active suppliers at any balance, including advance credit
+- List and cancel payments; cancelling an invoice preserves independent extra account payments
 
 ### Inventory (`/inventory`)
 
@@ -136,6 +143,10 @@ lib/
 - next-intl (English and Arabic)
 - Recharts for the dashboard
 - Native `fetch` (no Axios)
+
+## Bundled fonts and Vercel builds
+
+Noto Sans Arabic and Noto Sans are bundled in `app/font-files/` and loaded through `next/font/local` in `app/fonts.ts`. This preserves the existing font variables and weights without downloading Google Fonts during a production build. Include the WOFF2 assets and their SIL OFL license files in source control and deployment uploads. See [font sources and licenses](app/font-files/README.md).
 
 ## Prerequisites
 
@@ -225,6 +236,7 @@ Unauthenticated users are sent to `/login`. The **Users** screen is `super_admin
 | `/purchases`               | Both        | Purchase list       |
 | `/purchases/new`           | Both        | New purchase        |
 | `/purchases/:id`           | Both        | Purchase detail     |
+| `/purchases/:id/edit`      | Both        | Edit saved purchase |
 | `/supplier-payments`       | Both        | Supplier payments   |
 | `/inventory`               | Both        | Stock levels        |
 | `/items`                   | Both        | Item list           |

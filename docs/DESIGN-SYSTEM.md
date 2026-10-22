@@ -86,6 +86,11 @@ Practically, this means: a neutral canvas, one confident brand color, four disci
 | `danger`  | `#C13B2E` | `#E27567` | negative stock, cancelled invoices, critical/blocked balances, destructive actions |
 | `info`    | `#2E6FA6` | `#79ADD9` | neutral system information                                                         |
 
+Activation actions use `success-action` (`#267344` light, `#5FBB80` dark) with
+`success-action-foreground` (white light, dark ink dark). This stronger green
+keeps button labels readable while the regular `success` token remains for
+status badges and text.
+
 ### Usage rules
 
 - `primary` is used **only** for actions and navigation state — never for a status badge, never to indicate "this is important information" (that's typography/size's job).
@@ -226,7 +231,7 @@ Two tiers, sharing the same token scale — only the values assigned to spacing/
 | Form field vertical spacing | 16px                                           |
 | Section spacing             | 24–32px                                        |
 
-**Invoice forms:** Sales create/edit and purchase create use compact horizontal line layouts on desktop: item, quantity, price/cost, note, total, remove. Meter dimensions occupy a second row for all selected items; dimensions are optional for piece-priced items and required for cubic items. Multiple presets offer editable choices; single presets auto-fill. Fields stack on mobile. Inputs and line action buttons retain a 44px minimum height, labels are 14px, line padding is 12px, and line gaps are 8px. A single dashed Add line button sits below the rows at the logical end of the card. Form headers and customer/supplier sections use reduced spacing.
+**Invoice forms:** Sales and purchase create/edit use compact horizontal line layouts on desktop: item, quantity, price/cost, note, total, remove. Meter dimensions occupy a second row for all selected items; dimensions are optional for piece-priced items and required for cubic items. Multiple presets offer editable choices; single presets auto-fill. Fields stack on mobile. Inputs and line action buttons retain a 44px minimum height, labels are 14px, line padding is 12px, and line gaps are 8px. A single dashed Add line button sits below the rows at the logical end of the card. Form headers and customer/supplier sections use reduced spacing.
 
 **Comfortable is required for:** Any payment-entry workflow; any touch-primary device (tablet or touchscreen POS at the counter); all standard day-to-day workflows unless a screen is explicitly opted into Compact. Invoice forms retain comfortable touch targets within their compact layout.
 
@@ -353,7 +358,7 @@ One neutral, warm-tinted foundation (background/surface/border/text). One brand 
 
 ### Typography
 
-Noto Sans Arabic paired with Noto Sans, loaded through `app/fonts.ts`, for Arabic and Latin/numeral content. Western tabular digits throughout. Four-weight system (400/500/600/700), disciplined type scale from 12px to 28px, generous 1.7 line-height for Arabic body text.
+Noto Sans Arabic paired with Noto Sans, bundled in `app/font-files/` and loaded through `next/font/local` in `app/fonts.ts` (no build-time Google Fonts requests), for Arabic and Latin/numeral content. Western tabular digits throughout. Four-weight system (400/500/600/700), disciplined type scale from 12px to 28px, generous 1.7 line-height for Arabic body text.
 
 ### Density
 
@@ -429,3 +434,17 @@ required EGP amount and an optional note, with no quantity or unit-price input.
 - Export/public print notice: yellow warning tokens, icon plus explanatory text,
   outside the captured invoice and hidden on print. Public receipts use Arabic
   PDF guidance. Download is primary brown; Print is the standard outline action.
+
+
+## Account details and automatic excess payments
+
+Use a compact header with account name/back navigation, one primary New invoice action, secondary Record payment/Edit, with no Account actions button. Activation/deletion remain on list pages. Do not display contact information or merge controls on details. Three financial KPI cards use existing tokens: lifetime net invoices, active payments, current debt/credit. Grid is three columns on desktop, one on narrow screens. Create/edit uses one Balance field: optional starting amount on create, actual current amount on edit. Signed amounts support credit; an unchanged balance is omitted on contact-only saves. Balance corrections are audited automatically without an additional form. Keep invoice and payment histories in separate surfaces.
+
+Ordinary debt remains `text-primary`. Credit uses `success` together with explicit direction: Customer credit / Credit with supplier. Do not rely on a minus sign or color alone. Invoice forms show one **Paid amount** field without an upper cap. When it exceeds invoice net, keep remaining zero and explain the excess account payment inline; retain the resulting debt/credit preview. Sales creation defaults to Customer Sale with a single keyboard-accessible customer search dropdown. Customer-detail invoice history hides the redundant customer column. The creation summary uses a compact payment-breakdown card beside account debt/credit: combined total, invoice portion, previous debt portion. Saved details show combined paid above a conditional parenthesized invoice-plus-previous-debt breakdown; Arabic receipts place the same breakdown beside المدفوع, wrapping only when space requires it. No-extra invoices retain their plain amount. Selected customers use the supplier-style muted summary card with bold name, current debt/credit and Change customer action. All copy is localized; use logical alignment and `<bdi>` for money in RTL. No new colors or fonts are introduced.
+
+
+### Receipt amount alignment and RTL breakdown
+
+Arabic receipt totals use a shared three-column grid: label, conditional breakdown, fixed money column. Paid/total/remaining amounts align in the money column; breakdown sits immediately to the right of paid. Isolate the full equation as LTR and bind the additional amount and its localized previous-debt label in one inline group, so Arabic direction cannot associate the label with the invoice portion. Detail-page breakdowns reuse this grouping. Additional-payment Notes are metadata labels, with user notes preserved separately.
+
+Sales invoice item rows use a compact editable combobox in place of the native item select. Search matches item names or category names, with items grouped under category headings. Category headings are bold 16px and item names are regular 16px on the plain surface background; the list scrolls up to `min(32rem, 60dvh)`. Arrow keys, Enter, Escape, click, and blur preserve normal selection behavior. Use the existing input, muted-surface, focus, and dropdown elevation tokens. Paid amount precedes Discount in document and locale reading order. Customer lookup copy names only the customer name.

@@ -24,6 +24,7 @@ interface PurchasesTableProps {
   error: string | null;
   onRetry: () => void;
   onCancel?: (purchase: PurchaseInvoice) => void;
+  onEdit?: (purchase: PurchaseInvoice) => void;
   onHistory: (purchase: PurchaseInvoice) => void;
 }
 
@@ -60,6 +61,7 @@ export function PurchasesTable({
   error,
   onRetry,
   onCancel,
+  onEdit,
   onHistory,
 }: PurchasesTableProps) {
   const t = useTranslations("purchases");
@@ -130,6 +132,9 @@ export function PurchasesTable({
               ),
             ];
 
+            if (purchase.status === "saved" && onEdit) {
+              actions.push({ id: "edit", label: t("edit"), onSelect: () => onEdit(purchase) });
+            }
             if (purchase.status === "saved" && onCancel) {
               actions.push({
                 id: "cancel",
@@ -211,12 +216,6 @@ export function PurchasesTable({
                 {/* Actions */}
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-center gap-2">
-                    <Link
-                      href={`/purchases/${purchase.id}`}
-                      className="ds-focus-ring rounded-lg px-2 py-1 text-sm font-medium text-primary hover:underline"
-                    >
-                      {t("view")}
-                    </Link>
                     {actions.length > 0 ? (
                       <RowActionsMenu label={t("colActions")} items={actions} />
                     ) : null}

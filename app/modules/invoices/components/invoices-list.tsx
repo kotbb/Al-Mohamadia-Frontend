@@ -28,6 +28,7 @@ interface InvoicesListProps {
   onCancel: (invoice: SalesInvoice) => void;
   onHistory: (invoice: SalesInvoice) => void;
   actionsDisabled?: boolean;
+  showCustomer?: boolean;
 }
 
 function InvoiceDocIcon({ className = "h-4 w-4" }: { className?: string }) {
@@ -61,6 +62,7 @@ export function InvoicesList({
   onCancel,
   onHistory,
   actionsDisabled = false,
+  showCustomer = true,
 }: InvoicesListProps) {
   const t = useTranslations("invoices");
   const tAudit = useTranslations("audit");
@@ -90,7 +92,7 @@ export function InvoicesList({
 
   return (
     <div className="overflow-x-auto rounded-shell border border-border bg-surface">
-      <table className="w-full min-w-[52rem] border-collapse text-sm lg:text-base">
+      <table className={`w-full ${showCustomer ? "min-w-[52rem]" : "min-w-[44rem]"} border-collapse text-sm lg:text-base`}>
         <thead className="bg-surface-muted">
           <tr className="border-b border-border">
             <th className="px-4 py-3 text-start font-medium text-text-secondary">
@@ -99,9 +101,11 @@ export function InvoicesList({
             <th className="px-4 py-3 text-start font-medium text-text-secondary">
               {t("colDate")}
             </th>
+            {showCustomer ? (
             <th className="px-4 py-3 text-start font-medium text-text-secondary">
               {t("colCustomer")}
             </th>
+            ) : null}
             <th className="px-4 py-3 text-start font-medium text-text-secondary">
               {t("colTotal")}
             </th>
@@ -182,9 +186,11 @@ export function InvoicesList({
                 <td className="px-4 py-3 whitespace-nowrap text-text-secondary">
                   {formatInvoiceDate(invoice.createdAt, locale)}
                 </td>
+                {showCustomer ? (
                 <td className="px-4 py-3 whitespace-nowrap font-medium text-text-primary">
                   {customerLabel}
                 </td>
+                ) : null}
                 <td className="px-4 py-3 whitespace-nowrap font-medium text-text-primary">
                   {formatMoney(invoice.total, locale)}
                 </td>
@@ -210,17 +216,6 @@ export function InvoicesList({
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-center gap-2">
-                    <Link
-                      href={`/invoices/${invoice.id}`}
-                      aria-disabled={actionsDisabled}
-                      tabIndex={actionsDisabled ? -1 : undefined}
-                      onClick={(event) => {
-                        if (actionsDisabled) event.preventDefault();
-                      }}
-                      className="ds-focus-ring rounded-lg px-2 py-1 text-sm font-medium text-primary hover:underline aria-disabled:cursor-wait aria-disabled:opacity-50"
-                    >
-                      {t("view")}
-                    </Link>
                     <RowActionsMenu
                       label={t("colActions")}
                       disabled={actionsDisabled}
