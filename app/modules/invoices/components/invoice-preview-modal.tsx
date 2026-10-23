@@ -3,6 +3,7 @@
 import { ReceiptPaidAmount } from "./receipt-paid-amount";
 import { receiptUnitPrice } from "../utils/receipt-unit-price";
 import { ReceiptItemLabel } from "./receipt-item-label";
+import { ReceiptTableColumns } from "./receipt-table-columns";
 import {
   formatReceiptCubicVolume,
   receiptLineCubicVolume,
@@ -343,16 +344,17 @@ export function InvoicePreviewModal({
 
               {/* Items Table */}
               <table className="w-full border-collapse table-fixed mb-5 text-xs">
+                <ReceiptTableColumns hasDimensions={hasDimensions} hasCubic={hasCubic} />
                 <thead>
                   <tr className="bg-receipt-header text-white">
                     <th
-                      className={`${hasCubic ? "w-[22%]" : ""} px-2 text-right align-middle font-semibold text-xs`}
+                      className="px-2 text-right align-middle font-semibold text-xs"
                     >
                       <span className="receipt-header-label flex h-9 items-center justify-start whitespace-nowrap leading-none">
                         الصنف
                       </span>
                     </th>
-                    <th className="w-[9%] px-2 text-center align-middle font-semibold text-xs">
+                    <th className="px-1 text-center align-middle font-semibold text-xs">
                       <span className="receipt-header-label flex h-9 items-center justify-center whitespace-nowrap leading-none">
                         العدد
                       </span>
@@ -360,21 +362,21 @@ export function InvoicePreviewModal({
                     {hasDimensions && (
                       <>
                         <th
-                          className={`${hasCubic ? "w-[9%]" : "w-[11%]"} px-2 text-center align-middle font-semibold text-xs`}
+                          className="px-1 text-center align-middle font-semibold text-xs"
                         >
                           <span className="receipt-header-label flex h-9 items-center justify-center whitespace-nowrap leading-none">
                             التخانة
                           </span>
                         </th>
                         <th
-                          className={`${hasCubic ? "w-[9%]" : "w-[11%]"} px-2 text-center align-middle font-semibold text-xs`}
+                          className="px-1 text-center align-middle font-semibold text-xs"
                         >
                           <span className="receipt-header-label flex h-9 items-center justify-center whitespace-nowrap leading-none">
                             العرض
                           </span>
                         </th>
                         <th
-                          className={`${hasCubic ? "w-[9%]" : "w-[11%]"} px-2 text-center align-middle font-semibold text-xs`}
+                          className="px-1 text-center align-middle font-semibold text-xs"
                         >
                           <span className="receipt-header-label flex h-9 items-center justify-center whitespace-nowrap leading-none">
                             الطول
@@ -383,21 +385,21 @@ export function InvoicePreviewModal({
                       </>
                     )}
                     {hasCubic && (
-                      <th className="w-[12%] px-2 text-center align-middle font-semibold text-xs">
+                      <th className="px-1 text-center align-middle font-semibold text-xs">
                         <span className="receipt-header-label flex h-9 items-center justify-center whitespace-nowrap leading-none">
                           المكعب
                         </span>
                       </th>
                     )}
                     <th
-                      className={`${hasCubic ? "w-[14%]" : "w-[16%]"} px-2 text-center align-middle font-semibold text-xs`}
+                      className="px-1 text-center align-middle font-semibold text-xs"
                     >
                       <span className="receipt-header-label flex h-9 items-center justify-center whitespace-nowrap leading-none">
                         سعر الوحدة
                       </span>
                     </th>
                     <th
-                      className={`${hasCubic ? "w-[16%]" : "w-[18%]"} px-2 text-center align-middle font-semibold text-xs`}
+                      className="px-1 text-center align-middle font-semibold text-xs"
                     >
                       <span className="receipt-header-label flex h-9 items-center justify-center whitespace-nowrap leading-none">
                         الإجمالي
@@ -416,44 +418,45 @@ export function InvoicePreviewModal({
                         key={`${line.itemId}-${idx}`}
                         className="border-b border-[#e0e0e0] text-[12px]"
                       >
-                        <td className="py-2.5 px-3 text-right align-top">
+                        <td className="py-2.5 px-2 text-right align-top">
                           <ReceiptItemLabel
                             label={itemLabel}
                             className="font-bold text-[#111] text-[13px]"
                           />
                           {line.note && (
-                            <div className="mt-0.5 text-[10px] italic text-[#666]">
-                              {line.note}
-                            </div>
+                            <ReceiptItemLabel
+                              label={line.note}
+                              className="mt-0.5 text-[10px] font-normal leading-relaxed text-[#666]"
+                            />
                           )}
                         </td>
-                        <td className="py-2.5 px-3 text-center align-top font-bold text-[#1a1a1a]">
+                        <td className="py-2.5 px-1 text-center align-top font-bold text-[#1a1a1a]">
                           {line.pricingModeSnapshot === "free_amount" ? "" : line.quantity}
                         </td>
                         {hasDimensions && (
                           <>
-                            <td className="py-2.5 px-3 text-center align-top text-[#1a1a1a]">
+                            <td className="py-2.5 px-1 text-center align-top text-[#1a1a1a]">
                               {line.pricingModeSnapshot === "free_amount" ? "" : line.thickness != null ? line.thickness : "-"}
                             </td>
-                            <td className="py-2.5 px-3 text-center align-top text-[#1a1a1a]">
+                            <td className="py-2.5 px-1 text-center align-top text-[#1a1a1a]">
                               {line.pricingModeSnapshot === "free_amount" ? "" : line.width != null ? line.width : "-"}
                             </td>
-                            <td className="py-2.5 px-3 text-center align-top text-[#1a1a1a]">
+                            <td className="py-2.5 px-1 text-center align-top text-[#1a1a1a]">
                               {line.pricingModeSnapshot === "free_amount" ? "" : line.length != null ? line.length : "-"}
                             </td>
                           </>
                         )}
                         {hasCubic && (
-                          <td className="receipt-volume-cell py-2.5 px-3 text-center align-top text-[#1a1a1a]">
+                          <td className="receipt-volume-cell py-2.5 px-1 text-center align-top text-[#1a1a1a]">
                             {cubicVolume === null
                               ? ""
                               : formatReceiptCubicVolume(cubicVolume)}
                           </td>
                         )}
-                        <td className="py-2.5 px-3 text-center align-top text-[#1a1a1a]">
+                        <td className="py-2.5 px-1 text-center align-top text-[#1a1a1a]">
                           {line.pricingModeSnapshot === "free_amount" ? "" : formatMoneyValue(receiptUnitPrice(line))}
                         </td>
-                        <td className="py-2.5 px-3 text-center align-top font-bold text-[#1a1a1a]">
+                        <td className="py-2.5 px-1 text-center align-top font-bold text-[#1a1a1a]">
                           {formatMoneyValue(line.lineTotal)}
                         </td>
                       </tr>
@@ -462,8 +465,8 @@ export function InvoicePreviewModal({
                 </tbody>
                 <tfoot>
                   <tr className="border-t-2 border-[#222] font-bold text-[#111]">
-                    <td className="px-3 py-2 text-right">الإجمالي</td>
-                    <td className="px-3 py-2 text-center">
+                    <td className="px-2 py-2 text-right">الإجمالي</td>
+                    <td className="px-1 py-2 text-center">
                       {invoice.lines.reduce(
                         (sum, line) => sum + (line.pricingModeSnapshot === "free_amount" ? 0 : line.quantity),
                         0,
@@ -471,14 +474,14 @@ export function InvoicePreviewModal({
                     </td>
                     {hasDimensions && <td colSpan={3} />}
                     {hasCubic && (
-                      <td className="px-3 py-2 text-center">
+                      <td className="px-1 py-2 text-center">
                         {formatReceiptCubicVolume(
                           receiptTotalCubicVolume(invoice.lines),
                         )}
                       </td>
                     )}
                     <td />
-                    <td dir="ltr" className="px-3 py-2 text-center">
+                    <td dir="ltr" className="px-1 py-2 text-center">
                       {formatMoneyValue(invoice.total)}
                     </td>
                   </tr>

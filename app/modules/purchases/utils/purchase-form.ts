@@ -25,6 +25,7 @@ export function lineTotalForPurchaseLine(
 ): number {
   const item = itemsById.get(line.itemId);
   if (!item) return 0;
+  if (item.pricingMode === "free_amount") return roundMoney(parsePositive(line.unitCost) ?? 0);
   const quantity = parsePositive(line.quantity);
   const unitCost = parsePositive(line.unitCost);
   if (quantity === null || unitCost === null) return 0;

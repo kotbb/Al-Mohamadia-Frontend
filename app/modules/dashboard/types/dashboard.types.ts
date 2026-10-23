@@ -29,7 +29,6 @@ export interface DashboardSalesSeriesPoint {
 export interface DashboardTopSellingItem {
   itemId: string;
   name: string | null;
-  code: string | null;
   quantity: number;
   revenue: number;
 }

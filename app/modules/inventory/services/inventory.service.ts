@@ -17,6 +17,7 @@ function buildStockQuery(filters?: ListStockFilters): string {
   if (filters.q?.trim()) params.set("q", filters.q.trim());
   if (filters.page !== undefined) params.set("page", String(filters.page));
   if (filters.limit !== undefined) params.set("limit", String(filters.limit));
+  if (filters.paginationMode) params.set("paginationMode", filters.paginationMode);
   const query = params.toString();
   return query ? `/inventory/stock?${query}` : "/inventory/stock";
 }

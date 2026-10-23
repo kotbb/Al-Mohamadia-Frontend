@@ -176,8 +176,9 @@ export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
                     {purchase.lines.map((line, index) => {
                       const item = itemsMap[line.itemId];
                       const label = item ? item.name : null;
+                      const isFreeAmount = (line.pricingModeSnapshot ?? item?.pricingMode) === "free_amount";
                       const dims =
-                        line.thickness != null &&
+                        !isFreeAmount && line.thickness != null &&
                         line.width != null &&
                         line.length != null
                           ? `${line.thickness} × ${line.width} × ${line.length} ${locale === "ar" ? "م" : "m"}`
@@ -207,10 +208,10 @@ export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
                             ) : null}
                           </td>
                           <td className="px-4 py-3 text-center font-medium text-text-primary">
-                            {line.quantity}
+                            {isFreeAmount ? "—" : line.quantity}
                           </td>
                           <td className="px-4 py-3 text-end whitespace-nowrap text-text-primary">
-                            {formatMoney(line.unitCost, locale)}
+                            {isFreeAmount ? "—" : formatMoney(line.unitCost, locale)}
                           </td>
                           <td className="px-4 py-3 text-end whitespace-nowrap font-medium text-text-primary">
                             {formatMoney(line.lineTotal, locale)}

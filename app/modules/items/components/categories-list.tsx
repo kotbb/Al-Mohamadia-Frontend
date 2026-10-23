@@ -15,6 +15,7 @@ import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-d
 
 interface CategoriesListProps {
   categories: CategoryListRow[];
+  hasFilters?: boolean;
   status: "idle" | "loading" | "success" | "error";
   error: string | null;
   onRetry: () => void;
@@ -74,6 +75,7 @@ function CategoryFolderIcon({ className = "h-4 w-4" }: { className?: string }) {
 
 export function CategoriesList({
   categories,
+  hasFilters = false,
   status,
   error,
   onRetry,
@@ -105,7 +107,10 @@ export function CategoriesList({
 
   if (categories.length === 0) {
     return (
-      <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />
+      <EmptyState
+        title={t(hasFilters ? "noResultsTitle" : "emptyTitle")}
+        description={t(hasFilters ? "noResultsDescription" : "emptyDescription")}
+      />
     );
   }
 

@@ -12,6 +12,8 @@ import {
 interface CategoryItemsTableProps {
   category: Category;
   items: Item[];
+  isCollapsed: boolean;
+  onToggle: () => void;
   onEdit: (itemId: string) => void;
   onDelete: (item: Item) => void;
   onHistory: (item: Item) => void;
@@ -31,6 +33,8 @@ function pricingModeLabel(
 export function CategoryItemsTable({
   category,
   items,
+  isCollapsed,
+  onToggle,
   onEdit,
   onDelete,
   onHistory,
@@ -43,22 +47,33 @@ export function CategoryItemsTable({
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
       {/* Category Header */}
-      <div className="flex items-center justify-between border-b border-border bg-surface-muted px-4 py-3">
-        <div className="flex items-center gap-2.5">
-          <span
-            className="h-4 w-1 rounded-full bg-primary"
-            aria-hidden="true"
-          />
-          <h2 className="text-sm font-semibold text-text-primary sm:text-base">
-            {category.name}
-          </h2>
-        </div>
-        <span className="inline-flex items-center rounded-full border border-border/70 bg-surface px-2.5 py-0.5 text-xs font-medium text-text-secondary">
-          {items.length}
-        </span>
-      </div>
+      <h2>
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={!isCollapsed}
+          aria-controls={`items-category-${category.id}`}
+          className={`ds-focus-ring flex min-h-12 w-full items-center justify-between gap-3 bg-surface-muted px-4 py-3 text-start transition-colors hover:bg-surface-muted/80 ${isCollapsed ? "" : "border-b border-border"}`}
+        >
+          <span className="flex items-center gap-2.5">
+            <svg className={`h-4 w-4 shrink-0 text-text-secondary transition-transform duration-200 motion-reduce:transition-none ${isCollapsed ? "-rotate-90 rtl:rotate-90" : "rotate-0"}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+            <span
+              className="h-4 w-1 rounded-full bg-primary"
+              aria-hidden="true"
+            />
+            <span className="text-sm font-semibold text-text-primary sm:text-base">
+              {category.name}
+            </span>
+          </span>
+          <span className="inline-flex items-center rounded-full border border-border/70 bg-surface px-2.5 py-0.5 text-xs font-medium text-text-secondary">
+            {items.length}
+          </span>
+        </button>
+      </h2>
 
-      <div className="w-full overflow-x-auto">
+      <div id={`items-category-${category.id}`} hidden={isCollapsed} className="w-full overflow-x-auto">
         <table className="w-full min-w-[36rem] table-fixed border-collapse text-sm lg:text-base">
           <colgroup>
             <col className="w-[38%]" />

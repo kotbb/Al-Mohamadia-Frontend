@@ -8,6 +8,10 @@ import { AppShell } from "@/app/layout/app-shell";
 import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { CategoryItemsTable } from "@/app/modules/items/components/category-items-table";
 import { ItemsToolbar } from "@/app/modules/items/components/items-toolbar";
+import { CatalogSummaryCard } from "@/app/modules/items/components/catalog-summary-card";
+import { CatalogPagination } from "@/app/modules/items/components/catalog-pagination";
+import { CategoryToggleButton } from "@/app/modules/shared/components/category-toggle-button";
+import { useCategoryCollapse } from "@/app/modules/shared/hooks/use-category-collapse";
 import { useItemsPage } from "@/app/modules/items/hooks/use-items-page";
 import { deleteItem } from "@/app/modules/items/services/items.service";
 import type { Item } from "@/app/modules/items/types/items.types";
@@ -31,7 +35,11 @@ export function ItemsPage() {
 
   const {
     categories,
+    totalItems,
     groupedItems,
+    page,
+    totalPages,
+    setPage,
     status,
     error,
     refresh,
@@ -40,6 +48,8 @@ export function ItemsPage() {
     setCategoryId,
     setIsActive,
   } = useItemsPage();
+  const { isCategoryCollapsed, allCollapsed, toggleCategory, toggleAll } =
+    useCategoryCollapse(groupedItems.map(({ category }) => category.id));
 
   function openCreatePage() {
     router.push("/items/new");
@@ -123,6 +133,11 @@ export function ItemsPage() {
       />
 
       <div className="flex min-h-0 w-full flex-col gap-5">
+        <CatalogSummaryCard
+          label={t("totalItems")}
+          count={status === "success" ? totalItems : null}
+          isLoading={status === "loading" || status === "idle"}
+        />
         <ItemsToolbar
           filters={filters}
           categories={categories}
@@ -147,11 +162,16 @@ export function ItemsPage() {
           />
         ) : (
           <div className="flex flex-col gap-6 pb-2">
+            <div className="flex justify-end">
+              <CategoryToggleButton allCollapsed={allCollapsed} onClick={toggleAll} />
+            </div>
             {groupedItems.map(({ category, items }) => (
               <CategoryItemsTable
                 key={category.id}
                 category={category}
                 items={items}
+                isCollapsed={isCategoryCollapsed(category.id)}
+                onToggle={() => toggleCategory(category.id)}
                 onEdit={openEditPage}
                 onDelete={setDeleteTarget}
                 onHistory={(item) => history.openRecord(item.id, item.name)}
@@ -159,6 +179,9 @@ export function ItemsPage() {
             ))}
           </div>
         )}
+        {status === "success" ? (
+          <CatalogPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        ) : null}
       </div>
     </AppShell>
   );

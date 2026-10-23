@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
   isCubicPricingMode,
@@ -10,12 +10,15 @@ import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { Badge } from "@/app/modules/shared/components/badge";
 import { RowActionsMenu } from "@/app/modules/shared/components/row-actions-menu";
 import { Button } from "@/app/modules/shared/components/button";
+import { CategoryToggleButton } from "@/app/modules/shared/components/category-toggle-button";
+import { useCategoryCollapse } from "@/app/modules/shared/hooks/use-category-collapse";
 
 interface StockTableProps {
   items: StockItem[];
   isLoading: boolean;
   page: number;
   totalPages: number;
+  totalCategories: number;
   onPageChange: (page: number) => void;
   onAdjustStock: (item: StockItem) => void;
   onUpdateThreshold: (item: StockItem) => void;
@@ -27,6 +30,7 @@ export function StockTable({
   isLoading,
   page,
   totalPages,
+  totalCategories,
   onPageChange,
   onAdjustStock,
   onUpdateThreshold,
@@ -37,11 +41,6 @@ export function StockTable({
   const tShared = useTranslations("shared");
   const locale = useLocale();
 
-  // Collapsed categories state (set of categoryIds that are currently collapsed)
-  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(
-    () => new Set(),
-  );
-
   const formatQuantity = (qty: number, isCubic: boolean) => {
     return qty.toLocaleString("en-US", {
       minimumFractionDigits: isCubic ? 3 : 0,
@@ -49,72 +48,45 @@ export function StockTable({
     });
   };
 
-  // Group items by category (preserves alphabetical category order)
+  // Group items without changing the backend category creation order
   const groups = useMemo(() => {
-    const collator = new Intl.Collator(locale, {
-      sensitivity: "base",
-      numeric: true,
-    });
     const map = new Map<
       string,
-      { categoryId: string; categoryName: string; items: StockItem[] }
+      {
+        categoryId: string;
+        categoryName: string;
+        items: StockItem[];
+      }
     >();
 
     for (const item of items) {
-      const catId = item.category?.id ?? "uncategorized";
+      const catId = item.category?.id ?? (item.categoryId || "uncategorized");
       const catName = item.category?.name ?? t("uncategorized");
       if (!map.has(catId)) {
-        map.set(catId, { categoryId: catId, categoryName: catName, items: [] });
+        map.set(catId, {
+          categoryId: catId,
+          categoryName: catName,
+          items: [],
+        });
       }
       map.get(catId)!.items.push(item);
     }
 
-    return Array.from(map.values()).sort((a, b) => {
-      if (a.categoryId === "uncategorized") return 1;
-      if (b.categoryId === "uncategorized") return -1;
-      return collator.compare(a.categoryName, b.categoryName);
-    });
-  }, [items, locale, t]);
+    return Array.from(map.values());
+  }, [items, t]);
 
-  const toggleCategory = (categoryId: string) => {
-    setCollapsedCategories((prev) => {
-      const next = new Set(prev);
-      if (next.has(categoryId)) {
-        next.delete(categoryId);
-      } else {
-        next.add(categoryId);
-      }
-      return next;
-    });
-  };
-
-  const allCollapsed =
-    groups.length > 0 &&
-    groups.every((g) => collapsedCategories.has(g.categoryId));
-
-  const toggleAll = () => {
-    if (allCollapsed) {
-      setCollapsedCategories(new Set());
-    } else {
-      setCollapsedCategories(new Set(groups.map((g) => g.categoryId)));
-    }
-  };
+  const { isCategoryCollapsed, allCollapsed, toggleCategory, toggleAll } =
+    useCategoryCollapse(groups.map((group) => group.categoryId));
 
   return (
     <div className="space-y-3">
       {/* Category count & Collapse/Expand all toggle */}
       {!isLoading && groups.length > 0 && (
-        <div className="flex items-center justify-between px-1 text-sm text-text-secondary">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-1 text-sm text-text-secondary">
           <span className="font-medium text-xs sm:text-sm">
-            {t("categoryCount", { count: groups.length })}
+            {t("categoryCount", { count: groups.length, total: totalCategories })}
           </span>
-          <button
-            type="button"
-            onClick={toggleAll}
-            className="ds-focus-ring min-h-11 cursor-pointer rounded-lg px-2 text-sm font-semibold text-primary hover:underline"
-          >
-            {allCollapsed ? t("expandAll") : t("collapseAll")}
-          </button>
+          <CategoryToggleButton allCollapsed={allCollapsed} onClick={toggleAll} />
         </div>
       )}
 
@@ -139,7 +111,7 @@ export function StockTable({
         /* Separate Category Cards with space between them */
         <div className="flex flex-col gap-4">
           {groups.map((group) => {
-            const isCollapsed = collapsedCategories.has(group.categoryId);
+            const isCollapsed = isCategoryCollapsed(group.categoryId);
 
             return (
               <div
@@ -359,7 +331,7 @@ export function StockTable({
             {tShared("prevPage")}
           </Button>
 
-          <span className="text-sm">{t("pageOf", { page, totalPages })}</span>
+          <span className="text-sm">{t("categoryPageOf", { page, totalPages })}</span>
 
           <Button
             type="button"

@@ -4,7 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import type { PurchaseLineFormState } from "@/app/modules/purchases/types/purchases.types";
 import type { DimensionName } from "@/app/modules/items/types/items.types";
 import type { Item } from "@/app/modules/items/types/items.types";
-import { CategorizedItemOptions } from "@/app/modules/items/components/categorized-item-options";
+import { ItemCombobox } from "@/app/modules/shared/components/item-combobox";
 import {
   formatMoney,
   roundMoneyAmount,
@@ -16,6 +16,7 @@ import { Input } from "@/app/modules/shared/components/input";
 interface PurchaseLineRowProps {
   line: PurchaseLineFormState;
   items: Item[];
+  originalItemIds?: string[];
   lineTotal: number;
   canRemove: boolean;
   onSelectItem: (itemId: string) => void;
@@ -31,6 +32,7 @@ interface PurchaseLineRowProps {
 export function PurchaseLineRow({
   line,
   items,
+  originalItemIds,
   lineTotal,
   canRemove,
   onSelectItem,
@@ -42,26 +44,16 @@ export function PurchaseLineRow({
   const t = useTranslations("purchases");
   const locale = useLocale();
   const selectedItem = items.find((item) => item.id === line.itemId);
+  const isFreeAmount = selectedItem?.pricingMode === "free_amount";
   const isCubic = selectedItem?.pricingMode === "per_cubic_meter";
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-border bg-surface-muted/30 p-3 transition-colors hover:border-border-hover">
-      <div className="grid items-end gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_minmax(4rem,.65fr)_minmax(5.5rem,1fr)_minmax(0,1.5fr)_minmax(6.5rem,1fr)_6rem]">
-        <label className="flex min-w-0 w-full flex-col gap-1 sm:col-span-2 lg:col-span-1">
-          <span className="text-sm font-medium text-text-secondary">
-            {t("fieldItem")}
-          </span>
-          <select
-            className="ds-focus-input min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm text-text-primary"
-            value={line.itemId}
-            onChange={(e) => onSelectItem(e.target.value)}
-          >
-            <option value="">{t("fieldItemPlaceholder")}</option>
-            <CategorizedItemOptions items={items.filter((item) => item.isActive || item.id === line.itemId)} locale={locale} />
-          </select>
-        </label>
+      <div className={`grid items-end gap-2 sm:grid-cols-2 ${isFreeAmount ? "lg:grid-cols-[minmax(0,2fr)_minmax(7rem,1fr)_minmax(0,1.5fr)_minmax(6.5rem,1fr)_6rem]" : "lg:grid-cols-[minmax(0,2fr)_minmax(4rem,.65fr)_minmax(5.5rem,1fr)_minmax(0,1.5fr)_minmax(6.5rem,1fr)_6rem]"}`}>
+        <ItemCombobox eligibleInactiveItemIds={originalItemIds} items={items} value={line.itemId} name={`item-${line.key}`} onSelect={onSelectItem}
+          labels={{ label: t("fieldItem"), placeholder: t("itemSearchPlaceholder"), empty: t("noItemsFound") }} />
 
-        <Input
+        {!isFreeAmount && <Input
           density="compact"
           name={`qty-${line.key}`}
           label={t("fieldQty")}
@@ -70,17 +62,18 @@ export function PurchaseLineRow({
           step="any"
           value={line.quantity}
           onChange={(e) => onChange({ quantity: e.target.value })}
-        />
+        />}
         <Input
           density="compact"
           name={`cost-${line.key}`}
-          label={t("fieldUnitCost")}
+          label={t(isFreeAmount ? "fieldAmount" : "fieldUnitCost")}
           type="number"
           min={0}
-          step="any"
+          step={isFreeAmount ? "0.01" : "any"}
           value={line.unitCost}
           onChange={(e) => onChange({ unitCost: e.target.value })}
           onBlur={() => {
+            if (isFreeAmount) return;
             const rounded = roundMoneyAmount(line.unitCost);
             if (rounded === null) return;
             onChange({ unitCost: String(rounded) });
@@ -131,7 +124,7 @@ export function PurchaseLineRow({
           ) : null}
         </div>
       </div>
-      {selectedItem ? (
+      {selectedItem && !isFreeAmount ? (
         <div className="grid gap-2 sm:grid-cols-3 lg:max-w-xl">
           <DimensionInput
             key={`${line.itemId}-thickness`}

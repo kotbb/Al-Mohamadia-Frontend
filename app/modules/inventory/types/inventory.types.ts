@@ -22,7 +22,6 @@ export interface StockItemCategory {
 
 export interface StockItem {
   id: string;
-  code: string;
   name: string;
   categoryId: string;
   category: StockItemCategory | null;
@@ -54,6 +53,9 @@ export interface StockListMeta {
   page: number;
   limit: number;
   total: number;
+  paginationMode?: "items" | "categories";
+  totalItems?: number;
+  totalPages?: number;
 }
 
 export interface StockListResponse {
@@ -68,6 +70,7 @@ export interface ListStockFilters {
   q?: string;
   page?: number;
   limit?: number;
+  paginationMode?: "items" | "categories";
 }
 
 export interface CategoryValuation {

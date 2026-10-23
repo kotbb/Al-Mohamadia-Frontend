@@ -4,7 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import type { InvoiceFormLine } from "@/app/modules/invoices/types/use-invoice-form.types";
 import type { DimensionName } from "@/app/modules/items/types/items.types";
 import type { Item } from "@/app/modules/items/types/items.types";
-import { InvoiceItemCombobox } from "@/app/modules/invoices/components/invoice-item-combobox";
+import { ItemCombobox } from "@/app/modules/shared/components/item-combobox";
 import {
   formatMoney,
   roundMoneyAmount,
@@ -48,7 +48,8 @@ export function InvoiceLineRow({
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-border bg-surface-muted/30 p-3">
       <div className={`grid items-end gap-2 sm:grid-cols-2 ${isFreeAmount ? "lg:grid-cols-[minmax(0,2fr)_minmax(7rem,1fr)_minmax(0,1.5fr)_minmax(6.5rem,1fr)_minmax(4rem,.5fr)]" : "lg:grid-cols-[minmax(0,2fr)_minmax(4rem,.65fr)_minmax(5.5rem,1fr)_minmax(0,1.5fr)_minmax(6.5rem,1fr)_6rem]"}`}>
-        <InvoiceItemCombobox
+        <ItemCombobox
+          labels={{ label: t("fieldItem"), placeholder: t("itemSearchPlaceholder"), empty: t("noItemsFound") }}
           items={items}
           value={line.itemId}
           name={`item-${line.key}`}

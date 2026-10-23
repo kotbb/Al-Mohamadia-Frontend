@@ -85,7 +85,11 @@ export function NewPurchasePage({ purchaseId }: { purchaseId?: string }) {
               allSuppliersLoading={form.allSuppliersLoading}
               selectedSupplier={form.selectedSupplier}
               originalSupplier={form.originalSupplier}
-              onSelectSupplierId={form.selectSupplierById}
+              supplierQuery={form.supplierQuery}
+              onSupplierQueryChange={form.setSupplierQuery}
+              supplierResults={form.supplierResults}
+              suppliersLoading={form.suppliersLoading}
+              onSelectSupplier={form.selectSupplier}
               onClearSupplier={form.clearSupplier}
               notes={form.notes}
               onNotesChange={form.setNotes}
@@ -105,6 +109,7 @@ export function NewPurchasePage({ purchaseId }: { purchaseId?: string }) {
                     key={line.key}
                     line={line}
                     items={form.items}
+                    originalItemIds={form.editInvoice?.lines.map((original) => original.itemId)}
                     lineTotal={form.lineTotals[index] ?? 0}
                     canRemove={form.lines.length > 1}
                     onSelectItem={(itemId) => form.selectItem(line.key, itemId)}

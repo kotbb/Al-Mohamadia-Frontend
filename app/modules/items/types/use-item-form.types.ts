@@ -9,7 +9,6 @@ export type LoadStatus = "idle" | "loading" | "success" | "error";
 
 export interface ItemFormValues {
   dimensionDefaults: DimensionDefaultsForm;
-  code: string;
   name: string;
   categoryId: string;
   pricingMode: PricingMode;
@@ -31,8 +30,6 @@ export interface UseItemFormResult {
     key: K,
     value: ItemFormValues[K],
   ) => void;
-  /** True when the code was last set by the user (stop auto-updating). */
-  codeIsManual: boolean;
   isSubmitting: boolean;
   submitError: string | null;
   submit: () => Promise<boolean>;

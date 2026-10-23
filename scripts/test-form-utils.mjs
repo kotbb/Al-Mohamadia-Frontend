@@ -5,6 +5,56 @@ import { resolve, dirname } from "node:path";
 import { createRequire } from "node:module";
 import ts from "typescript";
 
+test("receipt column layouts give optional-column space back to the item and always total 100 percent", () => {
+  const React = nativeRequire("react");
+  const { renderToStaticMarkup } = nativeRequire("react-dom/server");
+  const { ReceiptTableColumns } = load("@/app/modules/invoices/components/receipt-table-columns");
+  for (const hasDimensions of [false, true]) {
+    for (const hasCubic of [false, true]) {
+      for (const showPrices of [false, true]) {
+        const html = renderToStaticMarkup(React.createElement(ReceiptTableColumns, { hasDimensions, hasCubic, showPrices }));
+        const widths = [...html.matchAll(/width:([0-9]+)%/g)].map((match) => Number(match[1]));
+        const rest = [10, ...(hasDimensions ? [10, 10, 10] : []), ...(hasCubic ? [11] : []), ...(showPrices ? [11, 13] : [])];
+        assert.deepEqual(widths, [100 - rest.reduce((sum, width) => sum + width, 0), ...rest]);
+        assert.equal(widths.reduce((sum, width) => sum + width, 0), 100);
+      }
+    }
+  }
+});
+
+test("receipt notes share Arabic spacing and isolated numbers across compact, standard and modal receipts", () => {
+  const React = nativeRequire("react");
+  const { renderToStaticMarkup } = nativeRequire("react-dom/server");
+  overrides.set("next/image", { default: () => null });
+  overrides.set("next-intl", { useTranslations: () => (key) => key });
+  try {
+    const { PublicInvoiceSheet } = load("@/app/modules/invoices/components/public-invoice-sheet");
+    const { InvoicePreviewModal } = load("@/app/modules/invoices/components/invoice-preview-modal");
+    for (const note of ["4ملي", "4 ملي"]) {
+      const piece = { itemId: "piece", itemLabel: "18 ام اف ساده", quantity: 1, thickness: 18, width: 122, length: 244, pricingModeSnapshot: "per_piece", piecePrice: 900, lineTotal: 900, note };
+      const lines = [piece, { ...piece, itemLabel: "ابلاكاش 6 ملي ارو" }, { ...piece, itemLabel: "2.7 ملي ته مربع" },
+        { ...piece, itemId: "cubic", itemLabel: "خشب", pricingModeSnapshot: "per_cubic_meter", thickness: .25, width: .15, length: .6 },
+        { ...piece, itemId: "free", itemLabel: "مبلغ حر", pricingModeSnapshot: "free_amount", thickness: null, width: null, length: null }];
+      const invoice = { id: "one", invoiceNumber: "INV-9124", type: "customer_sale", status: "saved", customerName: "عميل", total: 3753.04, discount: 0, paid: 1000, remaining: 2753.04, lines };
+      const sheets = [false, true].map((compact) => renderToStaticMarkup(React.createElement(PublicInvoiceSheet, { invoice, compact })));
+      sheets.push(renderToStaticMarkup(React.createElement(InvoicePreviewModal, { open: true, invoiceId: "one", initialInvoice: invoice })));
+      for (const html of sheets) {
+        assert.match(html, /<colgroup><col style="width:25%"/);
+        assert.doesNotMatch(html.match(/<thead>[\s\S]*?<\/thead>/)?.[0] ?? "", /w-\[/);
+        assert.match(html, /<bdi dir="ltr" class="inline-block whitespace-nowrap align-baseline">4<\/bdi> ملي/);
+        assert.doesNotMatch(html, /\bitalic\b/);
+        assert.match(html, /font-normal[^\"]*leading-relaxed/);
+        assert.match(html, /3,753\.04/);
+        assert.match(html, /2,753\.04/);
+      }
+      for (const html of sheets.slice(0, 2)) {
+        const text = html.replace(/<[^>]+>/g, "");
+        for (const label of ["18 ام اف ساده", "ابلاكاش 6 ملي ارو", "2.7 ملي ته مربع"]) assert.ok(text.includes(label));
+      }
+    }
+  } finally { overrides.delete("next/image"); overrides.delete("next-intl"); }
+});
+
 test("invoice item search matches names and categories, supports keyboard choice and preserves selection", () => {
   const states = [];
   let cursor = 0;
@@ -14,18 +64,18 @@ test("invoice item search matches names and categories, supports keyboard choice
     useState(initial) { const index = cursor++; if (!(index in states)) states[index] = initial; return [states[index], (value) => { states[index] = value; }]; },
   });
   overrides.set("next-intl", { useLocale: () => "en", useTranslations: () => (key) => key });
-  const file = resolve(root, "app/modules/invoices/components/invoice-item-combobox.tsx");
+  const file = resolve(root, "app/modules/shared/components/item-combobox.tsx");
   cache.delete(file);
   const chosen = [];
-  const props = { name: "item-one", value: "", items: [
+  const props = { labels: { label: "Item", placeholder: "Search", empty: "No items" }, name: "item-one", value: "", items: [
     { id: "oak", name: "Oak 18", category: { name: "Wood" }, isActive: true },
     { id: "pine", name: "Pine 12", category: { name: "Wood" }, isActive: true },
     { id: "arabic", name: "صنف", category: { name: "ألواح" }, isActive: true },
     { id: "inactive", name: "Hidden item", category: { name: "Wood" }, isActive: false },
   ], onSelect(id) { props.value = id; chosen.push(id); } };
   try {
-    const { InvoiceItemCombobox } = load("@/app/modules/invoices/components/invoice-item-combobox");
-    const render = () => { cursor = 0; return InvoiceItemCombobox(props); };
+    const { ItemCombobox } = load("@/app/modules/shared/components/item-combobox");
+    const render = () => { cursor = 0; return ItemCombobox(props); };
     const nodes = (element) => !element || typeof element !== "object" ? [] : [element, ...[element.props?.children].flat(Infinity).flatMap(nodes)];
     const input = () => nodes(render()).find((node) => node.props?.role === "combobox");
     const options = () => nodes(render()).filter((node) => node.props?.role === "option");
@@ -57,10 +107,32 @@ test("invoice item search matches names and categories, supports keyboard choice
     key("Escape");
     assert.equal(input().props.value, "صنف");
     assert.equal(input().props["aria-expanded"], false);
+    props.eligibleInactiveItemIds = ["inactive"];
+    input().props.onFocus({ currentTarget: { select() {} } });
+    assert.equal(options().length, 4, "original inactive items remain available after switching away");
+    props.eligibleInactiveItemIds = [];
     props.value = "inactive";
     input().props.onFocus({ currentTarget: { select() {} } });
     assert.equal(options().length, 4, "the existing inactive item remains selectable during editing");
   } finally { overrides.delete("react"); overrides.delete("next-intl"); cache.delete(file); }
+});
+
+test("purchase free rows show one amount and note while physical rows retain quantity and dimensions", () => {
+  const React = nativeRequire("react");
+  const { renderToStaticMarkup } = nativeRequire("react-dom/server");
+  overrides.set("next-intl", { useLocale: () => "en", useTranslations: () => (key) => key });
+  try {
+    const { PurchaseLineRow } = load("@/app/modules/purchases/components/purchase-line-row");
+    const props = { line: { key: "one", itemId: "charge", quantity: "1", unitCost: "125.5", note: "Delivery", thicknessM: "", widthM: "", lengthM: "" },
+      items: [{ id: "charge", name: "Delivery", category: { name: "Charges" }, isActive: true, pricingMode: "free_amount" }],
+      lineTotal: 125.5, canRemove: true, onSelectItem() {}, onChange() {}, onDuplicate() {}, onRemove() {}, onAddDimensionDefault: async () => {} };
+    const free = renderToStaticMarkup(React.createElement(PurchaseLineRow, props));
+    assert.match(free, /fieldAmount/);
+    assert.match(free, /name="note-one"/);
+    assert.doesNotMatch(free, /fieldQty|fieldUnitCost|fieldThickness|fieldWidth|fieldLength/);
+    const physical = renderToStaticMarkup(React.createElement(PurchaseLineRow, { ...props, items: [{ ...props.items[0], pricingMode: "per_piece" }] }));
+    for (const label of ["fieldQty", "fieldUnitCost", "fieldThickness", "fieldWidth", "fieldLength"]) assert.ok(physical.includes(label));
+  } finally { overrides.delete("next-intl"); }
 });
 
 test("signed balances accept credit without relaxing payment validation", () => {
@@ -185,6 +257,448 @@ const nativeRequire = createRequire(import.meta.url);
 const cache = new Map();
 const overrides = new Map();
 
+test("item forms create and edit all pricing modes without codes or an extra catalog fetch", async () => {
+  const cachedBefore = new Set(cache.keys());
+  const states = [], effects = [], pending = [], creates = [], updates = [], catalogRequests = [], priceChanges = [];
+  let cursor = 0, mode = "per_piece";
+  const category = { id: "wood", name: "Wood", isActive: true, isDeleted: false };
+  const item = () => ({ id: "item", name: "Board", category, pricingMode: mode, unitPrice: 10, cost: 5, stockQuantity: 2, reorderThreshold: 0, isActive: true, dimensionDefaults: { thickness: [], width: [], length: [] } });
+  overrides.set("react", {
+    useState(initial) { const index = cursor++; if (!(index in states)) states[index] = typeof initial === "function" ? initial() : initial; return [states[index], (value) => { states[index] = typeof value === "function" ? value(states[index]) : value; }]; },
+    useCallback: (fn) => fn,
+    useEffect(fn, deps) { const index = cursor++; if (!effects[index] || deps.some((value, i) => effects[index][i] !== value)) { effects[index] = deps; pending.push(fn); } },
+  });
+  overrides.set("next-intl", { useTranslations: () => (key) => key });
+  overrides.set("@/lib/api/use-api-error-message", { useApiErrorMessage: () => (error) => error.message });
+  overrides.set("@/app/modules/items/services/categories.service", { listCategories: async () => [category] });
+  overrides.set("@/app/modules/items/services/items.service", {
+    listItems: async () => { catalogRequests.push(true); return []; },
+    getItem: async () => item(), createItem: async (input) => { creates.push(input); return item(); },
+    updateItem: async (id, input) => { updates.push({ id, input }); return item(); }, updatePricing: async () => priceChanges.push(true),
+  });
+  const file = resolve(root, "app/modules/items/hooks/use-item-form.ts");
+  cache.delete(file);
+  try {
+    const { useItemForm: runItemForm } = load("@/app/modules/items/hooks/use-item-form");
+    for (mode of ["per_piece", "per_cubic_meter", "free_amount"]) {
+      for (const editing of [false, true]) {
+        states.length = 0; effects.length = 0; pending.length = 0;
+        const render = () => { cursor = 0; return runItemForm(editing ? "item" : undefined); };
+        let state = render();
+        for (const effect of pending.splice(0)) effect();
+        await Promise.resolve(); await Promise.resolve(); state = render();
+        assert.equal(Object.hasOwn(state.values, "code"), false);
+        assert.equal(Object.hasOwn(state, "codeIsManual"), false);
+        state.setField("name", "Renamed board"); state.setField("categoryId", "wood");
+        if (!editing) state.setField("pricingMode", mode);
+        state = render(); assert.equal(await state.submit(), true);
+        const payload = editing ? updates.at(-1).input : creates.at(-1);
+        assert.equal(payload.name, "Renamed board"); assert.equal(Object.hasOwn(payload, "code"), false);
+        if (!editing) assert.equal(payload.pricingMode, mode);
+        if (mode === "free_amount") for (const field of ["cost", "unitPrice", "stockQuantity", "dimensionDefaults"]) assert.equal(Object.hasOwn(payload, field), false);
+      }
+    }
+    assert.equal(creates.length, 3); assert.equal(updates.length, 3);
+    assert.equal(catalogRequests.length, 0); assert.equal(priceChanges.length, 0);
+  } finally {
+    for (const key of ["react", "next-intl", "@/lib/api/use-api-error-message", "@/app/modules/items/services/items.service", "@/app/modules/items/services/categories.service"]) overrides.delete(key);
+    for (const key of cache.keys()) if (!cachedBefore.has(key)) cache.delete(key);
+  }
+});
+
+test("items KPI counts the complete non-deleted catalog independently of filters and refreshes after changes", async () => {
+  const states = [], effects = [], pending = [];
+  const cachedBefore = new Set(cache.keys());
+  let cursor = 0;
+  const file = resolve(root, "app/modules/items/hooks/use-items-page.ts");
+  const category = { id: "wood", name: "Wood", isDeleted: false };
+  let catalog = [
+    { id: "active", name: "Active", code: "LEGACY-ONLY", category, isActive: true, isDeleted: false, pricingMode: "per_piece" },
+    { id: "inactive", name: "Inactive", category, isActive: false, isDeleted: false, pricingMode: "per_piece" },
+    { id: "service", name: "Service", category, isActive: true, isDeleted: false, pricingMode: "free_amount" },
+    { id: "deleted", name: "Deleted", category, isActive: true, isDeleted: true },
+  ];
+  overrides.set("react", {
+    useState(initial) { const index = cursor++; if (!(index in states)) states[index] = typeof initial === "function" ? initial() : initial; return [states[index], (value) => { states[index] = typeof value === "function" ? value(states[index]) : value; }]; },
+    useMemo: (fn) => fn(), useCallback: (fn) => fn,
+    useEffect(fn, deps) { const index = cursor++; if (!effects[index] || deps.some((value, i) => effects[index][i] !== value)) { effects[index] = deps; pending.push(fn); } },
+  });
+  overrides.set("@/lib/api/use-api-error-message", { useApiErrorMessage: () => (error) => error.message });
+  overrides.set("@/app/modules/items/services/items.service", { listItems: async () => catalog });
+  overrides.set("@/app/modules/items/services/categories.service", { listCategories: async () => [category] });
+  cache.delete(file);
+  try {
+    const { useItemsPage: runItemsHook } = load("@/app/modules/items/hooks/use-items-page");
+    const render = () => { cursor = 0; return runItemsHook(); };
+    const settle = async () => { for (const fn of pending.splice(0)) fn(); await Promise.resolve(); await Promise.resolve(); return render(); };
+    let state = render(); state = await settle();
+    assert.equal(state.status, "success"); assert.equal(state.totalItems, 3);
+    state.setSearch("LEGACY-ONLY"); state = render(); assert.equal(state.groupedItems.length, 0);
+    state.setSearch(""); state = render();
+    state.setIsActive("inactive"); state = render();
+    assert.equal(state.groupedItems.flatMap((group) => group.items).length, 1); assert.equal(state.totalItems, 3);
+    state.setSearch("missing"); state = render();
+    assert.equal(state.groupedItems.length, 0); assert.equal(state.totalItems, 3);
+    state.setCategoryId("other"); state = render();
+    assert.equal(state.totalItems, 3);
+    catalog = catalog.filter((item) => item.id !== "inactive");
+    state.refresh(); state = render(); state = await settle();
+    assert.equal(state.totalItems, 2);
+    catalog = []; state.refresh(); state = render(); state = await settle();
+    assert.equal(state.status, "success"); assert.equal(state.totalItems, 0);
+  } finally {
+    for (const key of ["react", "@/lib/api/use-api-error-message", "@/app/modules/items/services/items.service", "@/app/modules/items/services/categories.service"]) overrides.delete(key);
+    cache.delete(file); for (const key of cache.keys()) if (!cachedBefore.has(key)) cache.delete(key);
+  }
+});
+
+test("catalog pagination keeps complete item groups, resets filters and refresh, and paginates categories without changing totals", async () => {
+  const cachedBefore = new Set(cache.keys());
+  const states = [], effects = [], pending = [];
+  let cursor = 0;
+  const categories = Array.from({ length: 12 }, (_, index) => ({ id: `cat-${index}`, name: `Category ${String(index).padStart(2, "0")}`, isActive: index !== 11, isDeleted: false }));
+  let catalogCategories = categories;
+  const items = categories.flatMap((category, index) => Array.from({ length: index === 0 ? 25 : 1 }, (_, row) => ({ id: `${category.id}-${row}`, name: `Item ${row}`, category, isActive: index !== 11, isDeleted: false })));
+  overrides.set("react", {
+    useState(initial) { const index = cursor++; if (!(index in states)) states[index] = typeof initial === "function" ? initial() : initial; return [states[index], (value) => { states[index] = typeof value === "function" ? value(states[index]) : value; }]; },
+    useMemo: (fn) => fn(), useCallback: (fn) => fn,
+    useEffect(fn, deps) { const index = cursor++; if (!effects[index] || deps.some((value, i) => effects[index][i] !== value)) { effects[index] = deps; pending.push(fn); } },
+  });
+  overrides.set("@/lib/api/use-api-error-message", { useApiErrorMessage: () => (error) => error.message });
+  overrides.set("@/app/modules/items/services/categories.service", { listCategories: async () => catalogCategories });
+  overrides.set("@/app/modules/items/services/items.service", { listItems: async () => items });
+  try {
+    for (const kind of ["items-page", "categories"]) {
+      states.length = 0; effects.length = 0; pending.length = 0;
+      const file = resolve(root, `app/modules/items/hooks/use-${kind}.ts`);
+      cache.delete(file);
+      const hook = load(`@/app/modules/items/hooks/use-${kind}`)[kind === "items-page" ? "useItemsPage" : "useCategories"];
+      const render = () => { cursor = 0; return hook(); };
+      const settle = async () => { for (const effect of pending.splice(0)) effect(); await Promise.resolve(); await Promise.resolve(); return render(); };
+      let state = render(); state = await settle();
+      if (kind === "items-page") {
+        assert.equal(state.totalPages, 3); assert.equal(state.page, 1);
+        assert.equal(state.groupedItems.length, 5); assert.equal(state.groupedItems[0].items.length, 25);
+        assert.equal(state.totalItems, 36);
+        state.setPage(3); state = render(); assert.equal(state.groupedItems.length, 2);
+        state.setIsActive("inactive"); state = render(); assert.equal(state.page, 1); assert.equal(state.totalPages, 1); assert.equal(state.totalItems, 36);
+        state.setIsActive("all"); state = render(); state.setPage(2); state = render();
+        state.setSearch("missing"); state = render(); assert.equal(state.page, 1); assert.equal(state.groupedItems.length, 0);
+        state.setSearch(""); state = render(); state.setPage(2); state = render();
+        state.setCategoryId("cat-0"); state = render(); assert.equal(state.page, 1); assert.equal(state.groupedItems[0].items.length, 25);
+        state.setCategoryId(""); state = render(); state.setPage(3); state = render();
+      } else {
+        assert.equal(state.categories.length, 12); assert.equal(state.pageCategories.length, 10); assert.equal(state.totalPages, 2);
+        state.setPage(2); state = render(); assert.equal(state.pageCategories.length, 2); assert.equal(state.pageCategories[0].id, "cat-10");
+        state.setSearch("  CATEGORY 01  "); state = render();
+        assert.equal(state.page, 1); assert.equal(state.totalPages, 1); assert.equal(state.pageCategories[0].id, "cat-1"); assert.equal(state.categories.length, 12);
+        state.setIsActive("inactive"); state = render(); assert.equal(state.pageCategories.length, 0); assert.equal(state.hasFilters, true);
+        state.setSearch(""); state = render(); assert.equal(state.pageCategories[0].id, "cat-11");
+        state.setIsActive("active"); state = render(); assert.equal(state.totalPages, 2);
+        state.setPage(2); state = render(); assert.equal(state.pageCategories.length, 1);
+        state.setIsActive("all"); state = render(); assert.equal(state.page, 1); assert.equal(state.hasFilters, false);
+        state.setPage(2); state = render(); state.setSearch("missing"); state = render();
+        assert.equal(state.page, 1); assert.equal(state.totalPages, 1); assert.equal(state.pageCategories.length, 0); assert.equal(state.categories.length, 12);
+        catalogCategories = []; state.refresh(); state = render(); state = await settle();
+        assert.equal(state.page, 1); assert.equal(state.totalPages, 1); assert.equal(state.pageCategories.length, 0);
+      }
+      state.refresh(); state = render(); state = await settle(); assert.equal(state.page, 1);
+    }
+  } finally {
+    for (const key of ["react", "@/lib/api/use-api-error-message", "@/app/modules/items/services/items.service", "@/app/modules/items/services/categories.service"]) overrides.delete(key);
+    for (const key of cache.keys()) if (!cachedBefore.has(key)) cache.delete(key);
+  }
+});
+
+test("category toolbar exposes name and status filters and filtered empty state gives filter guidance", () => {
+  const cachedBefore = new Set(cache.keys());
+  overrides.set("next-intl", { useLocale: () => "en", useTranslations: () => (key) => key });
+  try {
+    const { CategoriesToolbar } = load("@/app/modules/items/components/categories-toolbar");
+    const { CategoriesList } = load("@/app/modules/items/components/categories-list");
+    const nodes = (element) => !element || typeof element !== "object" ? [] : [element, ...[element.props?.children].flat(Infinity).flatMap(nodes)];
+    const changes = [];
+    const tree = CategoriesToolbar({ filters: { search: "Wood", isActive: "active" }, onSearchChange: (value) => changes.push(value), onActiveChange: (value) => changes.push(value) });
+    const input = nodes(tree).find((node) => node.type === "input");
+    const select = nodes(tree).find((node) => node.type === "select");
+    assert.equal(input.props.value, "Wood"); assert.equal(input.props.placeholder, "searchPlaceholder");
+    input.props.onChange({ target: { value: "MDF" } }); select.props.onChange({ target: { value: "inactive" } });
+    assert.deepEqual(changes, ["MDF", "inactive"]);
+    assert.deepEqual(nodes(select).filter((node) => node.type === "option").map((node) => node.props.value), ["all", "active", "inactive"]);
+    const props = { categories: [], status: "success", error: null };
+    assert.equal(CategoriesList(props).props.title, "emptyTitle");
+    const empty = CategoriesList({ ...props, hasFilters: true });
+    assert.equal(empty.props.title, "noResultsTitle"); assert.equal(empty.props.description, "noResultsDescription");
+  } finally {
+    overrides.delete("next-intl");
+    for (const key of cache.keys()) if (!cachedBefore.has(key)) cache.delete(key);
+  }
+});
+
+test("catalog pagination controls show localized counters and disable page boundaries", () => {
+  const cachedBefore = new Set(cache.keys());
+  overrides.set("next-intl", { useTranslations: () => (key, values) => key === "pageOf" ? `Page ${values.page} of ${values.totalPages}` : key });
+  try {
+    const { CatalogPagination } = load("@/app/modules/items/components/catalog-pagination");
+    const changes = [];
+    const props = { page: 1, totalPages: 3, onPageChange: (page) => changes.push(page) };
+    assert.equal(CatalogPagination({ ...props, totalPages: 1 }), null);
+    let tree = CatalogPagination(props);
+    assert.equal(tree.type, "nav"); assert.equal(tree.props["aria-label"], "pagination");
+    let [previous, counter, next] = tree.props.children;
+    assert.equal(previous.props.disabled, true); assert.equal(next.props.disabled, false);
+    assert.equal(counter.props.children, "Page 1 of 3");
+    next.props.onClick(); assert.deepEqual(changes, [2]);
+    tree = CatalogPagination({ ...props, page: 3 });
+    [previous, counter, next] = tree.props.children;
+    assert.equal(previous.props.disabled, false); assert.equal(next.props.disabled, true);
+    assert.equal(counter.props.children, "Page 3 of 3");
+    previous.props.onClick(); assert.deepEqual(changes, [2, 2]);
+  } finally {
+    overrides.delete("next-intl");
+    for (const key of cache.keys()) if (!cachedBefore.has(key)) cache.delete(key);
+  }
+});
+
+test("item category headers expose collapse controls and both pages share the styled toggle", () => {
+  const cachedBefore = new Set(cache.keys());
+  overrides.set("next-intl", { useLocale: () => "en", useTranslations: () => (key) => key });
+  try {
+    const { CategoryItemsTable } = load("@/app/modules/items/components/category-items-table");
+    const { CategoryToggleButton } = load("@/app/modules/shared/components/category-toggle-button");
+    const nodes = (element) => !element || typeof element !== "object" ? [] : [element, ...[element.props?.children].flat(Infinity).flatMap(nodes)];
+    let toggles = 0;
+    const props = { category: { id: "wood", name: "Wood" }, items: [], isCollapsed: false, onToggle: () => toggles++, onEdit() {}, onDelete() {}, onHistory() {} };
+    let tree = CategoryItemsTable(props);
+    let header = nodes(tree).find((node) => node.type === "button");
+    assert.equal(header.props["aria-expanded"], true); assert.equal(header.props["aria-controls"], "items-category-wood");
+    assert.equal(nodes(tree).find((node) => node.props.id === "items-category-wood").props.hidden, false);
+    header.props.onClick(); assert.equal(toggles, 1);
+    tree = CategoryItemsTable({ ...props, isCollapsed: true });
+    header = nodes(tree).find((node) => node.type === "button");
+    assert.equal(header.props["aria-expanded"], false);
+    assert.equal(nodes(tree).find((node) => node.props.id === "items-category-wood").props.hidden, true);
+    for (const allCollapsed of [true, false]) {
+      const toggle = CategoryToggleButton({ allCollapsed, onClick: props.onToggle });
+      assert.equal(toggle.props.variant, "secondary"); assert.match(toggle.props.className, /min-h-11/);
+      assert.equal(toggle.props.children.at(-1), allCollapsed ? "expandAll" : "collapseAll");
+    }
+  } finally {
+    overrides.delete("next-intl");
+    for (const key of cache.keys()) if (!cachedBefore.has(key)) cache.delete(key);
+  }
+});
+
+test("shared category collapse keeps the global choice across item pages, filters and individual overrides", () => {
+  const states = [];
+  const cachedBefore = new Set(cache.keys());
+  let cursor = 0;
+  overrides.set("react", { useState(initial) { const index = cursor++; if (!(index in states)) states[index] = typeof initial === "function" ? initial() : initial; return [states[index], (value) => { states[index] = typeof value === "function" ? value(states[index]) : value; }]; } });
+  try {
+    const { useCategoryCollapse: runCategoryCollapse } = load("@/app/modules/shared/hooks/use-category-collapse");
+    let ids = ["A", "B"];
+    const render = () => { cursor = 0; return runCategoryCollapse(ids); };
+    let state = render(); assert.equal(state.allCollapsed, false);
+    state.toggleAll(); state = render(); assert.equal(state.allCollapsed, true);
+    ids = ["C", "D"]; state = render(); assert.equal(state.allCollapsed, true);
+    state.toggleCategory("C"); state = render(); assert.equal(state.isCategoryCollapsed("C"), false); assert.equal(state.isCategoryCollapsed("D"), true);
+    ids = []; state = render(); assert.equal(state.allCollapsed, false);
+    ids = ["A", "B"]; state = render(); assert.equal(state.allCollapsed, true);
+    state.toggleAll(); state = render(); assert.equal(state.allCollapsed, false);
+    ids = ["C", "D"]; state = render(); assert.equal(state.isCategoryCollapsed("C"), false); assert.equal(state.isCategoryCollapsed("D"), false);
+    state.toggleCategory("D"); state = render(); assert.equal(state.isCategoryCollapsed("D"), true);
+    state.toggleAll(); ids = ["E"]; state = render(); assert.equal(state.allCollapsed, true);
+  } finally {
+    overrides.delete("react");
+    for (const key of cache.keys()) if (!cachedBefore.has(key)) cache.delete(key);
+  }
+});
+
+test("inventory collapse all and expand all apply across pages with individual overrides", () => {
+  const states = [];
+  const cachedBefore = new Set(cache.keys());
+  let cursor = 0;
+  const file = resolve(root, "app/modules/inventory/components/stock-table.tsx");
+  overrides.set("react", {
+    useMemo: (fn) => fn(),
+    useState(initial) {
+      const index = cursor++;
+      if (!(index in states)) states[index] = typeof initial === "function" ? initial() : initial;
+      return [states[index], (value) => { states[index] = typeof value === "function" ? value(states[index]) : value; }];
+    },
+  });
+  overrides.set("next-intl", { useLocale: () => "en", useTranslations: () => (key) => key });
+  cache.delete(file);
+  const item = (id) => ({ id, name: id, categoryId: id, category: { id, name: id }, pricingMode: "per_piece", stockQuantity: 1, cost: 1, unitPrice: 2, valuationAtCost: 1, valuationAtSellingPrice: 2, reorderThreshold: 0, isActive: true });
+  const props = { items: [item("A"), item("B")], isLoading: false, page: 1, totalPages: 3, totalCategories: 5, onPageChange() {}, onAdjustStock() {}, onUpdateThreshold() {}, onViewAdjustmentsForItem() {} };
+  try {
+    const { StockTable } = load("@/app/modules/inventory/components/stock-table");
+    const render = () => { cursor = 0; return StockTable(props); };
+    const nodes = (element) => !element || typeof element !== "object" ? [] : [element, ...[element.props?.children].flat(Infinity).flatMap(nodes)];
+    const headers = () => nodes(render()).filter((node) => node.type === "button" && typeof node.props["aria-expanded"] === "boolean");
+    const expanded = () => headers().map((node) => node.props["aria-expanded"]);
+    const allButton = () => nodes(render()).find((node) => typeof node.props?.allCollapsed === "boolean" && typeof node.props?.onClick === "function");
+    assert.deepEqual(expanded(), [true, true]);
+    allButton().props.onClick();
+    assert.deepEqual(expanded(), [false, false]);
+    props.page = 2; props.items = [item("C"), item("D")]; props.isLoading = true; render(); props.isLoading = false;
+    assert.deepEqual(expanded(), [false, false]);
+    assert.equal(allButton().props.allCollapsed, true);
+    headers()[0].props.onClick();
+    assert.deepEqual(expanded(), [true, false]);
+    props.page = 1; props.items = [item("A"), item("B")];
+    assert.deepEqual(expanded(), [false, false]);
+    props.page = 2; props.items = [item("C"), item("D")];
+    assert.deepEqual(expanded(), [true, false]);
+    allButton().props.onClick();
+    assert.deepEqual(expanded(), [false, false]);
+    allButton().props.onClick();
+    assert.deepEqual(expanded(), [true, true]);
+    props.page = 1; props.items = [item("A"), item("B")];
+    assert.deepEqual(expanded(), [true, true]);
+    headers()[0].props.onClick();
+    assert.deepEqual(expanded(), [false, true]);
+    props.page = 3; props.items = [item("E")];
+    assert.deepEqual(expanded(), [true]);
+    allButton().props.onClick();
+    props.page = 1; props.items = [item("A"), item("B")];
+    assert.deepEqual(expanded(), [false, false]);
+  } finally {
+    overrides.delete("react"); overrides.delete("next-intl"); cache.delete(file);
+    for (const key of cache.keys()) if (!cachedBefore.has(key)) cache.delete(key);
+  }
+});
+
+test("inventory service serializes category pagination without changing legacy requests", async () => {
+  const requests = [];
+  const file = resolve(root, "app/modules/inventory/services/inventory.service.ts");
+  overrides.set("@/lib/api/client", { apiClient: { get: async (url, options) => { requests.push({ url, options }); return {}; } } });
+  cache.delete(file);
+  try {
+    const { getStockList } = load("@/app/modules/inventory/services/inventory.service");
+    const signal = new AbortController().signal;
+    await getStockList({ paginationMode: "categories", page: 2, limit: 5, categoryId: "wood", stockStatus: "low_stock", q: " oak " }, signal);
+    const query = new URL(requests[0].url, "http://localhost").searchParams;
+    assert.deepEqual(Object.fromEntries(query), { categoryId: "wood", stockStatus: "low_stock", q: "oak", page: "2", limit: "5", paginationMode: "categories" });
+    assert.equal(requests[0].options.signal, signal);
+    await getStockList({ page: 1, limit: 25 });
+    assert.equal(requests[1].url, "/inventory/stock?page=1&limit=25");
+    await getStockList();
+    assert.equal(requests[2].url, "/inventory/stock");
+  } finally { overrides.delete("@/lib/api/client"); cache.delete(file); }
+});
+
+test("inventory hook requests five complete categories and resets all filters to page one", async () => {
+  const states = [], dependencies = [], pending = [], requests = [], timers = new Map();
+  const cleanups = new Map();
+  let cursor = 0, timerId = 0, deferredResponse;
+  let responseMeta = { page: 1, limit: 5, total: 11, totalItems: 200, paginationMode: "categories", totalPages: 4 };
+  const file = resolve(root, "app/modules/inventory/hooks/use-inventory.ts");
+  const servicePath = "@/app/modules/inventory/services/inventory.service";
+  const categoriesPath = "@/app/modules/items/services/categories.service";
+  const oldWindow = globalThis.window;
+  globalThis.window = { setTimeout(fn) { timers.set(++timerId, fn); return timerId; }, clearTimeout(id) { timers.delete(id); } };
+  overrides.set("react", {
+    useState(initial) { const index = cursor++; if (!(index in states)) states[index] = typeof initial === "function" ? initial() : initial; return [states[index], (value) => { states[index] = typeof value === "function" ? value(states[index]) : value; }]; },
+    useCallback: (fn) => fn,
+    useEffect(fn, deps) { const index = cursor++; if (!dependencies[index] || deps.some((value, i) => dependencies[index][i] !== value)) { dependencies[index] = deps; pending.push(() => { cleanups.get(index)?.(); cleanups.set(index, fn()); }); } },
+  });
+  overrides.set("@/lib/api/use-api-error-message", { useApiErrorMessage: () => (error) => error.message });
+  overrides.set(servicePath, {
+    getStockList: async (filters) => { requests.push(filters); if (deferredResponse) { const response = deferredResponse; deferredResponse = undefined; return response; } return { items: [{ id: "entire-category" }], meta: responseMeta, summary: { totalItems: 200 } }; },
+    getInventoryValuation: async () => ({ totalItemsCount: 200 }),
+  });
+  overrides.set(categoriesPath, { listCategories: async () => [] });
+  cache.delete(file);
+  try {
+    const { useInventory: runInventoryHook } = load("@/app/modules/inventory/hooks/use-inventory");
+    const render = () => { cursor = 0; return runInventoryHook(); };
+    const settle = async () => { for (const effect of pending.splice(0)) effect(); await Promise.resolve(); await Promise.resolve(); return render(); };
+    let state = render();
+    assert.equal(state.meta.paginationMode, "categories");
+    assert.equal(state.meta.limit, 5);
+    state = await settle();
+    for (const timer of timers.values()) timer(); timers.clear();
+    assert.deepEqual(requests[0], { page: 1, limit: 5, paginationMode: "categories" });
+    assert.equal(state.totalPages, 4);
+    assert.equal(state.meta.total, 11);
+    assert.equal(state.summary.totalItems, 200);
+    assert.equal(state.items[0].id, "entire-category");
+    state.setPage(2); state = render(); state = await settle();
+    assert.equal(requests.at(-1).page, 2);
+    state.setCategoryId("oak"); state = render(); state = await settle();
+    assert.equal(requests.at(-1).page, 1);
+    assert.equal(requests.at(-1).categoryId, "oak");
+    state.setPage(2); state = render(); state = await settle();
+    state.setStatusFilter("low_stock"); state = render(); state = await settle();
+    assert.equal(requests.at(-1).page, 1);
+    assert.equal(requests.at(-1).stockStatus, "low_stock");
+    state.setPage(2); state = render(); state = await settle();
+    state.setSearchInput(" pine "); state = render(); state = await settle();
+    for (const timer of timers.values()) timer(); timers.clear();
+    state = render(); state = await settle();
+    assert.equal(requests.at(-1).page, 1);
+    assert.equal(requests.at(-1).q, "pine");
+    responseMeta = { page: 1, limit: 2, total: 11, totalItems: 200, paginationMode: "categories" };
+    state.refresh(); state = render(); state = await settle();
+    assert.equal(state.totalPages, 6);
+    state.setPage(6); state = render(); state = await settle();
+    responseMeta = { ...responseMeta, total: 0, totalPages: 1 };
+    state.refresh(); state = render(); state = await settle();
+    assert.equal(state.totalPages, 1);
+    assert.equal(state.page, 1);
+    state = await settle();
+    assert.equal(requests.at(-1).page, 1);
+    let releaseOldResponse;
+    deferredResponse = new Promise((resolveResponse) => { releaseOldResponse = resolveResponse; });
+    state.setCategoryId("stale"); state = render(); state = await settle();
+    state.setCategoryId("current"); state = render(); state = await settle();
+    releaseOldResponse({ items: [{ id: "stale-item" }], meta: { ...responseMeta, total: 99 }, summary: { totalItems: 999 } });
+    await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    state = render();
+    assert.equal(state.meta.total, 0);
+    assert.equal(state.summary.totalItems, 200);
+    assert.equal(state.items[0].id, "entire-category");
+  } finally {
+    for (const cleanup of cleanups.values()) cleanup?.();
+    if (oldWindow === undefined) delete globalThis.window; else globalThis.window = oldWindow;
+    for (const key of ["react", "next-intl", "@/lib/api/use-api-error-message", servicePath, categoriesPath]) overrides.delete(key);
+    cache.delete(file);
+  }
+});
+
+test("inventory stock table renders category counts and pages using both real locale dictionaries", () => {
+  const React = nativeRequire("react");
+  const { renderToStaticMarkup } = nativeRequire("react-dom/server");
+  const { createTranslator } = nativeRequire("next-intl");
+  const file = resolve(root, "app/modules/inventory/components/stock-table.tsx");
+  for (const locale of ["en", "ar"]) {
+    const messages = JSON.parse(readFileSync(resolve(root, `messages/${locale}.json`), "utf8"));
+    const translate = (namespace) => createTranslator({ locale, messages, namespace, onError(error) { throw error; } });
+    overrides.set("next-intl", { useLocale: () => locale, useTranslations: translate });
+    cache.delete(file);
+    try {
+      const { StockTable } = load("@/app/modules/inventory/components/stock-table");
+      const items = ["Zebra", "Alpha"].map((name) => ({ id: name, name, category: { id: name, name }, pricingMode: "per_piece", stockQuantity: 1, reorderThreshold: 0, cost: 1, unitPrice: 2, valuationAtCost: 1 }));
+      const html = renderToStaticMarkup(React.createElement(StockTable, { items, isLoading: false, page: 2, totalPages: 3, totalCategories: 11, onPageChange() {}, onAdjustStock() {}, onUpdateThreshold() {}, onViewAdjustmentsForItem() {} }));
+      assert.ok(html.includes(translate("inventory")("categoryCount", { count: 2, total: 11 })));
+      assert.ok(html.includes(translate("inventory")("categoryPageOf", { page: 2, totalPages: 3 })));
+      assert.ok(html.indexOf("Zebra") < html.indexOf("Alpha"));
+      assert.doesNotMatch(html, /\{(?:count|total|page|totalPages)\}|inventory\.category/);
+      const edgeItems = [
+        { ...items[0], id: "tie-last", name: "Tie Last", category: { id: "b", name: "Same" } },
+        { ...items[0], id: "tie-first", name: "Tie First", category: { id: "a", name: "Same" } },
+        { ...items[0], id: "orphan-one", category: null, categoryId: "missing-one" },
+        { ...items[0], id: "orphan-two", category: null, categoryId: "missing-two" },
+      ];
+      const edgeHtml = renderToStaticMarkup(React.createElement(StockTable, { items: edgeItems, isLoading: false, page: 1, totalPages: 1, totalCategories: 4, onPageChange() {}, onAdjustStock() {}, onUpdateThreshold() {}, onViewAdjustmentsForItem() {} }));
+      assert.ok(edgeHtml.includes(translate("inventory")("categoryCount", { count: 4, total: 4 })));
+      assert.ok(edgeHtml.indexOf("Tie Last") < edgeHtml.indexOf("Tie First"));
+      assert.ok(edgeHtml.indexOf("Tie Last") < edgeHtml.indexOf(translate("inventory")("uncategorized")));
+    } finally { overrides.delete("next-intl"); cache.delete(file); }
+  }
+});
+
 test("account payment previews preserve signed credit and exclude replaced invoice debt", () => {
   const { accountBalanceAfterInvoice, parseAccountPayment, splitInvoicePayment, invoicePaymentBreakdown } = load("@/app/modules/shared/utils/account-payment");
   assert.deepEqual(invoicePaymentBreakdown(1000, 3000), { invoicePaid: 1000, accountPaymentAmount: 3000, totalPaid: 4000 });
@@ -259,6 +773,7 @@ test("invoice form submissions split overpayments and do not replay them on edit
     },
   });
   const item = { id: "wood", pricingMode: "per_piece", unitPrice: 1000, cost: 1000, isActive: true };
+  const freeItem = { id: "charge", pricingMode: "free_amount", unitPrice: 0, cost: 999, isActive: true };
   const party = { id: "party", name: "Account", isActive: true, balance: 500, amountOwed: 500 };
   const captures = [];
   const service = {
@@ -270,7 +785,7 @@ test("invoice form submissions split overpayments and do not replay them on edit
   const replacements = {
     "@/app/modules/items/hooks/use-item-dimension-defaults": { useItemDimensionDefaults: () => async () => {} },
     "@/lib/api/use-api-error-message": { useApiErrorMessage: () => (error) => error.message },
-    "@/app/modules/items/services/items.service": { listItems: async () => [item], getItem: async () => item },
+    "@/app/modules/items/services/items.service": { listItems: async () => [item, freeItem], getItem: async (id) => id === "charge" ? freeItem : item },
     "@/app/modules/customers/services/customers.service": { listCustomers: async () => ({ items: [party] }), getCustomer: async () => party },
     "@/app/modules/suppliers/services/suppliers.service": { listSuppliers: async () => ({ items: [party] }), getSupplier: async () => party },
     "@/app/modules/invoices/services/invoices.service": service,
@@ -323,6 +838,61 @@ test("invoice form submissions split overpayments and do not replay them on edit
       form = render();
       assert.equal(await form.submit({ print: false, t: (key) => key }), null);
       assert.equal(captures.length, count + 1);
+      if (kind === "purchase") {
+        const previousWindow = globalThis.window;
+        globalThis.window = { setTimeout: () => 1, clearTimeout() {} };
+        try {
+          form.setSupplierQuery("different supplier");
+          form = render();
+          assert.equal(form.suppliersLoading, true, "the picker blocks selection throughout debounce");
+          assert.deepEqual(form.supplierResults, []);
+          form.setSupplierQuery("");
+          form = render();
+          assert.equal(form.suppliersLoading, false);
+        } finally {
+          if (previousWindow === undefined) delete globalThis.window;
+          else globalThis.window = previousWindow;
+        }
+        form.resetForm();
+        form = render();
+        form.selectSupplier(party);
+        form = render();
+        const lineKey = form.lines[0].key;
+        form.selectItem(lineKey, "charge");
+        form = render();
+        assert.equal(form.lines[0].unitCost, "", "free charges must not inherit catalog cost");
+        assert.equal(form.lines[0].quantity, "1");
+        form.updateLine(lineKey, { unitCost: "77.25" });
+        form = render();
+        form.selectItem(lineKey, "charge");
+        form = render();
+        assert.equal(form.lines[0].unitCost, "77.25", "reselecting a free item preserves its entered amount");
+        form.updateLine(lineKey, { quantity: "99", unitCost: "125.56", thicknessM: "2", widthM: "3", lengthM: "4", note: "  delivery  " });
+        form.setPaidInput("200");
+        form = render();
+        assert.equal(form.total, 125.56, "free charges ignore stock quantity and dimensions");
+        assert.equal(await form.submit({ t: (key) => key }), "saved");
+        assert.deepEqual(captures.at(-1).lines, [{ itemId: "charge", quantity: 1, unitCost: 125.56, thickness: undefined, width: undefined, length: undefined, note: "delivery" }]);
+        assert.equal(captures.at(-1).paid, 125.56);
+        assert.equal(captures.at(-1).accountPaymentAmount, 74.44);
+        await form.initializeForEdit({ ...invoice, lines: [{ itemId: "charge", quantity: 1, unitCost: 125.56, lineTotal: 125.56, pricingModeSnapshot: "free_amount" }] });
+        form = render();
+        assert.equal(form.lines[0].unitCost, "125.56");
+        assert.equal(await form.submit({ t: (key) => key }), "saved");
+        assert.equal(captures.at(-1).lines[0].quantity, 1);
+        const beforeInvalid = captures.length;
+        for (const unitCost of ["0", "-1", "NaN", "Infinity", "0.001", "125.555"]) {
+          form.updateLine(form.lines[0].key, { unitCost });
+          form = render();
+          assert.equal(await form.submit({ t: (key) => key }), null);
+        }
+        assert.equal(captures.length, beforeInvalid);
+        form.selectItem(form.lines[0].key, "wood");
+        form = render();
+        assert.equal(form.lines[0].quantity, "1");
+        assert.equal(form.lines[0].unitCost, "1000");
+        assert.equal(form.lines[0].thicknessM, "");
+      }
       form.resetForm();
       form = render();
       if (kind === "sales") assert.equal(form.type, "customer_sale");
@@ -366,11 +936,11 @@ test("customer picker searches and selects in one field with keyboard navigation
   const selected = [];
   const active = { id: "active", name: "Active", isActive: true };
   const another = { id: "another", name: "Another", isActive: true };
-  const props = { query: "", results: [another], loading: false, allCustomers: [active, another, { id: "off", name: "Inactive", isActive: false }],
-    allCustomersLoading: false, selectedCustomer: null,
+  const props = { name: "account", labels: { label: "Account", placeholder: "Search", clear: "Clear", loading: "Loading", empty: "No accounts" }, query: "", results: [another], loading: false, allAccounts: [active, another, { id: "off", name: "Inactive", isActive: false }],
+    allAccountsLoading: false, selectedAccount: null,
     onQueryChange(value) { props.query = value; },
-    onSelect(value) { selected.push(value.id); props.selectedCustomer = value; },
-    onClear() { props.selectedCustomer = null; },
+    onSelect(value) { selected.push(value.id); props.selectedAccount = value; },
+    onClear() { props.selectedAccount = null; },
   };
   overrides.set("react", {
     useId: () => "customer-picker",
@@ -379,11 +949,11 @@ test("customer picker searches and selects in one field with keyboard navigation
     useState(initial) { const index = cursor++; if (!(index in state)) state[index] = initial; return [state[index], (value) => { state[index] = value; }]; },
   });
   overrides.set("next-intl", { useTranslations: () => (key) => key });
-  const path = resolve(root, "app/modules/invoices/components/invoice-customer-combobox.tsx");
+  const path = resolve(root, "app/modules/shared/components/account-combobox.tsx");
   cache.delete(path);
   try {
-    const { InvoiceCustomerCombobox } = load("@/app/modules/invoices/components/invoice-customer-combobox");
-    function render() { cursor = 0; return InvoiceCustomerCombobox(props); }
+    const { AccountCombobox } = load("@/app/modules/shared/components/account-combobox");
+    function render() { cursor = 0; return AccountCombobox(props); }
     function nodes(element) {
       return !element || typeof element !== "object" ? [] : [element, ...[element.props?.children].flat(Infinity).flatMap(nodes)];
     }
@@ -401,7 +971,7 @@ test("customer picker searches and selects in one field with keyboard navigation
     key("Enter");
     assert.equal(selected.at(-1), "another", "Enter on the selected account must not switch to the first customer");
     input().props.onChange({ target: { value: "An" } });
-    assert.equal(props.selectedCustomer, null);
+    assert.equal(props.selectedAccount, null);
     assert.equal(input().props.value, "An");
     assert.equal(nodes(render()).filter((node) => node.props?.role === "option").length, 1);
     key("Escape");
@@ -409,6 +979,16 @@ test("customer picker searches and selects in one field with keyboard navigation
     key("ArrowUp");
     key("Enter");
     assert.deepEqual(selected, ["another", "another", "another"]);
+    props.onClear(); props.query = "";
+    props.originalAccount = { id: "original", name: "Original inactive", isActive: false };
+    key("ArrowDown");
+    assert.equal(nodes(render()).filter((node) => node.props?.role === "option").length, 3);
+    props.originalAccount.isDeleted = true;
+    assert.equal(nodes(render()).filter((node) => node.props?.role === "option").length, 2);
+    props.loading = true; props.query = "An";
+    const beforeLoading = selected.length;
+    key("Enter");
+    assert.equal(selected.length, beforeLoading, "loading results cannot select a stale supplier");
   } finally { overrides.delete("react"); overrides.delete("next-intl"); cache.delete(path); }
 });
 
@@ -852,7 +1432,7 @@ test("receipt item names separate Western digits from adjacent Arabic and isolat
   assert.equal(receipt.formatReceiptItemLabel("MDF18"), "MDF18");
   const { ReceiptItemLabel } = load("@/app/modules/invoices/components/receipt-item-label");
   const html = renderToStaticMarkup(React.createElement(ReceiptItemLabel, { label: "14ملي مربع" }));
-  assert.match(html, /<bdi dir="ltr">14<\/bdi> ملي مربع/);
+  assert.match(html, /<bdi dir="ltr" class="inline-block whitespace-nowrap align-baseline">14<\/bdi> ملي مربع/);
 });
 test("receipt cubic volume uses saved mode and six-decimal math before five-decimal display", () => {
   const volume = load("@/app/modules/invoices/utils/receipt-volume");
@@ -883,11 +1463,12 @@ test("A4 and A5 customer sheets keep the requested RTL columns and right totals"
       assert.match(html, /bg-receipt-header/);
       assert.match(html, /text-\[\#b85d19\][^>]*>فاتورة #0001/);
       assert.match(html, /text-\[\#b85d19\][^>]*>450<\/span>/);
-      assert.match(html, /<bdi dir="ltr">14<\/bdi> ملي مربع/);
+      assert.match(html, /<bdi dir="ltr" class="inline-block whitespace-nowrap align-baseline">14<\/bdi> ملي مربع/);
       assert.doesNotMatch(html, /print-color-adjust:exact/);
       assert.match(html, compact ? /padding:3mm/ : /padding:12mm/);
       assert.match(html, compact ? /h-8 flex items-center justify-center whitespace-nowrap/ : /h-9 flex items-center justify-center whitespace-nowrap/);
-      assert.match(html, compact ? /px-\[11px\]/ : /px-3/);
+      assert.match(html, compact ? /px-0\.5/ : /px-1/);
+      assert.match(html, compact ? /px-1\.5[^"\n]*text-right/ : /px-2[^"\n]*text-right/);
       assert.match(html, compact ? /text-\[\#666\] text-\[10px\]/ : /text-\[\#666\] text-\[11px\]/);
       assert.match(html, /flex flex-col items-center/);
       assert.doesNotMatch(html, /إجمالي المكعب/);
@@ -1331,22 +1912,22 @@ test("purchase edit totals retain the account preview without capping entered pa
   } finally { overrides.delete("next-intl"); }
 });
 
-test("purchase supplier picker offers only the original inactive supplier during editing", () => {
-  const React = nativeRequire("react");
-  const { renderToStaticMarkup } = nativeRequire("react-dom/server");
+test("purchase supplier picker shares the searchable account control and restricts the inactive exception to the original", () => {
   overrides.set("next-intl", { useLocale: () => "en", useTranslations: () => (key) => key });
+  overrides.set("react", { useState: () => [false, () => {}] });
   try {
     const { PurchaseSupplierSection } = load("@/app/modules/purchases/components/purchase-supplier-section");
-    const active = { id: "active", name: "Active Supplier", phone: null, address: null, amountOwed: 0, isActive: true, isDeleted: false };
-    const original = { ...active, id: "original", name: "Original Inactive Supplier", isActive: false };
-    const props = { allSuppliers: [active], allSuppliersLoading: false, selectedSupplier: null, onSelectSupplierId() {}, onClearSupplier() {}, notes: "", onNotesChange() {} };
-    const createHtml = renderToStaticMarkup(React.createElement(PurchaseSupplierSection, props));
-    assert.match(createHtml, /Active Supplier/);
-    assert.doesNotMatch(createHtml, /Original Inactive Supplier/);
-    const editHtml = renderToStaticMarkup(React.createElement(PurchaseSupplierSection, { ...props, originalSupplier: original }));
-    assert.match(editHtml, /<option value="original">Original Inactive Supplier/);
-    assert.match(editHtml, /Active Supplier/);
-  } finally { overrides.delete("next-intl"); }
+    const { AccountCombobox } = load("@/app/modules/shared/components/account-combobox");
+    const original = { id: "original", name: "Original", isActive: false };
+    const props = { allSuppliers: [], allSuppliersLoading: false, supplierQuery: "query", supplierResults: [], suppliersLoading: true, selectedSupplier: null, originalSupplier: original, onSelectSupplier() {}, onSupplierQueryChange() {}, onClearSupplier() {}, notes: "", onNotesChange() {} };
+    const nodes = (element) => !element || typeof element !== "object" ? [] : [element, ...[element.props?.children].flat(Infinity).flatMap(nodes)];
+    const picker = nodes(PurchaseSupplierSection(props)).find((node) => node.type === AccountCombobox);
+    assert.equal(picker.props.query, "query");
+    assert.equal(picker.props.loading, true);
+    assert.equal(picker.props.originalAccount, original);
+    assert.equal(picker.props.onQueryChange, props.onSupplierQueryChange);
+    assert.equal(picker.props.labels.empty, "noSuppliersFound");
+  } finally { overrides.delete("react"); overrides.delete("next-intl"); }
 });
 
 test("audit change labels and coded values are available in both locales", () => {

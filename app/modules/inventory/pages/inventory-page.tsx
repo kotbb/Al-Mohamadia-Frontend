@@ -26,6 +26,7 @@ export function InventoryPage() {
   const {
     items,
     summary,
+    meta: stockMeta,
     page: stockPage,
     totalPages: stockTotalPages,
     setPage: setStockPage,
@@ -113,6 +114,7 @@ export function InventoryPage() {
             isLoading={stockListStatus === "loading"}
             page={stockPage}
             totalPages={stockTotalPages}
+            totalCategories={stockMeta.total}
             onPageChange={setStockPage}
             onAdjustStock={(item) => setSelectedAdjustItem(item)}
             onUpdateThreshold={(item) => setSelectedThresholdItem(item)}

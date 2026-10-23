@@ -4,6 +4,9 @@ import { useTranslations } from "next-intl";
 import { AppShell } from "@/app/layout/app-shell";
 import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { CategoriesList } from "@/app/modules/items/components/categories-list";
+import { CatalogSummaryCard } from "@/app/modules/items/components/catalog-summary-card";
+import { CatalogPagination } from "@/app/modules/items/components/catalog-pagination";
+import { CategoriesToolbar } from "@/app/modules/items/components/categories-toolbar";
 import { CategoryFormModal } from "@/app/modules/items/components/category-form-modal";
 import { useCategories } from "@/app/modules/items/hooks/use-categories";
 import { Button } from "@/app/modules/shared/components/button";
@@ -15,6 +18,14 @@ export function CategoriesPage() {
   const history = useAuditHistory({ entityType: "Category" });
   const {
     categories,
+    pageCategories,
+    page,
+    totalPages,
+    setPage,
+    filters,
+    setSearch,
+    setIsActive,
+    hasFilters,
     listStatus,
     listError,
     refresh,
@@ -141,17 +152,29 @@ export function CategoriesPage() {
         onCancel={closeConfirm}
       />
 
-      <CategoriesList
-        categories={categories}
-        status={listStatus}
-        error={listError}
-        onRetry={refresh}
-        onEdit={openEdit}
-        onDeactivate={openDeactivateConfirm}
-        onActivate={openActivateConfirm}
-        onDelete={openDeleteConfirm}
-        onHistory={(category) => history.openRecord(category.id, category.name)}
-      />
+      <div className="space-y-6">
+        <CatalogSummaryCard
+          label={t("totalCategories")}
+          count={listStatus === "success" ? categories.length : null}
+          isLoading={listStatus === "loading" || listStatus === "idle"}
+        />
+        <CategoriesToolbar filters={filters} onSearchChange={setSearch} onActiveChange={setIsActive} />
+        <CategoriesList
+          categories={pageCategories}
+          hasFilters={hasFilters}
+          status={listStatus}
+          error={listError}
+          onRetry={refresh}
+          onEdit={openEdit}
+          onDeactivate={openDeactivateConfirm}
+          onActivate={openActivateConfirm}
+          onDelete={openDeleteConfirm}
+          onHistory={(category) => history.openRecord(category.id, category.name)}
+        />
+        {listStatus === "success" ? (
+          <CatalogPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        ) : null}
+      </div>
     </AppShell>
   );
 }

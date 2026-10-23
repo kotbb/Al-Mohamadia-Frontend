@@ -16,8 +16,21 @@ export interface CategoryListRow extends Category {
   itemCount: number;
 }
 
+export interface CategoriesFilters {
+  search: string;
+  isActive: "all" | "active" | "inactive";
+}
+
 export interface UseCategoriesResult {
   categories: CategoryListRow[];
+  pageCategories: CategoryListRow[];
+  page: number;
+  totalPages: number;
+  setPage: (page: number) => void;
+  filters: CategoriesFilters;
+  setSearch: (value: string) => void;
+  setIsActive: (value: CategoriesFilters["isActive"]) => void;
+  hasFilters: boolean;
   listStatus: ListStatus;
   listError: string | null;
   refresh: () => void;

@@ -19,7 +19,7 @@ import type {
 import { listCategories } from "@/app/modules/items/services/categories.service";
 import type { Category } from "@/app/modules/items/types/items.types";
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 5;
 const SEARCH_DEBOUNCE_MS = 300;
 
 export function useInventory() {
@@ -37,6 +37,9 @@ export function useInventory() {
     page: 1,
     limit: PAGE_SIZE,
     total: 0,
+    paginationMode: "categories",
+    totalItems: 0,
+    totalPages: 1,
   });
   const [page, setPage] = useState(1);
   const [categoryId, setCategoryId] = useState<string>("");
@@ -108,6 +111,7 @@ export function useInventory() {
     const filters: ListStockFilters = {
       page,
       limit: PAGE_SIZE,
+      paginationMode: "categories",
     };
 
     if (categoryId) {
@@ -124,6 +128,12 @@ export function useInventory() {
 
     getStockList(filters, controller.signal)
       .then((res) => {
+        if (controller.signal.aborted) return;
+        const responseTotalPages = Math.max(
+          1,
+          res.meta.totalPages ?? Math.ceil(res.meta.total / res.meta.limit),
+        );
+        setPage((current) => Math.min(current, responseTotalPages));
         setItems(res.items);
         setMeta(res.meta);
         setSummary(res.summary);
@@ -142,7 +152,10 @@ export function useInventory() {
     setTick((t) => t + 1);
   }, []);
 
-  const totalPages = Math.max(1, Math.ceil((meta.total || 0) / PAGE_SIZE));
+  const totalPages = Math.max(
+    1,
+    meta.totalPages ?? Math.ceil(meta.total / meta.limit),
+  );
 
   return {
     items,

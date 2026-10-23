@@ -176,19 +176,7 @@ export function NewInvoicePage({ invoiceId }: { invoiceId?: string }) {
             <div className="flex flex-wrap justify-end gap-3 border-t border-border pt-6">
               <Button
                 type="button"
-                variant="secondary"
-                disabled={form.isSubmitting}
-                onClick={() =>
-                  router.push(
-                    invoiceId ? `/invoices/${invoiceId}` : "/invoices",
-                  )
-                }
-              >
-                {t("modalCancel")}
-              </Button>
-              <Button
-                type="button"
-                variant="primary"
+                variant={invoiceId ? "primary" : "secondary"}
                 disabled={form.isSubmitting}
                 onClick={() => void handleSubmit(false)}
               >

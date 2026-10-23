@@ -10,8 +10,11 @@ export interface ItemsPageFilters {
 
 export interface UseItemsPageResult {
   categories: Category[];
-  items: Item[];
+  totalItems: number;
   groupedItems: Array<{ category: Category; items: Item[] }>;
+  page: number;
+  totalPages: number;
+  setPage: (page: number) => void;
   status: LoadStatus;
   error: string | null;
   refresh: () => void;

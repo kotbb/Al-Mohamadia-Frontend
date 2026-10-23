@@ -4,6 +4,7 @@ import type { Ref } from "react";
 import type { PublicInvoice } from "../types/invoices.types";
 import { ReceiptPaidAmount } from "./receipt-paid-amount";
 import { ReceiptItemLabel } from "./receipt-item-label";
+import { ReceiptTableColumns } from "./receipt-table-columns";
 import {
   formatReceiptCubicVolume,
   receiptLineCubicVolume,
@@ -34,18 +35,11 @@ export function PublicInvoiceSheet({
     (l) => l.thickness != null || l.width != null || l.length != null,
   );
   const hasCubic = invoice.lines.some((line) => receiptLineCubicVolume(line) !== null);
-  const cellPadding = compact ? "px-[11px]" : "px-3";
-  const headerPadding = compact ? "px-1.5" : "px-2";
+  const cellPadding = compact ? "px-0.5" : "px-1";
+  const itemPadding = compact ? "px-1.5" : "px-2";
+  const headerPadding = cellPadding;
   const headerHeight = compact ? "h-8" : "h-9";
   const headerText = compact ? "text-[10px]" : "text-xs";
-  const itemWidth = hasCubic ? compact ? "w-[17%]" : "w-[22%]" : "";
-  const dimensionWidth = hasCubic
-    ? compact ? "w-[10%]" : "w-[9%]"
-    : compact ? "w-[12%]" : "w-[11%]";
-  const unitPriceWidth = hasCubic ? "w-[14%]" : "w-[16%]";
-  const lineTotalWidth = hasCubic
-    ? "w-[16%]"
-    : compact ? "w-[19%]" : "w-[18%]";
   return (
     <div
       ref={printAreaRef}
@@ -130,40 +124,41 @@ export function PublicInvoiceSheet({
         dir="rtl"
         className={`${compact ? "mb-3 text-[10px]" : "mb-5 text-xs"} w-full table-fixed border-collapse`}
       >
+        <ReceiptTableColumns hasDimensions={hasDimensions} hasCubic={hasCubic} showPrices={showPrices} />
         <thead>
           <tr className="bg-receipt-header text-white">
             <th
-              className={`${headerPadding} ${headerText} ${itemWidth} text-right align-middle font-semibold`}
+              className={`${itemPadding} ${headerText} text-right align-middle font-semibold`}
             >
               <span className={`receipt-header-label ${headerHeight} flex items-center justify-start whitespace-nowrap leading-none`}>الصنف</span>
             </th>
-            <th className={`w-[9%] ${headerPadding} ${headerText} text-center align-middle font-semibold`}>
+            <th className={`${headerPadding} ${headerText} text-center align-middle font-semibold`}>
               <span className={`receipt-header-label ${headerHeight} flex items-center justify-center whitespace-nowrap leading-none`}>العدد</span>
             </th>
             {hasDimensions && (
               <>
-                <th className={`${dimensionWidth} ${headerPadding} ${headerText} text-center align-middle font-semibold`}>
+                <th className={`${headerPadding} ${headerText} text-center align-middle font-semibold`}>
                   <span className={`receipt-header-label ${headerHeight} flex items-center justify-center whitespace-nowrap leading-none`}>التخانة</span>
                 </th>
-                <th className={`${dimensionWidth} ${headerPadding} ${headerText} text-center align-middle font-semibold`}>
+                <th className={`${headerPadding} ${headerText} text-center align-middle font-semibold`}>
                   <span className={`receipt-header-label ${headerHeight} flex items-center justify-center whitespace-nowrap leading-none`}>العرض</span>
                 </th>
-                <th className={`${dimensionWidth} ${headerPadding} ${headerText} text-center align-middle font-semibold`}>
+                <th className={`${headerPadding} ${headerText} text-center align-middle font-semibold`}>
                   <span className={`receipt-header-label ${headerHeight} flex items-center justify-center whitespace-nowrap leading-none`}>الطول</span>
                 </th>
               </>
             )}
             {hasCubic && (
-              <th className={`${compact ? "w-[14%]" : "w-[12%]"} ${headerPadding} ${headerText} text-center align-middle font-semibold`}>
+              <th className={`${headerPadding} ${headerText} text-center align-middle font-semibold`}>
                 <span className={`receipt-header-label ${headerHeight} flex items-center justify-center whitespace-nowrap leading-none`}>المكعب</span>
               </th>
             )}
             {showPrices && (
               <>
-                <th className={`${unitPriceWidth} ${headerPadding} ${headerText} text-center align-middle font-semibold`}>
+                <th className={`${headerPadding} ${headerText} text-center align-middle font-semibold`}>
                   <span className={`receipt-header-label ${headerHeight} flex items-center justify-center whitespace-nowrap leading-none`}>سعر الوحدة</span>
                 </th>
-                <th className={`${lineTotalWidth} ${headerPadding} ${headerText} text-center align-middle font-semibold`}>
+                <th className={`${headerPadding} ${headerText} text-center align-middle font-semibold`}>
                   <span className={`receipt-header-label ${headerHeight} flex items-center justify-center whitespace-nowrap leading-none`}>الإجمالي</span>
                 </th>
               </>
@@ -179,16 +174,17 @@ export function PublicInvoiceSheet({
                 className={`border-b border-[#e0e0e0] ${compact ? "text-[10px]" : "text-[12px]"}`}
               >
                 <td
-                  className={`${compact ? "py-1.5" : "py-2.5"} ${cellPadding} text-right align-top`}
+                  className={`${compact ? "py-1.5" : "py-2.5"} ${itemPadding} text-right align-top`}
                 >
                   <ReceiptItemLabel
                     label={line.itemLabel}
                     className={`${compact ? "text-[11px]" : "text-[13px]"} font-bold text-[#111]`}
                   />
                   {line.note && (
-                    <div className="mt-0.5 text-[10px] italic text-[#666]">
-                      {line.note}
-                    </div>
+                    <ReceiptItemLabel
+                      label={line.note}
+                      className="mt-0.5 text-[10px] font-normal leading-relaxed text-[#666]"
+                    />
                   )}
                 </td>
                 <td className={`${compact ? "py-1.5" : "py-2.5"} ${cellPadding} text-center align-top font-bold text-[#1a1a1a]`}>
@@ -239,7 +235,7 @@ export function PublicInvoiceSheet({
         <tfoot>
           <tr className="border-t-2 border-[#222] font-bold text-[#111]">
             <td
-              className={`${cellPadding} py-2 text-right`}
+              className={`${itemPadding} py-2 text-right`}
             >
               الإجمالي
             </td>

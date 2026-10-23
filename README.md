@@ -47,6 +47,7 @@ lib/
 ### Dashboard (`/`)
 
 - Today's sales, estimated gross profit, collections, and invoice count
+- Existing gross-profit figures deduct stocked-item sales costs and saved free-amount purchase totals from net sales; supplier payments do not deduct the amount again
 - Outstanding customer debt
 - Period financial summaries, chart, and top-selling items with day/week/month/year or custom dates
 
@@ -99,6 +100,7 @@ lib/
 ### Purchases (`/purchases`)
 
 - Create and edit purchases on dedicated pages with stock, supplier debt, and linked-payment reconciliation
+- Search suppliers and categorized items in the same controls used by sales; free-amount lines accept one amount and optional note with no stock movement
 - One Paid amount field splits invoice payment from independent excess; preview resulting supplier debt/credit
 - Category-grouped items, meter dimensions, and inline saved dimension defaults
 - Purchase list and detail
@@ -114,16 +116,19 @@ lib/
 - Live stock, low-stock and negative-stock flags
 - Valuation at cost and selling price
 - Manual stock adjustment (جرد) with a reason
-- Compact category tables retaining eight columns, collapse controls, pagination, and history actions
+- Compact category tables retaining eight columns, collapse controls, history actions, and pagination of five complete matching categories per page; a category is never split
 - Compact valuation/profit/alert KPI cards; category counts describe the loaded page
 
 ### Items and categories (`/items`, `/categories`)
 
-- Categories: create, edit, soft-delete
+- Categories: create, edit, soft-delete; full-width total-count KPI, category-name/status filters, and ten matching rows per page
 - Items: piece, per-cubic-meter, or مبلغ حر pricing; free-amount items have no editable cost, price, or stock
+- Items: catalog-wide total-count KPI; five complete category groups per page after filtering, with Close all / Expand all retained across pages
 - Price history
 - Edit and soft-delete items
 - Dedicated Add/Edit pages with multiple dimension defaults per axis
+
+Items use database IDs for references and names/categories for display. Item codes are no longer generated, accepted by item create/update requests, or returned by item, inventory or dashboard top-selling responses. Items and Inventory search by name; invoice selectors also match category names. Duplicate item names remain allowed. Use the matching backend version and follow [manual database cleanup](../Al-Mohamadia-Backend/docs/REMOVE-ITEM-CODES.md) for existing code fields/indexes.
 
 ### Audit log (`/audit`)
 

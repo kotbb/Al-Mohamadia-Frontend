@@ -178,7 +178,7 @@ Focus is never indicated by `primary` alone or by a border-color change alone �
 
 ### Decision: **Noto Sans Arabic paired with Noto Sans**, for both Arabic and Latin/numeral content.
 
-**Why Noto Sans Arabic:** Highly legible, ultra-clean, and neutral sans-serif designed specifically for digital displays and multi-script harmony. Combining `Noto Sans Arabic` with its Latin counterpart `Noto Sans` provides smooth, friendly letterforms with clear distinction at all sizes (from 12px table metadata to 28px dashboard KPIs), completely eliminating serif fallbacks and rendering glitches in mixed Arabic/English text and SKU codes.
+**Why Noto Sans Arabic:** Highly legible, ultra-clean, and neutral sans-serif designed specifically for digital displays and multi-script harmony. Combining `Noto Sans Arabic` with its Latin counterpart `Noto Sans` provides smooth, friendly letterforms with clear distinction at all sizes (from 12px table metadata to 28px dashboard KPIs), completely eliminating serif fallbacks and rendering glitches in mixed Arabic/English text and invoice numbers.
 
 **Fallback stack:** `"Noto Sans Arabic", "Noto Sans", "Segoe UI", system-ui, sans-serif`.
 
@@ -201,7 +201,7 @@ Focus is never indicated by `primary` alone or by a border-color change alone �
 
 **Tabular figures:** enabled everywhere numbers appear in a column — invoice line totals, price lists, balances, dashboard KPIs — so digits align vertically. Not required in inline prose numbers.
 
-**Mixed RTL/LTR behavior:** paragraph/field direction follows the locale (`ar` RTL, `en` LTR); embedded numerals, currency, and item codes render as LTR runs within the RTL flow (standard Unicode bidi behavior) — never force-mirrored, never manually reversed. Currency (ج.م) sits as a fixed suffix directly after the number, same run.
+**Mixed RTL/LTR behavior:** paragraph/field direction follows the locale (`ar` RTL, `en` LTR); embedded numerals, currency, and invoice numbers render as LTR runs within the RTL flow (standard Unicode bidi behavior) — never force-mirrored, never manually reversed. Currency (ج.م) sits as a fixed suffix directly after the number, same run.
 
 ---
 
@@ -231,7 +231,7 @@ Two tiers, sharing the same token scale — only the values assigned to spacing/
 | Form field vertical spacing | 16px                                           |
 | Section spacing             | 24–32px                                        |
 
-**Invoice forms:** Sales and purchase create/edit use compact horizontal line layouts on desktop: item, quantity, price/cost, note, total, remove. Meter dimensions occupy a second row for all selected items; dimensions are optional for piece-priced items and required for cubic items. Multiple presets offer editable choices; single presets auto-fill. Fields stack on mobile. Inputs and line action buttons retain a 44px minimum height, labels are 14px, line padding is 12px, and line gaps are 8px. A single dashed Add line button sits below the rows at the logical end of the card. Form headers and customer/supplier sections use reduced spacing.
+**Invoice forms:** Sales and purchase create/edit use compact horizontal line layouts on desktop: item, quantity, price/cost, note, total, remove. Meter dimensions occupy a second row for stocked items; free-amount lines show only an entered amount and optional note, with no quantity or dimension controls; dimensions are optional for piece-priced items and required for cubic items. Multiple presets offer editable choices; single presets auto-fill. Fields stack on mobile. Inputs and line action buttons retain a 44px minimum height, labels are 14px, line padding is 12px, and line gaps are 8px. A single dashed Add line button sits below the rows at the logical end of the card. Form headers and customer/supplier sections use reduced spacing.
 
 **Comfortable is required for:** Any payment-entry workflow; any touch-primary device (tablet or touchscreen POS at the counter); all standard day-to-day workflows unless a screen is explicitly opted into Compact. Invoice forms retain comfortable touch targets within their compact layout.
 
@@ -378,7 +378,7 @@ A second accent color of any kind. Solid-filled status badges. Fully rounded pil
 
 ### Compact inventory and shared Add actions
 
-Inventory category tables use muted headers, a brown accent, count pill, rounded border and restrained row dividers. Keep horizontal scrolling and 44px action targets. DashedAddButton is the shared plus-button primitive for invoice Add line and dimension Add value. Item forms use compact cards and header Back links. DimensionInput keeps its Add value action after all presets inside the scrollable list, with inline input, hint, validation and saving state.
+Inventory pages show five complete matching categories in backend creation-date order (oldest first, category ID ties), without splitting any category between pages. Preserve the response order in both locales; missing category references remain last. Pagination labels identify category pages, while per-category item counts, collapse controls and KPI semantics stay unchanged. A large category may produce a longer page. Inventory category tables use muted headers, a brown accent, count pill, rounded border and restrained row dividers. Keep horizontal scrolling and 44px action targets. DashedAddButton is the shared plus-button primitive for invoice Add line and dimension Add value. Item forms use compact cards and header Back links. DimensionInput keeps its Add value action after all presets inside the scrollable list, with inline input, hint, validation and saving state.
 
 Inventory KPI cards keep four desktop columns, 12px padding and 20px figures. Desktop cards have a 144px minimum height and grow naturally for wrapped alert labels; mobile cards have no minimum height. Alert filter badges share a horizontal wrapping row with 44px targets. Preserve the existing values, semantic colors and filter actions.
 
@@ -447,4 +447,22 @@ Ordinary debt remains `text-primary`. Credit uses `success` together with explic
 
 Arabic receipt totals use a shared three-column grid: label, conditional breakdown, fixed money column. Paid/total/remaining amounts align in the money column; breakdown sits immediately to the right of paid. Isolate the full equation as LTR and bind the additional amount and its localized previous-debt label in one inline group, so Arabic direction cannot associate the label with the invoice portion. Detail-page breakdowns reuse this grouping. Additional-payment Notes are metadata labels, with user notes preserved separately.
 
-Sales invoice item rows use a compact editable combobox in place of the native item select. Search matches item names or category names, with items grouped under category headings. Category headings are bold 16px and item names are regular 16px on the plain surface background; the list scrolls up to `min(32rem, 60dvh)`. Arrow keys, Enter, Escape, click, and blur preserve normal selection behavior. Use the existing input, muted-surface, focus, and dropdown elevation tokens. Paid amount precedes Discount in document and locale reading order. Customer lookup copy names only the customer name.
+Sales and purchase invoice item rows share a compact editable combobox in place of the native item select. Search matches item names or category names, with items grouped under category headings. Category headings are bold 16px and item names are regular 16px on the plain surface background; the list scrolls up to `min(32rem, 60dvh)`. Arrow keys, Enter, Escape, click, and blur preserve normal selection behavior. Use the existing input, muted-surface, focus, and dropdown elevation tokens. Paid amount precedes Discount in document and locale reading order. Customer lookup copy names only the customer name.
+
+### Receipt item space and Arabic notes
+
+Receipt tables share `ReceiptTableColumns` across standard/A4, compact/A5, and the invoice modal. All columns visible: item 25%, quantity 10%, thickness/width/length 10% each, cubic volume 11%, unit price 11%, total 13%. Any width freed by hidden columns returns to the item column. Keep column order and the existing paper formats and font sizes.
+
+Compact numeric cells use 2px horizontal padding per side and item cells 6px; standard numeric cells use 4px and item cells 8px. Header and footer padding follow the same split. Item names remain bold with natural wrapping, and long unbroken text can wrap without truncation. Names and line notes share display-only Arabic/number spacing and RTL rendering. Numeric runs are LTR inline blocks aligned to the text baseline; notes use normal font style and relaxed line spacing, rather than italics. Stored names, notes, dimensions, and money remain unchanged.
+
+Sales invoice mode order follows locale reading direction: Customer sale first (default), then Cash sale. The footer has one primary action, Save & print; Save uses the outlined secondary style and Go back uses the ghost style. Customer and supplier lookup share accessible combobox interactions, loading/empty states and keyboard navigation; after selection, retain the account summary and Change action. Gross-profit cards keep their existing layout and labels while incorporating saved free-amount purchase totals.
+
+Manual checks: compare sales and purchase account/item searches in Arabic/English and light/dark, including category search, bold category headings, keyboard selection/Escape, inactive original selections on edit, small screens, and free-amount lines with no quantity/dimensions. Confirm Customer sale first/default and one primary sales footer action.
+
+Items and Categories share catalog pagination controls below the list: secondary Previous/Next buttons with a muted page counter, disabled boundary buttons, localized navigation labels, and no controls for zero or one page. The Items page paginates complete category groups to avoid splitting related items.
+
+Category visibility controls on Items and Inventory use the same outlined secondary button: surface background, subtle border/shadow, primary-colored directional icon, semibold label, and at least a 44px touch target. Keep the action at the end of the category toolbar and allow wrapping on small screens. Individual category headers expose aria-expanded and support native keyboard activation.
+
+The Categories toolbar matches Items: a bordered surface with a growing name-search field and a compact All/Active/Inactive status selector. Stack fields on small screens, preserve locale reading direction, and show filter-specific empty-state guidance.
+
+Item forms and catalog surfaces display names and categories without item-code fields, badges, or generated-code hints. Invoice references remain database IDs internally; do not expose these as replacement item codes.

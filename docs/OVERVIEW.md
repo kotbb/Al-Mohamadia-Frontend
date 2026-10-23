@@ -200,7 +200,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
 Use `http://` for local development. `https://localhost` will fail without
 a local TLS certificate.
 
-Ask your team for seeded users (Phase 1+). Do not commit credentials.
+Ask your team for provisioned user accounts. Do not commit credentials.
 
 ### Develop
 
@@ -241,14 +241,14 @@ Implemented since Phase 1 (see [`PHASES.md`](./PHASES.md)):
 
 ### Manual verification (authentication)
 
-1. Log in as seeded super admin.
+1. Log in with a provisioned super-admin account.
 2. Create an admin → log in as that admin → confirm no user-management UI/API.
 3. Reload after access token expiry → session restores via refresh.
 4. Logout → login screen; protected routes redirect when logged out.
 
 ### Manual verification (Phase 2 — UI)
 
-After `npm run seed:catalog` in the backend repo:
+Using development examples created through the application/API:
 
 1. Open **Categories** — list loads; create/edit via modal; delete disabled when items exist.
 2. Open **Items & Prices** — categories/items load; search and filter work.
@@ -325,8 +325,18 @@ required positive EGP amount plus an optional note. The form hides quantity,
 dimensions, and unit price. The server stores canonical quantity 1 and the amount
 as `piecePrice`, with zero cost and no stock movement. Preview/export leave those
 internal columns blank, while including the charge in the invoice total. Physical
-quantity and cubic footer totals exclude free-amount lines. These items are absent
-from purchase and inventory flows.
+quantity and cubic footer totals exclude free-amount lines. Purchase forms also
+accept these items as one positive amount and optional note, storing quantity 1,
+`unitCost: amount`, and no dimensions. Inventory still excludes them. Saved
+free-amount purchase totals reduce the existing gross-profit figures in their
+purchase creation period, independently of sales dates and supplier payments.
+Gross profit is net sales minus stocked-item sales costs and those purchase
+totals; cancelled purchases are excluded and negative profit is retained.
+
+Sales and purchase forms share searchable account and categorized item pickers.
+Customer sale appears first and remains the default. On sales forms, Save & print
+is primary, Save is outlined, and Go back is a quiet action. Searchable selections
+preserve keyboard navigation and show the existing account summary after selection.
 
 
 ## Architecture maintenance
@@ -347,7 +357,7 @@ all business logic or ownership decisions correct.
 
 Sales and purchase create/edit offer a dropdown for every dimension, including empty and single presets. The final Add value action saves a positive meter value for future invoices through POST /items/:id/dimension-defaults; custom typing stays local. Successful additions select the current value and merge sorted choices across the form. Late responses cannot update switched or removed lines.
 
-Inventory retains eight columns and its existing actions inside compact category tables. Counts describe the loaded page. See [the current workflow checklist](#manual-verification-current-workflows).
+Inventory retains eight columns and its existing actions inside compact category tables. Pagination requests five complete matching categories per page through `paginationMode=categories&limit=5`; category groups follow category creation date ascending (oldest first, ID ties), and a large category stays on one longer page. Search and stock-status filters apply before choosing categories. Counts describe the loaded page; page totals count matching categories, while KPI calculations remain unchanged. Collapse all and Expand all apply across inventory pagination during the current page visit. Individual category toggles are retained across pages as overrides; either global action clears those overrides. See [the current workflow checklist](#manual-verification-current-workflows).
 
 ## Current export and loading flows
 
@@ -384,6 +394,9 @@ layout, printer settings or browser sharing behavior.
    Invalid phones should show a field error only after Submit; editing clears it.
 3. Check inventory category counts, collapse, horizontal scrolling, eight columns,
    stock history/adjustment actions, KPI cards, and item creation/edit pages.
+   With more than five categories, confirm that each page shows complete matching
+   groups, including a category with more than 25 items. Repeat with search, each
+   stock-status filter, a single category, and empty results; check category page labels.
    Stock-correction presets use wording about an incorrectly recorded quantity.
 4. Verify single/multiple/empty dimension presets, inline Add value, retry and
    custom typing. Check piece/cubic totals, invoice editing and saved dimensions.
@@ -423,3 +436,23 @@ Manual checks (English/Arabic, light/dark, desktop/mobile): search customers by 
 ### Bundled production fonts
 
 `app/fonts.ts` loads the bundled Noto Sans Arabic / Noto Sans variable WOFF2 files through `next/font/local`, preserving both CSS variables and weights 400–700. Builds do not fetch Google Fonts. Include `app/font-files/` and its license notices when committing or uploading for Vercel/Docker. Asset provenance is documented in [the font README](../app/font-files/README.md).
+
+### Receipt label width and Arabic note verification
+
+Sales receipt preview, public receipts, PNG/share captures, and PDF/print use the same column policy: 25% for item names with all eight columns visible, plus reclaimed space when optional columns are hidden. Tighter numeric padding leaves room for names. Line notes reuse item-text formatting, so `4ملي` displays as `4 ملي` with isolated digits and regular note styling. The backend contracts and export utilities are unchanged.
+
+Manual visual check (browser verification remains user-run): use invoice 9124 or equivalent six-row piece/cubic data, including `18 ام اف ساده`, `ابلاكاش 6 ملي ارو`, `2.7 ملي ته مربع`, and notes `4ملي` / `4 ملي`. Compare website preview, downloaded/shared A5 PNG, A4 PDF, and print. Confirm no overlapping number/Arabic text, ordinary names fit naturally, all numeric columns remain readable, and totals/payment breakdowns are unchanged. Repeat without prices, without dimensions, with free-amount lines, and with an exceptionally long name/note that must wrap rather than truncate.
+
+The Items page shows a Total items KPI above its filters using the existing KPI card styling. The count includes all non-deleted catalog records (active, inactive and free-amount items) and does not change with search, category or status filters. Loading shows a skeleton; errors show an unavailable value rather than zero.
+
+The Categories page uses the same full-width count card as Items, showing all non-deleted categories, including inactive and empty categories. Loading shows a skeleton and errors show an unavailable value.
+
+Catalog pagination: Items shows five complete matching category groups per page after search, category and active-status filtering; a large category stays on one longer page. Categories supports case-insensitive name search and All/Active/Inactive status filters in the Items-style toolbar, then shows ten matching rows per page. Filtering resets to page one without changing the total-category KPI. Filtered empty results suggest adjusting the filters. Both use localized Previous / page counter / Next controls, hidden for a single page. Filters and catalog refreshes return to page one; KPI counts remain catalog-wide. These pages paginate the existing complete catalog responses locally; invoice selectors continue to receive the complete lists.
+
+Items and Inventory share Close all / Expand all controls and category collapse behavior. The global choice carries across pagination and filters during the page visit, with individual category overrides. A later global action clears those overrides. Item category headers are keyboard-accessible buttons with expanded state; closed tables are hidden from interaction.
+
+## Item identification
+
+Items are identified by database ID and displayed by name/category. Create and update item requests do not accept `code`; item, inventory and dashboard top-selling responses do not return it. Item-name duplicates are allowed. Item forms do not fetch the complete catalog to generate identifiers. Items and Inventory search names only; invoice selectors retain item/category-name search. Historical audit code hiding remains for old audit entries. Database cleanup is a manual rollout step; no database fields or indexes are removed automatically.
+
+Deploy with the matching backend contract and follow [the backend manual cleanup procedure](../../Al-Mohamadia-Backend/docs/REMOVE-ITEM-CODES.md).

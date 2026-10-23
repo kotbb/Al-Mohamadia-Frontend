@@ -51,8 +51,8 @@ export function InvoiceCustomerSection({
           value={type}
           onChange={onTypeChange}
           options={[
-            { value: "cash_sale", label: t("typeCash") },
             { value: "customer_sale", label: t("typeCustomer") },
+            { value: "cash_sale", label: t("typeCash") },
           ]}
         />
 

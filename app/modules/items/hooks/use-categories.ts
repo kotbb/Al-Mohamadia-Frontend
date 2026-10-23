@@ -6,6 +6,7 @@ import type {
   CategoriesConfirmKind,
   CategoryListRow,
   UseCategoriesResult,
+  CategoriesFilters,
 } from "../types/use-categories.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
@@ -19,6 +20,8 @@ import {
 import { listItems } from "@/app/modules/items/services/items.service";
 import type { Category } from "@/app/modules/items/types/items.types";
 
+const PAGE_SIZE = 10;
+
 export function useCategories(): UseCategoriesResult {
   const describeError = useApiErrorMessage();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -26,6 +29,8 @@ export function useCategories(): UseCategoriesResult {
   const [listStatus, setListStatus] = useState<ListStatus>("loading");
   const [listError, setListError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
+  const [requestedPage, setPage] = useState(1);
+  const [filters, setFilters] = useState<CategoriesFilters>({ search: "", isActive: "all" });
 
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
@@ -44,6 +49,7 @@ export function useCategories(): UseCategoriesResult {
   const [confirmError, setConfirmError] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
+    setPage(1);
     setListStatus("loading");
     setListError(null);
     setTick((value) => value + 1);
@@ -203,8 +209,38 @@ export function useCategories(): UseCategoriesResult {
     }
   }, [confirmCategory, confirmKind, refresh]);
 
+  const filteredCategories = useMemo(() => {
+    const search = filters.search.trim().toLocaleLowerCase();
+    return rows.filter((category) => {
+      if (filters.isActive === "active" && !category.isActive) return false;
+      if (filters.isActive === "inactive" && category.isActive) return false;
+      return !search || category.name.toLocaleLowerCase().includes(search);
+    });
+  }, [rows, filters]);
+
+  const setSearch = useCallback((search: string) => {
+    setPage(1);
+    setFilters((current) => ({ ...current, search }));
+  }, []);
+
+  const setIsActive = useCallback((isActive: CategoriesFilters["isActive"]) => {
+    setPage(1);
+    setFilters((current) => ({ ...current, isActive }));
+  }, []);
+
+  const totalPages = Math.max(1, Math.ceil(filteredCategories.length / PAGE_SIZE));
+  const page = Math.max(1, Math.min(requestedPage, totalPages));
+
   return {
     categories: rows,
+    pageCategories: filteredCategories.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    page,
+    totalPages,
+    setPage,
+    filters,
+    setSearch,
+    setIsActive,
+    hasFilters: filters.search.trim() !== "" || filters.isActive !== "all",
     listStatus,
     listError,
     refresh,

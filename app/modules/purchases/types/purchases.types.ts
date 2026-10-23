@@ -1,9 +1,11 @@
+import type { PricingMode } from "@/app/modules/items/types/items.types";
+
 export type PurchaseInvoiceStatus = "saved" | "cancelled";
 
 export interface PurchaseInvoiceLine {
   itemId: string;
   quantity: number;
-  pricingModeSnapshot?: "per_piece" | "per_cubic_meter";
+  pricingModeSnapshot?: PricingMode;
   width: number | null;
   length: number | null;
   thickness: number | null;

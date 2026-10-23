@@ -40,7 +40,6 @@ export interface ItemCategorySummary {
 
 export interface Item {
   id: string;
-  code: string;
   name: string;
   category: ItemCategorySummary;
   isWood: boolean;
@@ -68,7 +67,6 @@ export interface PriceHistoryEntry {
 
 export interface CreateItemInput {
   dimensionDefaults?: DimensionDefaults;
-  code: string;
   name: string;
   categoryId: string;
   pricingMode: PricingMode;
@@ -82,7 +80,6 @@ export interface CreateItemInput {
 
 export interface UpdateItemInput {
   dimensionDefaults?: DimensionDefaults;
-  code?: string;
   name?: string;
   categoryId?: string;
   isWood?: boolean;

@@ -7,6 +7,7 @@ import { applySavedDimension } from "@/app/modules/shared/utils/saved-dimension"
 
 import type { UsePurchaseFormOptions } from "../types/use-purchase-form.types";
 import { newLine, lineTotalForPurchaseLine } from "../utils/purchase-form";
+import { isMoneyAmount } from "@/app/modules/shared/utils/money-validation";
 import { parsePositive } from "@/app/modules/shared/utils/form-numbers";
 import { moneyFieldString } from "@/app/modules/shared/utils/format-money";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
@@ -46,6 +47,7 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
   const [allSuppliers, setAllSuppliers] = useState<Supplier[]>([]);
   const [allSuppliersLoading, setAllSuppliersLoading] = useState(true);
   const [supplierQuery, setSupplierQuery] = useState("");
+  const supplierSearchVersion = useRef(0);
   const [supplierResults, setSupplierResults] = useState<Supplier[]>([]);
   const [suppliersLoading, setSuppliersLoading] = useState(false);
 
@@ -73,7 +75,7 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
         setItems((previous) => {
           const merged = new Map(previous.map((item) => [item.id, item]));
           for (const item of result) {
-            if (item.pricingMode !== "free_amount") merged.set(item.id, item);
+            merged.set(item.id, item);
           }
           return [...merged.values()];
         });
@@ -103,16 +105,16 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
   }, []);
 
   function handleSupplierQueryChange(q: string) {
+    supplierSearchVersion.current += 1;
     setSupplierQuery(q);
-    if (!q.trim()) {
-      setSupplierResults([]);
-      setSuppliersLoading(false);
-    }
+    setSupplierResults([]);
+    setSuppliersLoading(Boolean(q.trim()));
   }
 
   // Search suppliers
   useEffect(() => {
     const q = supplierQuery.trim();
+    const version = supplierSearchVersion.current;
     if (!q) {
       return;
     }
@@ -125,13 +127,13 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
         controller.signal,
       )
         .then((result) => {
-          setSupplierResults(result.items);
+          if (!controller.signal.aborted && version === supplierSearchVersion.current) setSupplierResults(result.items);
         })
         .catch(() => {
-          if (!controller.signal.aborted) setSupplierResults([]);
+          if (!controller.signal.aborted && version === supplierSearchVersion.current) setSupplierResults([]);
         })
         .finally(() => {
-          if (!controller.signal.aborted) setSuppliersLoading(false);
+          if (!controller.signal.aborted && version === supplierSearchVersion.current) setSuppliersLoading(false);
         });
     }, SEARCH_DEBOUNCE_MS);
 
@@ -229,23 +231,6 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
     setSubmitError(null);
   }
 
-  function selectSupplierById(id: string) {
-    if (!id) {
-      clearSupplier();
-      return;
-    }
-    const found =
-      allSuppliers.find((s) => s.id === id) ||
-      supplierResults.find((s) => s.id === id);
-    if (found) {
-      selectSupplier(found);
-    } else {
-      getSupplier(id)
-        .then((s) => selectSupplier(s))
-        .catch(() => {});
-    }
-  }
-
   function addLine() {
     setLines((prev) => [...prev, newLine()]);
     setSubmitError(null);
@@ -305,11 +290,16 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
       key,
       (selectionVersions.current.get(key) ?? 0) + 1,
     );
+    const previous = lines.find((line) => line.key === key);
+    if (previous?.itemId === itemId) return;
     const item = itemsById.get(itemId);
-    const dimensions = initialDimensions(item?.dimensionDefaults);
+    const previousWasFree = itemsById.get(previous?.itemId ?? "")?.pricingMode === "free_amount";
+    const isFreeAmount = item?.pricingMode === "free_amount";
+    const dimensions = initialDimensions(isFreeAmount ? undefined : item?.dimensionDefaults);
     updateLine(key, {
       itemId,
-      unitCost: item && item.cost > 0 ? String(item.cost) : "",
+      quantity: isFreeAmount || previousWasFree ? "1" : previous?.quantity ?? "1",
+      unitCost: !isFreeAmount && item && item.cost > 0 ? String(item.cost) : "",
       thicknessM: dimensions.thickness,
       widthM: dimensions.width,
       lengthM: dimensions.length,
@@ -345,11 +335,11 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
     for (const line of snapshotLines) {
       if (!line.itemId) continue;
       const item = itemsById.get(line.itemId);
-      if (!item || item.pricingMode === "free_amount") return t("validationItem");
+      if (!item) return t("validationItem");
       if (!item.isActive && !editInvoice?.lines.some((original) => original.itemId === line.itemId)) return t("validationItem");
-      if (parsePositive(line.quantity) === null) return t("validationQuantity");
+      if (item.pricingMode !== "free_amount" && parsePositive(line.quantity) === null) return t("validationQuantity");
       if (parsePositive(line.unitCost) === null) return t("validationUnitCost");
-      if (
+      if (item.pricingMode !== "free_amount" &&
         [line.thicknessM, line.widthM, line.lengthM].some(
           (value) => value.trim() && parsePositive(value) === null,
         )
@@ -386,8 +376,13 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
       setSubmitError(opts.t("validationPaidNegative"));
       return null;
     }
+    if (lines.some((line) => itemsById.get(line.itemId)?.pricingMode === "free_amount" && (parsePositive(line.unitCost) === null || !isMoneyAmount(Number(line.unitCost))))) {
+      setSubmitError(opts.t("validationAmount"));
+      return null;
+    }
     const snapshotLines = lines.map((line) => ({
       ...line,
+      ...(itemsById.get(line.itemId)?.pricingMode === "free_amount" ? { quantity: "1", thicknessM: "", widthM: "", lengthM: "" } : {}),
       unitCost: moneyFieldString(line.unitCost),
     }));
     const paidRounded = roundMoneyAmount(paidInput);
@@ -489,7 +484,6 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
     supplierResults,
     suppliersLoading,
     selectSupplier,
-    selectSupplierById,
     clearSupplier,
 
     items,

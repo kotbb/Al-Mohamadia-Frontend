@@ -12,6 +12,8 @@ import { listCategories } from "@/app/modules/items/services/categories.service"
 import { listItems } from "@/app/modules/items/services/items.service";
 import type { Category, Item } from "@/app/modules/items/types/items.types";
 
+const CATEGORIES_PER_PAGE = 5;
+
 export function useItemsPage(): UseItemsPageResult {
   const describeError = useApiErrorMessage();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -19,6 +21,7 @@ export function useItemsPage(): UseItemsPageResult {
   const [status, setStatus] = useState<LoadStatus>("loading");
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
+  const [requestedPage, setPage] = useState(1);
 
   const [filters, setFilters] = useState<ItemsPageFilters>({
     search: "",
@@ -27,6 +30,7 @@ export function useItemsPage(): UseItemsPageResult {
   });
 
   const refresh = useCallback(() => {
+    setPage(1);
     setStatus("loading");
     setError(null);
     setTick((value) => value + 1);
@@ -66,10 +70,7 @@ export function useItemsPage(): UseItemsPageResult {
       if (filters.isActive === "active" && !item.isActive) return false;
       if (filters.isActive === "inactive" && item.isActive) return false;
       if (!search) return true;
-      return (
-        item.name.toLowerCase().includes(search) ||
-        item.code.toLowerCase().includes(search)
-      );
+      return item.name.toLowerCase().includes(search);
     });
   }, [items, filters]);
 
@@ -102,21 +103,30 @@ export function useItemsPage(): UseItemsPageResult {
   }, [categories, filteredItems]);
 
   const setSearch = useCallback((value: string) => {
+    setPage(1);
     setFilters((current) => ({ ...current, search: value }));
   }, []);
 
   const setCategoryId = useCallback((value: string) => {
+    setPage(1);
     setFilters((current) => ({ ...current, categoryId: value }));
   }, []);
 
   const setIsActive = useCallback((value: ItemsPageFilters["isActive"]) => {
+    setPage(1);
     setFilters((current) => ({ ...current, isActive: value }));
   }, []);
 
+  const totalPages = Math.max(1, Math.ceil(groupedItems.length / CATEGORIES_PER_PAGE));
+  const page = Math.max(1, Math.min(requestedPage, totalPages));
+
   return {
     categories,
-    items: filteredItems,
-    groupedItems,
+    totalItems: items.length,
+    groupedItems: groupedItems.slice((page - 1) * CATEGORIES_PER_PAGE, page * CATEGORIES_PER_PAGE),
+    page,
+    totalPages,
+    setPage,
     status,
     error,
     refresh,

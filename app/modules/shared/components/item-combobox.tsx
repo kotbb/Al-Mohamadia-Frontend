@@ -1,18 +1,19 @@
 "use client";
 
 import { useId, useRef, useState, type KeyboardEvent } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 import type { Item } from "@/app/modules/items/types/items.types";
 
-interface InvoiceItemComboboxProps {
+interface ItemComboboxProps {
+  labels: { label: string; placeholder: string; empty: string };
   items: Item[];
+  eligibleInactiveItemIds?: string[];
   value: string;
   name: string;
   onSelect: (itemId: string) => void;
 }
 
-export function InvoiceItemCombobox({ items, value, name, onSelect }: InvoiceItemComboboxProps) {
-  const t = useTranslations("invoices");
+export function ItemCombobox({ items, value, name, onSelect, labels, eligibleInactiveItemIds = [] }: ItemComboboxProps) {
   const locale = useLocale();
   const id = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -23,7 +24,7 @@ export function InvoiceItemCombobox({ items, value, name, onSelect }: InvoiceIte
   const selected = items.find((item) => item.id === value);
   const search = (query ?? "").trim().toLocaleLowerCase(locale);
   const collator = new Intl.Collator(locale, { sensitivity: "base", numeric: true });
-  const options = items.filter((item) => (item.isActive || item.id === value) &&
+  const options = items.filter((item) => (item.isActive || item.id === value || eligibleInactiveItemIds.includes(item.id)) &&
     (!search || item.name.toLocaleLowerCase(locale).includes(search) || item.category.name.toLocaleLowerCase(locale).includes(search)))
     .sort((a, b) => collator.compare(a.category.name, b.category.name) || collator.compare(a.name, b.name));
   const activeIndex = options.findIndex((item) => item.id === activeId);
@@ -62,12 +63,12 @@ export function InvoiceItemCombobox({ items, value, name, onSelect }: InvoiceIte
   return (
     <div className="relative min-w-0 w-full sm:col-span-2 lg:col-span-1"
       onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) close(); }}>
-      <label htmlFor={id} className="mb-1 block text-sm font-medium text-text-secondary">{t("fieldItem")}</label>
+      <label htmlFor={id} className="mb-1 block text-sm font-medium text-text-secondary">{labels.label}</label>
       <div className="relative">
         <input ref={inputRef} id={id} name={name} role="combobox" type="text" autoComplete="off"
           aria-autocomplete="list" aria-expanded={open} aria-controls={`${id}-options`}
           aria-activedescendant={open && activeIndex >= 0 ? `${id}-option-${activeIndex}` : undefined}
-          value={query ?? selected?.name ?? ""} placeholder={t("itemSearchPlaceholder")}
+          value={query ?? selected?.name ?? ""} placeholder={labels.placeholder}
           className="ds-focus-input min-h-11 w-full rounded-xl border border-border bg-surface ps-3 pe-9 text-sm text-text-primary placeholder:text-text-muted"
           onFocus={(event) => { setOpen(true); setActiveId(null); event.currentTarget.select(); }}
           onClick={() => setOpen(true)}
@@ -77,7 +78,7 @@ export function InvoiceItemCombobox({ items, value, name, onSelect }: InvoiceIte
           viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
       </div>
       {open ? (
-        <ul id={`${id}-options`} role="listbox" aria-label={t("fieldItem")}
+        <ul id={`${id}-options`} role="listbox" aria-label={labels.label}
           className="absolute z-20 mt-1 max-h-[min(32rem,60dvh)] w-full min-w-0 overflow-auto rounded-xl border border-border bg-surface py-1 shadow-[var(--shadow-1)]">
           {options.length ? Array.from(groups, ([category, entries]) => (
             <li key={category} role="presentation">
@@ -98,7 +99,7 @@ export function InvoiceItemCombobox({ items, value, name, onSelect }: InvoiceIte
                 </ul>
               </div>
             </li>
-          )) : <li role="presentation" className="px-3 py-3 text-sm text-text-secondary"><span role="status">{t("noItemsFound")}</span></li>}
+          )) : <li role="presentation" className="px-3 py-3 text-sm text-text-secondary"><span role="status">{labels.empty}</span></li>}
         </ul>
       ) : null}
     </div>

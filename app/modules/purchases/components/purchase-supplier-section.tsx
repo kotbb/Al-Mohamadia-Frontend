@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { AccountCombobox } from "@/app/modules/shared/components/account-combobox";
 import { useLocale, useTranslations } from "next-intl";
 import type { Supplier } from "@/app/modules/suppliers/types/suppliers.types";
 import { Button } from "@/app/modules/shared/components/button";
@@ -11,7 +13,11 @@ interface PurchaseSupplierSectionProps {
   allSuppliersLoading: boolean;
   selectedSupplier: Supplier | null;
   originalSupplier?: Supplier | null;
-  onSelectSupplierId: (id: string) => void;
+  supplierQuery: string;
+  onSupplierQueryChange: (value: string) => void;
+  supplierResults: Supplier[];
+  suppliersLoading: boolean;
+  onSelectSupplier: (supplier: Supplier) => void;
   onClearSupplier: () => void;
   notes: string;
   onNotesChange: (notes: string) => void;
@@ -22,15 +28,14 @@ export function PurchaseSupplierSection({
   allSuppliersLoading,
   selectedSupplier,
   originalSupplier,
-  onSelectSupplierId,
+  supplierQuery, onSupplierQueryChange, supplierResults, suppliersLoading, onSelectSupplier,
   onClearSupplier,
   notes,
   onNotesChange,
 }: PurchaseSupplierSectionProps) {
   const t = useTranslations("purchases");
   const locale = useLocale();
-  const includeOriginal = originalSupplier && !originalSupplier.isDeleted &&
-    !allSuppliers.some((supplier) => supplier.id === originalSupplier.id);
+  const [focusSearch, setFocusSearch] = useState(false);
 
   return (
     <SurfaceCard padding="sm">
@@ -61,45 +66,17 @@ export function PurchaseSupplierSection({
               type="button"
               variant="secondary"
               size="sm"
-              onClick={onClearSupplier}
+              onClick={() => { onClearSupplier(); onSupplierQueryChange(""); setFocusSearch(true); }}
             >
-              {t("supplierClear")}
+              {t("supplierChange")}
             </Button>
           </div>
         ) : (
-          <div>
-            <label className="flex w-full flex-col gap-1.5">
-              <span className="text-base font-semibold text-text-primary">
-                {t("selectSupplierLabel")}
-              </span>
-              <select
-                className="ds-focus-input min-h-11 w-full rounded-xl border border-border bg-surface px-4 text-base text-text-primary transition-colors focus:border-primary"
-                value=""
-                onChange={(e) => {
-                  if (e.target.value) {
-                    onSelectSupplierId(e.target.value);
-                  }
-                }}
-                disabled={allSuppliersLoading}
-              >
-                <option value="">
-                  {allSuppliersLoading
-                    ? t("loadingSuppliers")
-                    : t("selectSupplierPlaceholder")}
-                </option>
-                {allSuppliers.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name} {s.phone ? `(${s.phone})` : ""}
-                  </option>
-                ))}
-                {includeOriginal ? (
-                  <option value={originalSupplier.id}>
-                    {originalSupplier.name} {originalSupplier.phone ? `(${originalSupplier.phone})` : ""}
-                  </option>
-                ) : null}
-              </select>
-            </label>
-          </div>
+          <AccountCombobox name="supplierSearch" query={supplierQuery} onQueryChange={onSupplierQueryChange}
+            results={supplierResults} loading={suppliersLoading} allAccounts={allSuppliers} allAccountsLoading={allSuppliersLoading}
+            selectedAccount={selectedSupplier} originalAccount={originalSupplier} focusOnMount={focusSearch}
+            onSelect={(supplier) => { setFocusSearch(false); onSelectSupplier(supplier); }} onClear={onClearSupplier}
+            labels={{ label: t("selectSupplierLabel"), placeholder: t("supplierSearchPlaceholder"), clear: t("supplierClear"), loading: t("loadingSuppliers"), empty: t("noSuppliersFound") }} />
         )}
 
         {/* Invoice-level notes */}

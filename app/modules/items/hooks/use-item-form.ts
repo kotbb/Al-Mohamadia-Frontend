@@ -21,11 +21,9 @@ import { listCategories } from "@/app/modules/items/services/categories.service"
 import {
   createItem,
   getItem,
-  listItems,
   updateItem,
   updatePricing,
 } from "@/app/modules/items/services/items.service";
-import { generateItemCode } from "@/app/modules/items/utils/generate-item-code";
 import type {
   Category,
   CreateItemInput,
@@ -35,7 +33,6 @@ import type {
 
 const emptyFormValues: ItemFormValues = {
   dimensionDefaults: dimensionDefaultsForForm(),
-  code: "",
   name: "",
   categoryId: "",
   pricingMode: "per_piece",
@@ -54,14 +51,12 @@ export function useItemForm(itemId?: string): UseItemFormResult {
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesStatus, setCategoriesStatus] =
     useState<LoadStatus>("loading");
-  const [existingCodes, setExistingCodes] = useState<string[]>([]);
   const [item, setItem] = useState<Item | null>(null);
   const [itemStatus, setItemStatus] = useState<LoadStatus>(
     isEdit ? "loading" : "success",
   );
   const [itemError, setItemError] = useState<string | null>(null);
   const [values, setValues] = useState<ItemFormValues>(emptyFormValues);
-  const [codeIsManual, setCodeIsManual] = useState(false);
   const [initialPricing, setInitialPricing] = useState({
     unitPrice: 0,
     cost: 0,
@@ -87,22 +82,6 @@ export function useItemForm(itemId?: string): UseItemFormResult {
   }, []);
 
   useEffect(() => {
-    if (isEdit) return;
-    const controller = new AbortController();
-
-    listItems(undefined, controller.signal)
-      .then((items) => {
-        setExistingCodes(items.map((entry) => entry.code));
-      })
-      .catch(() => {
-        if (controller.signal.aborted) return;
-        setExistingCodes([]);
-      });
-
-    return () => controller.abort();
-  }, [isEdit]);
-
-  useEffect(() => {
     if (!itemId) return;
     const controller = new AbortController();
 
@@ -111,7 +90,6 @@ export function useItemForm(itemId?: string): UseItemFormResult {
         setItem(loaded);
         setValues({
           dimensionDefaults: dimensionDefaultsForForm(loaded.dimensionDefaults),
-          code: loaded.code,
           name: loaded.name,
           categoryId: loaded.category.id,
           pricingMode: loaded.pricingMode,
@@ -122,7 +100,6 @@ export function useItemForm(itemId?: string): UseItemFormResult {
           stockQuantity: String(loaded.stockQuantity),
           isActive: loaded.isActive,
         });
-        setCodeIsManual(true);
         setInitialPricing({ unitPrice: loaded.unitPrice, cost: loaded.cost });
         setItemStatus("success");
         setItemError(null);
@@ -141,54 +118,10 @@ export function useItemForm(itemId?: string): UseItemFormResult {
   const setField = useCallback(
     <K extends keyof ItemFormValues>(key: K, value: ItemFormValues[K]) => {
       if (isEdit && key === "pricingMode") return;
-      if (key === "code") {
-        setCodeIsManual(true);
-        setValues((current) => ({ ...current, code: value as string }));
-        return;
-      }
-
-      if (!isEdit && (key === "name" || key === "categoryId")) {
-        setValues((current) => {
-          const next: ItemFormValues = { ...current, [key]: value };
-          if (!codeIsManual) {
-            const category = categories.find(
-              (entry) => entry.id === next.categoryId,
-            );
-            next.code = generateItemCode(
-              category?.name ?? "",
-              next.name,
-              existingCodes,
-            );
-          }
-          return next;
-        });
-        return;
-      }
-
       setValues((current) => ({ ...current, [key]: value }));
     },
-    [isEdit, codeIsManual, categories, existingCodes],
+    [isEdit],
   );
-
-  // After existing codes load, refresh uniqueness suffix once if still auto
-  useEffect(() => {
-    if (isEdit || codeIsManual || existingCodes.length === 0) return;
-
-    setValues((current) => {
-      if (!current.name.trim() && !current.categoryId) return current;
-      const category = categories.find(
-        (entry) => entry.id === current.categoryId,
-      );
-      const nextCode = generateItemCode(
-        category?.name ?? "",
-        current.name,
-        existingCodes,
-      );
-      return current.code === nextCode
-        ? current
-        : { ...current, code: nextCode };
-    });
-  }, [isEdit, codeIsManual, existingCodes, categories]);
 
   const submit = useCallback(async (): Promise<boolean> => {
     const isFreeAmount = values.pricingMode === "free_amount";
@@ -198,7 +131,7 @@ export function useItemForm(itemId?: string): UseItemFormResult {
       setSubmitError(shared("validationNumbers"));
       return false;
     }
-    if (!values.name.trim() || (isEdit && !values.code.trim())) {
+    if (!values.name.trim()) {
       setSubmitError(shared("requiredText"));
       return false;
     }
@@ -219,15 +152,7 @@ export function useItemForm(itemId?: string): UseItemFormResult {
         return false;
       }
       if (!isEdit) {
-        const category = categories.find(
-          (entry) => entry.id === values.categoryId,
-        );
-        const code =
-          values.code.trim() ||
-          generateItemCode(category?.name ?? "", values.name, existingCodes);
-
         const input: CreateItemInput = {
-          code,
           name: values.name.trim(),
           categoryId: values.categoryId,
           pricingMode: values.pricingMode,
@@ -241,7 +166,6 @@ export function useItemForm(itemId?: string): UseItemFormResult {
       if (!itemId) return false;
 
       const masterInput: UpdateItemInput = {
-        code: values.code.trim(),
         name: values.name.trim(),
         categoryId: values.categoryId,
         isActive: values.isActive,
@@ -276,8 +200,6 @@ export function useItemForm(itemId?: string): UseItemFormResult {
     itemId,
     values,
     initialPricing,
-    categories,
-    existingCodes,
     describeError,
     t,
   ]);
@@ -290,7 +212,6 @@ export function useItemForm(itemId?: string): UseItemFormResult {
     itemError,
     values,
     setField,
-    codeIsManual,
     isSubmitting,
     submitError,
     submit,
