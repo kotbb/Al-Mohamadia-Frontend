@@ -253,7 +253,7 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
           totalPaid={customer.financialSummary?.totalPaid ?? 0}
           currentBalance={customer.balance} party="customer" currency={t("currency")} />
 
-        <CustomerInvoiceHistory customerId={customerId} customerName={customer.name} onFinancialChange={() => { refresh(); customerPayments.refresh(); }} />
+        <CustomerInvoiceHistory customerId={customerId} onFinancialChange={() => { refresh(); customerPayments.refresh(); }} />
 
         {/* Payment History Section */}
         <SurfaceCard padding="lg">

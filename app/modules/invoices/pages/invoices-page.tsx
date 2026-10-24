@@ -29,7 +29,6 @@ export function InvoicesPage() {
 
   const {
     invoices,
-    customerNames,
     summaryTotalAmount,
     page,
     totalPages,
@@ -201,7 +200,6 @@ export function InvoicesPage() {
           ) : null}
           <InvoicesList
             invoices={invoices}
-            customerNames={customerNames}
             status={hasLoaded ? "success" : listStatus}
             actionsDisabled={actionsDisabled}
             error={listError}

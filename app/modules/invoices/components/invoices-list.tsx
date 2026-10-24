@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { NavigableTableRow } from "@/app/modules/shared/components/navigable-table-row";
 import { Link } from "@/i18n/navigation";
-import type { SalesInvoice } from "@/app/modules/invoices/types/invoices.types";
+import type { SalesInvoice, SalesInvoiceListItem } from "@/app/modules/invoices/types/invoices.types";
 import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
 import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { Badge } from "@/app/modules/shared/components/badge";
@@ -17,8 +17,7 @@ import {
 } from "@/app/modules/shared/components/row-actions-menu";
 
 interface InvoicesListProps {
-  invoices: SalesInvoice[];
-  customerNames: Record<string, string>;
+  invoices: SalesInvoiceListItem[];
   status: "idle" | "loading" | "success" | "error";
   error: string | null;
   onRetry: () => void;
@@ -52,7 +51,6 @@ function InvoiceDocIcon({ className = "h-4 w-4" }: { className?: string }) {
 
 export function InvoicesList({
   invoices,
-  customerNames,
   status,
   error,
   onRetry,
@@ -126,7 +124,7 @@ export function InvoicesList({
               invoice.type === "cash_sale"
                 ? t("cashCustomer")
                 : invoice.customerId
-                  ? (customerNames[invoice.customerId] ?? "…")
+                  ? (invoice.customerName ?? "-")
                   : "-";
 
             const actions: RowActionItem[] = [

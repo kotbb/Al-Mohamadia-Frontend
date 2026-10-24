@@ -992,6 +992,60 @@ test("customer picker searches and selects in one field with keyboard navigation
   } finally { overrides.delete("react"); overrides.delete("next-intl"); cache.delete(path); }
 });
 
+test("invoice lists receive names in one request and preserve refresh, abort and error behavior", async () => {
+  const cachedBefore = new Set(cache.keys());
+  const states = [], dependencies = [], pending = [], requests = [], customerRequests = [];
+  const cleanups = new Map();
+  let cursor = 0;
+  const previousWindow = globalThis.window;
+  const describeError = (error) => error.message;
+  globalThis.window = { setTimeout: () => 1, clearTimeout() {} };
+  overrides.set("react", {
+    useState(initial) { const index = cursor++; if (!(index in states)) states[index] = typeof initial === "function" ? initial() : initial; return [states[index], (value) => { states[index] = typeof value === "function" ? value(states[index]) : value; }]; },
+    useCallback: (fn) => fn,
+    useEffect(fn, deps) { const index = cursor++; if (!dependencies[index] || deps.some((value, i) => dependencies[index][i] !== value)) { dependencies[index] = deps; pending.push({ index, fn }); } },
+  });
+  overrides.set("@/lib/api/use-api-error-message", { useApiErrorMessage: () => describeError });
+  overrides.set("@/app/modules/customers/services/customers.service", { getCustomer: async (id) => { customerRequests.push(id); return { name: "Unneeded name" }; } });
+  overrides.set("@/app/modules/invoices/services/invoices.service", {
+    listSalesInvoices: (filters, signal) => new Promise((resolve, reject) => requests.push({ filters, signal, resolve, reject })),
+  });
+  const file = resolve(root, "app/modules/invoices/hooks/use-invoices.ts");
+  cache.delete(file);
+  try {
+    const { useInvoices: runInvoices } = load("@/app/modules/invoices/hooks/use-invoices");
+    const render = () => { cursor = 0; return runInvoices(); };
+    const flush = () => { for (const { index, fn } of pending.splice(0)) { cleanups.get(index)?.(); cleanups.set(index, fn()); } };
+    const settle = async () => { flush(); await Promise.resolve(); await Promise.resolve(); return render(); };
+    const response = (name, page) => ({ items: [{ id: `invoice-${page}`, customerId: "customer", customerName: name, type: "customer_sale" }], meta: { total: 30, page, limit: 10 }, summary: { totalAmount: 900 } });
+    let state = render(); flush(); assert.equal(requests.length, 1);
+    requests[0].resolve(response("First name", 1)); state = await settle(); state = await settle();
+    assert.equal(state.invoices[0].customerName, "First name"); assert.equal(state.actionsDisabled, false);
+    assert.equal(Object.hasOwn(state, "customerNames"), false); assert.equal(customerRequests.length, 0);
+    state.setPage(2); state = render();
+    assert.equal(state.invoices[0].customerName, "First name"); assert.equal(state.isRefreshing, true); assert.equal(state.actionsDisabled, true);
+    flush(); assert.equal(requests[1].filters.page, 2);
+    requests[1].resolve(response("Second-page name", 2)); state = await settle();
+    assert.equal(state.invoices[0].customerName, "Second-page name"); assert.equal(state.summaryTotalAmount, 900);
+    state.setPage(3); state = render(); flush();
+    state.setPage(1); state = render(); flush(); assert.equal(requests[2].signal.aborted, true);
+    requests[2].resolve(response("Stale name", 3)); state = await settle();
+    assert.equal(state.invoices[0].customerName, "Second-page name");
+    requests[3].reject(new Error("List unavailable")); state = await settle();
+    assert.equal(state.listStatus, "error"); assert.equal(state.listError, "List unavailable");
+    assert.equal(state.invoices[0].customerName, "Second-page name"); assert.equal(state.actionsDisabled, true);
+    state.refresh(); state = render(); flush();
+    requests[4].resolve(response("Renamed customer", 1)); state = await settle();
+    assert.equal(state.invoices[0].customerName, "Renamed customer"); assert.equal(state.actionsDisabled, false);
+    assert.equal(requests.length, 5); assert.equal(customerRequests.length, 0);
+  } finally {
+    for (const cleanup of cleanups.values()) cleanup?.();
+    globalThis.window = previousWindow;
+    for (const key of ["react", "@/lib/api/use-api-error-message", "@/app/modules/customers/services/customers.service", "@/app/modules/invoices/services/invoices.service"]) overrides.delete(key);
+    for (const key of cache.keys()) if (!cachedBefore.has(key)) cache.delete(key);
+  }
+});
+
 test("customer invoice history can omit the repeated customer column without changing invoice lists", () => {
   const React = nativeRequire("react");
   const { renderToStaticMarkup } = nativeRequire("react-dom/server");
@@ -1002,8 +1056,8 @@ test("customer invoice history can omit the repeated customer column without cha
   });
   try {
     const { InvoicesList } = load("@/app/modules/invoices/components/invoices-list");
-    const props = { invoices: [{ id: "one", invoiceNumber: "INV-1", customerId: "customer", type: "customer_sale", total: 1000, remaining: 0, status: "saved" }],
-      customerNames: { customer: "Repeated Customer" }, status: "success", error: null,
+    const props = { invoices: [{ id: "one", invoiceNumber: "INV-1", customerId: "customer", customerName: "Repeated Customer", type: "customer_sale", total: 1000, remaining: 0, status: "saved" }],
+      status: "success", error: null,
       onRetry() {}, onPrint() {}, onShare() {}, onCancel() {}, onHistory() {},
     };
     const detail = renderToStaticMarkup(React.createElement(InvoicesList, { ...props, showCustomer: false }));
@@ -1011,6 +1065,12 @@ test("customer invoice history can omit the repeated customer column without cha
     const general = renderToStaticMarkup(React.createElement(InvoicesList, props));
     assert.match(general, /Repeated Customer/);
     assert.match(general, /colCustomer/);
+    const fallback = renderToStaticMarkup(React.createElement(InvoicesList, { ...props, invoices: [{ ...props.invoices[0], customerName: null }] }));
+    assert.doesNotMatch(fallback, /Repeated Customer|…/);
+    assert.match(fallback, />-<\/td>/);
+    const cash = renderToStaticMarkup(React.createElement(InvoicesList, { ...props, invoices: [{ ...props.invoices[0], type: "cash_sale", customerId: null, customerName: null }] }));
+    assert.match(cash, /cashCustomer/);
+    assert.doesNotMatch(cash, /Repeated Customer|…/);
   } finally { overrides.delete("next-intl"); overrides.delete("@/i18n/navigation"); }
 });
 

@@ -9,12 +9,11 @@ import type {
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
-import { getCustomer } from "@/app/modules/customers/services/customers.service";
 import {
   cancelSalesInvoice,
   listSalesInvoices,
 } from "@/app/modules/invoices/services/invoices.service";
-import type { SalesInvoice } from "@/app/modules/invoices/types/invoices.types";
+import type { SalesInvoice, SalesInvoiceListItem } from "@/app/modules/invoices/types/invoices.types";
 import { todayIsoDate } from "@/app/modules/invoices/utils/format-invoice-date";
 
 const PAGE_SIZE = 10;
@@ -24,7 +23,7 @@ export function useInvoices(options?: { customerId?: string; pageSize?: number }
   const customerId = options?.customerId;
   const pageSize = options?.pageSize ?? PAGE_SIZE;
   const describeError = useApiErrorMessage();
-  const [invoices, setInvoices] = useState<SalesInvoice[]>([]);
+  const [invoices, setInvoices] = useState<SalesInvoiceListItem[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [summaryTotalAmount, setSummaryTotalAmount] = useState(0);
@@ -37,9 +36,6 @@ export function useInvoices(options?: { customerId?: string; pageSize?: number }
   const [listStatus, setListStatus] = useState<ListStatus>("loading");
   const [listError, setListError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
-  const [customerNames, setCustomerNames] = useState<Record<string, string>>(
-    {},
-  );
   const [toast, setToast] = useState<InvoicesToastState | null>(null);
   const [confirmInvoice, setConfirmInvoice] = useState<SalesInvoice | null>(
     null,
@@ -128,39 +124,6 @@ export function useInvoices(options?: { customerId?: string; pageSize?: number }
     describeError,
   ]);
 
-  useEffect(() => {
-    const ids = [
-      ...new Set(
-        invoices
-          .map((invoice) => invoice.customerId)
-          .filter((id): id is string => Boolean(id)),
-      ),
-    ].filter((id) => customerNames[id] === undefined);
-
-    if (ids.length === 0) return;
-
-    const controller = new AbortController();
-    Promise.all(
-      ids.map(async (id) => {
-        try {
-          const customer = await getCustomer(id, controller.signal);
-          return [id, customer.name] as const;
-        } catch {
-          return [id, "-"] as const;
-        }
-      }),
-    ).then((entries) => {
-      if (controller.signal.aborted) return;
-      setCustomerNames((prev) => {
-        const next = { ...prev };
-        for (const [id, name] of entries) next[id] = name;
-        return next;
-      });
-    });
-
-    return () => controller.abort();
-  }, [invoices, customerNames]);
-
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   function clearToast() {
@@ -198,7 +161,6 @@ export function useInvoices(options?: { customerId?: string; pageSize?: number }
 
   return {
     invoices,
-    customerNames,
     summaryTotalAmount,
     page,
     totalPages,

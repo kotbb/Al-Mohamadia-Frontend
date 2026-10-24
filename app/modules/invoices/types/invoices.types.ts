@@ -38,12 +38,16 @@ export interface SalesInvoiceListMeta {
   total: number;
 }
 
+export interface SalesInvoiceListItem extends SalesInvoice {
+  customerName: string | null;
+}
+
 export interface SalesInvoiceListSummary {
   totalAmount: number;
 }
 
 export interface SalesInvoiceListResponse {
-  items: SalesInvoice[];
+  items: SalesInvoiceListItem[];
   meta: SalesInvoiceListMeta;
   summary: SalesInvoiceListSummary;
 }

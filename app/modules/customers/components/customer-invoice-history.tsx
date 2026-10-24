@@ -14,11 +14,10 @@ import { Toast } from "@/app/modules/shared/components/toast";
 
 interface CustomerInvoiceHistoryProps {
   customerId: string;
-  customerName: string;
   onFinancialChange: () => void;
 }
 
-export function CustomerInvoiceHistory({ customerId, customerName, onFinancialChange }: CustomerInvoiceHistoryProps) {
+export function CustomerInvoiceHistory({ customerId, onFinancialChange }: CustomerInvoiceHistoryProps) {
   const account = useTranslations("accountDetails");
   const t = useTranslations("invoices");
   const shared = useTranslations("shared");
@@ -38,7 +37,7 @@ export function CustomerInvoiceHistory({ customerId, customerName, onFinancialCh
         onConfirm={() => void invoices.submitCancel(onFinancialChange)} onCancel={invoices.closeCancelConfirm} />
       <div className="flex flex-col gap-4">
         <h2 className="text-base font-semibold text-text-primary">{account("invoiceHistoryTitle")}</h2>
-        <InvoicesList showCustomer={false} invoices={invoices.invoices} customerNames={{ ...invoices.customerNames, [customerId]: customerName }}
+        <InvoicesList showCustomer={false} invoices={invoices.invoices}
           status={invoices.listStatus} error={invoices.listError} onRetry={invoices.refresh} actionsDisabled={invoices.actionsDisabled}
           onEdit={(invoice) => router.push(`/invoices/${invoice.id}/edit`)}
           onPrint={(invoice) => router.push(`/invoices/${invoice.id}/export`)} onShare={(invoice) => setShareId(invoice.id)}

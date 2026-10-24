@@ -293,7 +293,6 @@ Sales and purchase create/edit use compact desktop line rows, a second row for m
 |-----|---------|
 | [`AGENTS.md`](../AGENTS.md) | Engineering standards, folder structure, security, UX |
 | [`DESIGN-SYSTEM.md`](./DESIGN-SYSTEM.md) | Quiet Ledger design system — tokens, typography, UX rules |
-| [`UI/`](../UI/) | Screen mockups — **layout/structure** source of truth (re-skin with DESIGN-SYSTEM.md) |
 | [`PHASES.md`](./PHASES.md) | Phased build plan and status |
 | [`../../Al-Mohamadia-Backend/docs/DATABASE.md`](../../Al-Mohamadia-Backend/docs/DATABASE.md) | Data model source of truth |
 | [`../README.md`](../README.md) | Public GitHub project README |
@@ -357,7 +356,7 @@ all business logic or ownership decisions correct.
 
 Sales and purchase create/edit offer a dropdown for every dimension, including empty and single presets. The final Add value action saves a positive meter value for future invoices through POST /items/:id/dimension-defaults; custom typing stays local. Successful additions select the current value and merge sorted choices across the form. Late responses cannot update switched or removed lines.
 
-Inventory retains eight columns and its existing actions inside compact category tables. Pagination requests five complete matching categories per page through `paginationMode=categories&limit=5`; category groups follow category creation date ascending (oldest first, ID ties), and a large category stays on one longer page. Search and stock-status filters apply before choosing categories. Counts describe the loaded page; page totals count matching categories, while KPI calculations remain unchanged. Collapse all and Expand all apply across inventory pagination during the current page visit. Individual category toggles are retained across pages as overrides; either global action clears those overrides. See [the current workflow checklist](#manual-verification-current-workflows).
+Inventory retains eight columns and its existing actions inside compact category tables. Pagination requests five complete matching categories per page through `paginationMode=categories&limit=5`; category groups follow category creation date ascending (oldest first, ID ties), and a large category stays on one longer page. Search and stock-status filters apply before choosing categories. Counts describe the loaded page; page totals count matching categories, while KPI calculations remain unchanged. Collapse all and Expand all apply across inventory pagination during the current page visit. Individual category toggles are retained across pages as overrides; either global action clears those overrides.
 
 ## Current export and loading flows
 
@@ -370,13 +369,13 @@ The operating-expense feature is retired. The backend retains historical expense
 ## Row navigation and invoice presentation
 
 Both sales/purchase sidebar hubs open invoices first. Customer, supplier and sales/purchase invoice row clicks open details, with primary-link brown hover across the row and independent nested actions. Invoice details use one labeled Previous/Next pair with an Invoice number /
-Same customer selector; selected mode is carried in neighbor URLs. Receipts calculate cubic per-piece display from saved meter volume/rate; rates and stored totals stay unchanged. See [the current workflow checklist](#manual-verification-current-workflows).
+Same customer selector; selected mode is carried in neighbor URLs. Receipts calculate cubic per-piece display from saved meter volume/rate; rates and stored totals stay unchanged.
 
 
 ### Mobile validation and invoice presentation
 
 Invoice details use one Previous/Next pair with an Invoice number / Same customer selector. Export guidance follows PDF A4 / PNG A5 without appearing in outputs. Customer/supplier forms use a fixed Egypt +20 field with a ten-digit limit. Validation is submit-triggered, and generic `1XX XXX XXXX` guidance remains
-visible at unfilled positions. See [the current workflow checklist](#manual-verification-current-workflows).
+visible at unfilled positions.
 
 
 ## Manual verification (current workflows)
@@ -455,4 +454,3 @@ Items and Inventory share Close all / Expand all controls and category collapse 
 
 Items are identified by database ID and displayed by name/category. Create and update item requests do not accept `code`; item, inventory and dashboard top-selling responses do not return it. Item-name duplicates are allowed. Item forms do not fetch the complete catalog to generate identifiers. Items and Inventory search names only; invoice selectors retain item/category-name search. Historical audit code hiding remains for old audit entries. Database cleanup is a manual rollout step; no database fields or indexes are removed automatically.
 
-Deploy with the matching backend contract and follow [the backend manual cleanup procedure](../../Al-Mohamadia-Backend/docs/REMOVE-ITEM-CODES.md).
