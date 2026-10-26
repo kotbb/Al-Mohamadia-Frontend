@@ -30,7 +30,6 @@ export function useInventory() {
     totalItems: 0,
     lowStockCount: 0,
     outOfStockCount: 0,
-    negativeStockCount: 0,
     normalStockCount: 0,
   });
   const [meta, setMeta] = useState<StockListMeta>({

@@ -180,9 +180,13 @@ Domains (map to MVP modules):
 - All authenticated HTTP goes through the shared API client (`NEXT_PUBLIC_API_URL`,
   Bearer access token, single-flight refresh on 401). Never call `fetch` ad
   hoc from components.
-- Roles: `super_admin` (user management only extra) and `admin` (all
+- Roles: `super_admin` (user management and shared personal ledger) and `admin` (all
   operational features, no user management). Enforce on UI routes and hide
   nav items accordingly — the API is still the authority.
+- Personal ledger uses existing AuthGuard/sidebar role checks with no owner
+  restrictions or additional authentication. All superadmins share all records.
+  It has no personal history and does not affect operational audit or store KPIs.
+  Method is optional and displays blank; no opening-balance workflow.
 - Treat user input as untrusted; validate amounts, quantities, and required
   dimensions before submit. Server recomputes totals — never trust
   client-only `remaining` / `lineTotal` as final truth.

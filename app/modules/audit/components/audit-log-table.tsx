@@ -138,7 +138,7 @@ export function AuditLogTable({
                   entry[0],
                   entry[1].old,
                   locale,
-                  t("emptyValue"),
+                  "",
                   valueLabels,
                 );
                 const newText = formatAuditChangeValue(
@@ -148,9 +148,9 @@ export function AuditLogTable({
                   t("emptyValue"),
                   valueLabels,
                 );
-                const oldShown = oldText ?? t("emptyValue");
+                const oldShown = oldText ?? "";
                 const newShown = newText ?? t("emptyValue");
-                if (oldShown === t("emptyValue") && newShown === t("emptyValue")) {
+                if (oldShown === "" && newShown === t("emptyValue")) {
                   return [];
                 }
                 return [[entry[0], oldShown, newShown] as const];
@@ -173,7 +173,7 @@ export function AuditLogTable({
                 hasChanges={hasChanges}
                 isOpen={isOpen}
                 changeEntries={changeEntries}
-                locale={locale}
+                changeColumnLabels={[t("colField"), t("colBefore"), t("colAfter")]}
                 actionText={actionLabel(log.action)}
                 entityText={entityLabel(log.entityType)}
                 userText={log.user.username ?? t("unknownUser")}
@@ -199,7 +199,7 @@ function LogRows({
   hasChanges,
   isOpen,
   changeEntries,
-  locale,
+  changeColumnLabels,
   actionText,
   entityText,
   userText,
@@ -214,7 +214,7 @@ function LogRows({
   hasChanges: boolean;
   isOpen: boolean;
   changeEntries: readonly (readonly [string, string, string])[];
-  locale: string;
+  changeColumnLabels: readonly [string, string, string];
   actionText: string;
   entityText: string;
   userText: string;
@@ -243,6 +243,7 @@ function LogRows({
                 type="button"
                 className="ds-focus-ring mt-1 inline-flex items-center rounded-lg bg-primary/10 px-2.5 py-1 text-sm text-primary hover:bg-primary/15"
                 aria-expanded={isOpen}
+                aria-controls={`audit-changes-${log.id}`}
                 onClick={onToggle}
               >
                 <span className="font-bold">
@@ -255,30 +256,31 @@ function LogRows({
       </tr>
       {isOpen && hasChanges ? (
         <tr className="border-b border-border bg-surface-muted/40">
-          <td colSpan={5} className="px-4 py-3">
-            <dl className="flex flex-col gap-2">
-              {changeEntries.map(([field, oldText, newText]) => (
-                <div
-                  key={`${log.id}-${field}`}
-                  className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm"
-                >
-                  <dt className="whitespace-nowrap font-medium text-text-primary">
-                    {fieldLabel(field)}:
-                  </dt>
-                  <dd className="text-text-secondary">
-                    <bdi>{oldText}</bdi>
-                    <span
-                      dir="ltr"
-                      className="inline-block px-1.5 text-text-muted"
-                      aria-hidden
-                    >
-                      {locale === "ar" ? "←" : "→"}
-                    </span>
-                    <bdi>{newText}</bdi>
-                  </dd>
-                </div>
-              ))}
-            </dl>
+          <td id={`audit-changes-${log.id}`} colSpan={5} className="px-4 py-3">
+            <div className="overflow-x-auto rounded-xl border border-border bg-surface">
+              <table className="w-full min-w-[32rem] border-collapse text-sm">
+                <thead className="bg-surface-muted">
+                  <tr className="border-b border-border">
+                    {changeColumnLabels.map((label) => (
+                      <th key={label} scope="col" className="px-4 py-3 text-start font-medium text-text-secondary">
+                        {label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {changeEntries.map(([field, oldText, newText]) => (
+                    <tr key={`${log.id}-${field}`} className="border-b border-border last:border-b-0">
+                      <th scope="row" className="px-4 py-2 text-start font-medium text-text-secondary">
+                        {fieldLabel(field)}
+                      </th>
+                      <td className="max-w-64 whitespace-pre-wrap break-words px-4 py-2 text-text-secondary"><bdi>{oldText}</bdi></td>
+                      <td className="max-w-64 whitespace-pre-wrap break-words px-4 py-2 text-text-primary"><bdi>{newText}</bdi></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </td>
         </tr>
       ) : null}

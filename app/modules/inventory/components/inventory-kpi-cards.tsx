@@ -35,8 +35,7 @@ export function InventoryKpiCards({
 
   const attentionCount =
     summary.lowStockCount +
-    summary.outOfStockCount +
-    summary.negativeStockCount;
+    summary.outOfStockCount;
 
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -116,7 +115,7 @@ export function InventoryKpiCards({
           </span>
           <div
             className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
-              summary.negativeStockCount > 0
+              summary.outOfStockCount > 0
                 ? "bg-danger/12 text-danger"
                 : attentionCount > 0
                   ? "bg-warning/12 text-warning"
@@ -134,7 +133,7 @@ export function InventoryKpiCards({
           <div className="flex items-baseline gap-1.5">
             <span
               className={`text-xl font-bold tracking-tight tabular-nums ${
-                summary.negativeStockCount > 0
+                summary.outOfStockCount > 0
                   ? "text-danger"
                   : attentionCount > 0
                     ? "text-warning"
@@ -169,18 +168,6 @@ export function InventoryKpiCards({
                 <span className="h-1.5 w-1.5 rounded-full bg-danger" />
                 <span>
                   {summary.outOfStockCount} {t("badgeOutOfStock")}
-                </span>
-              </button>
-            )}
-            {summary.negativeStockCount > 0 && (
-              <button
-                type="button"
-                onClick={() => onSelectStatusFilter?.("negative_stock")}
-                className="ds-focus-ring min-h-11 cursor-pointer inline-flex items-center gap-1 rounded-full bg-danger/12 border border-danger/20 px-2 py-0.5 text-xs font-semibold text-danger hover:bg-danger/20 transition-colors"
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-danger" />
-                <span>
-                  {summary.negativeStockCount} {t("badgeNegativeStock")}
                 </span>
               </button>
             )}

@@ -83,7 +83,7 @@ Practically, this means: a neutral canvas, one confident brand color, four disci
 | --------- | --------- | --------- | ---------------------------------------------------------------------------------- |
 | `success` | `#2E8F52` | `#5FBB80` | paid, saved, in-stock                                                              |
 | `warning` | `#B8862B` | `#D9A854` | low stock, pending, balances requiring attention                                   |
-| `danger`  | `#C13B2E` | `#E27567` | negative stock, cancelled invoices, critical/blocked balances, destructive actions |
+| `danger`  | `#C13B2E` | `#E27567` | out-of-stock items, cancelled invoices, critical/blocked balances, destructive actions |
 | `info`    | `#2E6FA6` | `#79ADD9` | neutral system information                                                         |
 
 Activation actions use `success-action` (`#267344` light, `#5FBB80` dark) with
@@ -145,7 +145,7 @@ An ordinary customer who owes money for a routine, current purchase is **not** v
 
 **Unchanged / always `danger`:**
 
-- Negative stock.
+- Out-of-stock quantities (zero or negative; preserve the signed quantity).
 - Cancelled invoices.
 - Genuinely destructive actions (Delete, Cancel Invoice, Merge).
 
@@ -459,10 +459,34 @@ Sales invoice mode order follows locale reading direction: Customer sale first (
 
 Manual checks: compare sales and purchase account/item searches in Arabic/English and light/dark, including category search, bold category headings, keyboard selection/Escape, inactive original selections on edit, small screens, and free-amount lines with no quantity/dimensions. Confirm Customer sale first/default and one primary sales footer action.
 
-Items and Categories share catalog pagination controls below the list: secondary Previous/Next buttons with a muted page counter, disabled boundary buttons, localized navigation labels, and no controls for zero or one page. The Items page paginates complete category groups to avoid splitting related items.
+Items and Categories share catalog pagination controls below the list: secondary Previous/Next buttons with a muted page counter, disabled boundary buttons, localized navigation labels, and no controls for zero or one page. The Items page paginates complete category groups to avoid splitting related items. Order those groups by category creation date, oldest first with ID ties, preserving the category API order in both locales. Keep items alphabetical within each group.
 
 Category visibility controls on Items and Inventory use the same outlined secondary button: surface background, subtle border/shadow, primary-colored directional icon, semibold label, and at least a 44px touch target. Keep the action at the end of the category toolbar and allow wrapping on small screens. Individual category headers expose aria-expanded and support native keyboard activation.
 
 The Categories toolbar matches Items: a bordered surface with a growing name-search field and a compact All/Active/Inactive status selector. Stack fields on small screens, preserve locale reading direction, and show filter-specific empty-state guidance.
 
 Item forms and catalog surfaces display names and categories without item-code fields, badges, or generated-code hints. Invoice references remain database IDs internally; do not expose these as replacement item codes.
+
+### Personal ledger — دفترك
+
+- Reuse the app shell, Noto fonts and existing light/dark tokens in both locales.
+  Keep one primary New movement action and a secondary Manage contacts action.
+- Three equal summary cards show deposits (`success`), withdrawals (`danger`)
+  and signed net. Search and shared period/custom-date controls precede the
+  rounded bordered table. Default to No period; the date picker uses intrinsic
+  desktop width without shrinking, so complete week/month ranges remain visible.
+  Use explicit type labels and plus/minus markers;
+  isolate money with Western tabular numerals for RTL.
+- Reuse Modal, Input, AccountCombobox, SegmentedControl, DashedAddButton and
+  RowActionsMenu. Distinguish store customers from ledger people with source
+  labels. Mark method/notes optional; absent methods render blank.
+- Small personal-ledger dialogs use direct imports so opening them does not
+  suspend the page into the route loading screen. Show only the dialog-local
+  data loader while its request is pending.
+- Contact cards explicitly show lifetime totals. Manage contacts provides View
+  and Rename, with no Archive action. Remove personal history entry points.
+  Confirm movement deletion and use date-only movement dates.
+- Audit Show changes expands a rounded, bordered Field / Before / After table
+  with muted column headings, row separators and bidi-isolated values. Missing
+  Before values render blank; zero/false remain visible and sensitive values stay
+  hidden. Keep horizontal scrolling on narrow screens. No new tokens or fonts are needed.

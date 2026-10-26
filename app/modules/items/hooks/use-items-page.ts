@@ -78,6 +78,8 @@ export function useItemsPage(): UseItemsPageResult {
     const categoryMap = new Map(
       categories.map((category) => [category.id, category]),
     );
+    // The categories API supplies oldest-first creation order with ID ties.
+    const categoryOrder = new Map(categories.map((category, index) => [category.id, index]));
     const groups = new Map<string, Item[]>();
 
     for (const item of filteredItems) {
@@ -99,7 +101,11 @@ export function useItemsPage(): UseItemsPageResult {
           } satisfies Category);
         return { category, items: groupItems };
       })
-      .sort((a, b) => a.category.name.localeCompare(b.category.name));
+      .sort((a, b) =>
+        (categoryOrder.get(a.category.id) ?? Number.MAX_SAFE_INTEGER) -
+          (categoryOrder.get(b.category.id) ?? Number.MAX_SAFE_INTEGER) ||
+        a.category.id.localeCompare(b.category.id),
+      );
   }, [categories, filteredItems]);
 
   const setSearch = useCallback((value: string) => {

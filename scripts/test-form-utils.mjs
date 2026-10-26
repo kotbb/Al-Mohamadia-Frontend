@@ -5,6 +5,257 @@ import { resolve, dirname } from "node:path";
 import { createRequire } from "node:module";
 import ts from "typescript";
 
+test("audit expanded changes use localized Field Before After columns and blank missing before values", () => {
+  const cachedBefore = new Set(cache.keys());
+  const React = nativeRequire("react");
+  const { renderToStaticMarkup } = nativeRequire("react-dom/server");
+  const { createTranslator } = nativeRequire("next-intl");
+  let locale = "en";
+  overrides.set("react", { ...React, useState: () => ["invoice", () => {}] });
+  overrides.set("next-intl", { useLocale: () => locale, useTranslations: (namespace) => createTranslator({ locale, namespace, messages: JSON.parse(readFileSync(resolve(root, `messages/${locale}.json`), "utf8")) }) });
+  try {
+    const { AuditLogTable } = load("@/app/modules/audit/components/audit-log-table");
+    const logs = [{ id: "invoice", createdAt: "2026-10-19T15:55:00Z", user: { id: "user", username: "superadmin" }, action: "invoice_updated", entityType: "SalesInvoice", changes: { notes: { old: null, new: "New note" }, paid: { old: 0, new: 100 }, isActive: { old: false, new: true }, passwordHash: { old: null, new: "hidden secret" }, customerId: { old: null, new: "123456789012345678901234" } } }];
+    for (locale of ["en", "ar"]) {
+      const html = renderToStaticMarkup(React.createElement(AuditLogTable, { logs, status: "success", error: null, hasActiveFilters: false, onRetry() {} }));
+      assert.equal((html.match(/<table\b/g) ?? []).length, 2);
+      const detail = html.slice(html.lastIndexOf("<table"));
+      for (const label of locale === "en" ? ["Field", "Before", "After"] : ["الحقل", "قبل", "بعد"]) assert.ok(detail.includes(label));
+      assert.match(detail, /<td[^>]*><bdi><\/bdi><\/td>/);
+      assert.match(detail, /<bdi>0<\/bdi>/);
+      assert.ok(detail.includes("New note"));
+      assert.doesNotMatch(detail, /hidden secret|123456789012345678901234|passwordHash/);
+    }
+  } finally {
+    overrides.delete("react"); overrides.delete("next-intl");
+    for (const key of cache.keys()) if (!cachedBefore.has(key)) cache.delete(key);
+  }
+});
+
+test("opening a personal ledger dialog keeps the page visible with only its local data loader", () => {
+  const cachedBefore = new Set(cache.keys());
+  const React = nativeRequire("react");
+  const { renderToString } = nativeRequire("react-dom/server");
+  let modal = "contacts", cursor = 0;
+  const keys = [];
+  const stub = (key, value) => { keys.push(key); overrides.set(key, value); };
+  // Cold dynamic imports suspend exactly as next/dynamic does in the App Router.
+  stub("next/dynamic", { default: () => React.lazy(() => new Promise(() => {})) });
+  stub("react", { ...React, useState: (initial) => {
+    const index = cursor++;
+    return [index === 1 && modal === "movement" ? "movement-id" : index === 2 && modal === "contacts" ? true : index === 3 && modal === "person" ? "person-id" : initial, () => {}];
+  } });
+  stub("next-intl", { useTranslations: () => (key) => key });
+  stub("@/app/layout/app-shell", { AppShell: ({ children, actions }) => React.createElement("main", null, "Ledger page", actions, children) });
+  stub("../hooks/use-personal-ledger", { usePersonalLedger: () => ({ resource: { loading: false, error: null, data: null }, filters: {}, notice: "" }) });
+  for (const [path, name] of [["summary", "PersonalLedgerSummary"], ["filters", "PersonalLedgerFilters"], ["table", "PersonalLedgerTable"], ["pagination", "PersonalLedgerPagination"]]) stub(`../components/personal-ledger-${path}`, { [name]: () => null });
+  for (const [path, name] of [["movement-modal", "PersonalLedgerMovementModal"], ["movement-detail-modal", "PersonalLedgerMovementDetailModal"], ["contacts-modal", "PersonalLedgerContactsModal"], ["contact-detail-modal", "PersonalLedgerContactDetailModal"]]) {
+    stub(`../components/personal-ledger-${path}`, { [name]: () => React.createElement("div", { role: "dialog" }, React.createElement("div", { role: "status" }, "Dialog data loading")) });
+  }
+  try {
+    const { PersonalLedgerPage } = load("@/app/modules/personal-ledger/pages/personal-ledger-page");
+    for (modal of ["contacts", "movement", "person"]) {
+      cursor = 0;
+      const html = renderToString(React.createElement(React.Suspense, { fallback: React.createElement("div", null, "Full page loading") }, React.createElement(PersonalLedgerPage)));
+      assert.ok(html.includes("Ledger page"));
+      assert.ok(html.includes("Dialog data loading"));
+      assert.equal((html.match(/role="status"/g) ?? []).length, 1);
+      assert.doesNotMatch(html, /Full page loading/);
+    }
+  } finally {
+    for (const key of keys) overrides.delete(key);
+    for (const key of cache.keys()) if (!cachedBefore.has(key)) cache.delete(key);
+  }
+});
+
+test("personal ledger people management has view and rename only and detail footers omit history", () => {
+  const cachedBefore = new Set(cache.keys());
+  const React = nativeRequire("react");
+  const { renderToStaticMarkup } = nativeRequire("react-dom/server");
+  const person = { id: "person", name: "Personal contact", customerId: null, isActive: true, summary: { deposits: 100, withdrawals: 0, net: 100, count: 1 } };
+  const menus = [];
+  overrides.set("next-intl", { useLocale: () => "en", useTranslations: () => (key) => key });
+  overrides.set("@/app/modules/shared/components/row-actions-menu", { RowActionsMenu: ({ items }) => { menus.push(items.map((item) => item.id)); return null; } });
+  overrides.set("../hooks/use-personal-ledger-contacts", { usePersonalLedgerContacts: () => ({ query: "", search() {}, resource: { data: { items: [person], meta: { page: 1, limit: 10, total: 1 } } }, edit() {}, editor: null }) });
+  let detailData = { contact: person, movements: { items: [], meta: { page: 1, limit: 10, total: 0 } } };
+  overrides.set("../hooks/use-personal-ledger-resource", { usePersonalLedgerResource: () => ({ data: detailData }) });
+  try {
+    const { PersonalLedgerContactsModal } = load("@/app/modules/personal-ledger/components/personal-ledger-contacts-modal");
+    const { PersonalLedgerContactDetailModal } = load("@/app/modules/personal-ledger/components/personal-ledger-contact-detail-modal");
+    const { PersonalLedgerMovementDetailModal } = load("@/app/modules/personal-ledger/components/personal-ledger-movement-detail-modal");
+    const props = { id: "person", onClose() {}, onContact() {}, onChanged() {} };
+    renderToStaticMarkup(React.createElement(PersonalLedgerContactsModal, props));
+    assert.deepEqual(menus, [["view", "rename"]]);
+    for (const component of [PersonalLedgerContactDetailModal, PersonalLedgerMovementDetailModal]) {
+      if (component === PersonalLedgerMovementDetailModal) detailData = null;
+      const html = renderToStaticMarkup(React.createElement(component, props));
+      assert.doesNotMatch(html, />history<|>archive<|>reactivate</);
+    }
+  } finally {
+    for (const key of ["next-intl", "@/app/modules/shared/components/row-actions-menu", "../hooks/use-personal-ledger-contacts", "../hooks/use-personal-ledger-resource"]) overrides.delete(key);
+    for (const key of cache.keys()) if (!cachedBefore.has(key)) cache.delete(key);
+  }
+});
+
+test("personal ledger requires a person and valid money/date while optional fields remain nullable", () => {
+  const { makeLedgerForm, validateLedgerForm, ledgerMovementInput } = load("@/app/modules/personal-ledger/utils/personal-ledger-form.util");
+  const form = makeLedgerForm(undefined, "2026-10-25");
+  assert.equal(validateLedgerForm(form, "2026-10-25"), "personRequired");
+  form.person = { id: "contact:person", referenceId: "person", source: "contact", name: "Person", isActive: true };
+  form.amount = "250.25";
+  assert.equal(validateLedgerForm(form, "2026-10-25"), null);
+  assert.deepEqual(ledgerMovementInput(form, "person"), { contactId: "person", type: "withdrawal", amount: 250.25, movementDate: "2026-10-25", method: null, notes: null });
+  for (const amount of ["", "0", "-1", "1.001", "NaN", "Infinity"]) assert.equal(validateLedgerForm({ ...form, amount }, "2026-10-25"), "invalidAmount");
+  for (const movementDate of ["2026-10-26", "2026-02-31", ""]) assert.equal(validateLedgerForm({ ...form, movementDate }, "2026-10-25"), "invalidDate");
+  assert.equal(validateLedgerForm({ ...form, type: "opening_balance" }, "2026-10-25"), "invalidType");
+  assert.equal(validateLedgerForm({ ...form, method: "other" }, "2026-10-25"), "invalidMethod");
+  const saved = makeLedgerForm({ id: "one", contactId: "person", contactName: "Person", type: "deposit", amount: 0.01, movementDate: "2020-01-01", method: "cash", notes: "old" });
+  assert.equal(saved.method, "cash");
+  assert.equal(ledgerMovementInput({ ...saved, method: "", notes: "  " }, "person").method, null);
+});
+
+test("personal ledger opens without a date filter and applies explicit period selections", async () => {
+  const cachedBefore = new Set(cache.keys());
+  const states = [], calls = [];
+  let cursor = 0, fetchResource;
+  const keys = [];
+  const stub = (key, value) => { keys.push(key); overrides.set(key, value); };
+  stub("react", {
+    useState(initial) { const index = cursor++; if (!(index in states)) states[index] = typeof initial === "function" ? initial() : initial; return [states[index], (value) => { states[index] = typeof value === "function" ? value(states[index]) : value; }]; },
+    useRef(initial) { const index = cursor++; if (!(index in states)) states[index] = { current: initial }; return states[index]; },
+    useCallback: (fn) => fn, useDeferredValue: (value) => value,
+  });
+  stub("next-intl", { useTranslations: () => (key) => key });
+  stub("@/lib/api/use-api-error-message", { useApiErrorMessage: () => () => "Error" });
+  stub("../services/personal-ledger.service", { listPersonalLedgerMovements: async (filters) => { calls.push(filters); return { items: [], meta: { page: 1, limit: 10, total: 0 } }; } });
+  stub("./use-personal-ledger-resource", { usePersonalLedgerResource: (load) => { fetchResource = load; return {}; } });
+  try {
+    const { usePersonalLedger: runLedger } = load("@/app/modules/personal-ledger/hooks/use-personal-ledger");
+    const render = () => { cursor = 0; return runLedger(); };
+    let state = render();
+    assert.equal(state.filters.period, "all");
+    await fetchResource(new AbortController().signal);
+    assert.equal(calls.at(-1).from, undefined);
+    assert.equal(calls.at(-1).to, undefined);
+    state.changeFilters({ period: "month", date: "2026-10-26" });
+    state = render(); await fetchResource(new AbortController().signal);
+    assert.equal(calls.at(-1).from, "2026-10-01");
+    assert.equal(calls.at(-1).to, "2026-10-31");
+    state.changeFilters({ period: "all" });
+    render(); await fetchResource(new AbortController().signal);
+    assert.equal(calls.at(-1).from, undefined);
+    assert.equal(calls.at(-1).to, undefined);
+  } finally {
+    for (const key of keys) overrides.delete(key);
+    for (const key of cache.keys()) if (!cachedBefore.has(key)) cache.delete(key);
+  }
+});
+
+test("personal ledger period bounds match Cairo calendar choices and optional methods display blank", () => {
+  const { ledgerDateBounds, ledgerMethodLabel } = load("@/app/modules/personal-ledger/utils/personal-ledger-form.util");
+  assert.deepEqual(ledgerDateBounds("month", "2026-10-25", { from: "", to: "" }), { from: "2026-10-01", to: "2026-10-31" });
+  assert.deepEqual(ledgerDateBounds("all", "2026-10-25", { from: "", to: "" }), {});
+  assert.deepEqual(ledgerDateBounds("custom", "2026-10-25", { from: "2020-01-01", to: "2020-02-01" }), { from: "2020-01-01", to: "2020-02-01" });
+  assert.equal(ledgerMethodLabel(null, { cash: "Cash" }), "");
+  assert.equal(ledgerMethodLabel("cash", { cash: "Cash" }), "Cash");
+});
+
+test("personal ledger table renders a blank payment-method cell in Arabic and English", () => {
+  const React = nativeRequire("react");
+  const { renderToStaticMarkup } = nativeRequire("react-dom/server");
+  const { createTranslator } = nativeRequire("next-intl");
+  let locale = "ar";
+  overrides.set("next-intl", { useLocale: () => locale, useTranslations: (namespace) => createTranslator({ locale, namespace, messages: JSON.parse(readFileSync(resolve(root, `messages/${locale}.json`), "utf8")) }) });
+  try {
+    const { PersonalLedgerTable } = load("@/app/modules/personal-ledger/components/personal-ledger-table");
+    for (locale of ["ar", "en"]) {
+      const row = { id: "one", contactId: "person", contactName: "Person", type: "deposit", amount: 100, movementDate: "2026-10-25", method: null, notes: "A note" };
+      const html = renderToStaticMarkup(React.createElement(PersonalLedgerTable, { rows: [row], onView() {}, onEdit() {}, onDelete() {} }));
+      const cells = [...html.match(/<tbody>([\s\S]*?)<\/tbody>/)[1].matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/g)].map((match) => match[1]);
+      assert.equal(cells[4], "");
+      assert.ok(html.includes("Person"));
+      assert.match(html, /type="button"/);
+    }
+  } finally { overrides.delete("next-intl"); }
+});
+
+test("personal ledger transport uses the backend routes, verbs, filters and null-clearing contracts", async () => {
+  const calls = [];
+  const client = Object.fromEntries(["get", "post", "patch", "delete"].map((verb) => [verb, async (...args) => { calls.push({ verb, args }); return {}; }]));
+  overrides.set("@/lib/api/client", { apiClient: client });
+  try {
+    const api = load("@/app/modules/personal-ledger/services/personal-ledger.service");
+    await api.listPersonalLedgerMovements({ from: "2026-10-01", to: "2026-10-31", q: "أحمد", page: 2 });
+    const url = new URL(calls[0].args[0], "http://test");
+    assert.equal(url.pathname, "/personal-ledger/movements");
+    assert.deepEqual(Object.fromEntries(url.searchParams), { from: "2026-10-01", to: "2026-10-31", q: "أحمد", page: "2" });
+    await api.listPersonalLedgerMovements();
+    assert.equal(calls.at(-1).args[0], "/personal-ledger/movements");
+    await api.listPersonalLedgerContacts({ includeInactive: true });
+    assert.equal(calls.at(-1).args[0], "/personal-ledger/contacts?includeInactive=true");
+    await api.createPersonalLedgerContact({ customerId: "customer" });
+    assert.deepEqual(calls.at(-1), { verb: "post", args: ["/personal-ledger/contacts", { customerId: "customer" }] });
+    await api.updatePersonalLedgerMovement("one", { method: null });
+    assert.deepEqual(calls.at(-1), { verb: "patch", args: ["/personal-ledger/movements/one", { method: null }] });
+    await api.deletePersonalLedgerMovement("one");
+    assert.deepEqual(calls.at(-1), { verb: "delete", args: ["/personal-ledger/movements/one"] });
+    assert.equal(api.listPersonalLedgerHistory, undefined);
+  } finally { overrides.delete("@/lib/api/client"); cache.delete(resolve(root, "app/modules/personal-ledger/services/personal-ledger.service.ts")); }
+});
+
+test("one personal movement saving workflow blocks repeat person creation and waits for the new person", async () => {
+  const cachedBefore = new Set(cache.keys());
+  const states = [], updates = [], creates = [];
+  let cursor = 0, resolveContact, rejectCreate = false, rejectSave = false;
+  const contactResponse = new Promise((resolve) => { resolveContact = resolve; });
+  overrides.set("react", {
+    useState(initial) { const index = cursor++; if (!(index in states)) states[index] = typeof initial === "function" ? initial() : initial; return [states[index], (value) => { states[index] = typeof value === "function" ? value(states[index]) : value; }]; },
+    useRef(initial) { const index = cursor++; if (!(index in states)) states[index] = { current: initial }; return states[index]; },
+    useCallback: (fn) => fn, useEffect() {},
+  });
+  overrides.set("next-intl", { useTranslations: () => (key) => key });
+  overrides.set("@/lib/api/use-api-error-message", { useApiErrorMessage: () => (error) => error.message });
+  overrides.set("../services/personal-ledger.service", {
+    createPersonalLedgerContact: (input) => { creates.push(input); return rejectCreate ? Promise.reject(new Error("Person save failed")) : contactResponse; },
+    updatePersonalLedgerMovement: async (id, input) => { updates.push({ id, input }); if (rejectSave) throw new Error("Movement save failed"); return {}; },
+  });
+  const personA = { id: "entry", contactId: "a", contactName: "Person A", type: "deposit", amount: 100, movementDate: "2020-01-01", method: null, notes: null };
+  try {
+    const { usePersonalLedgerForm: runLedgerForm } = load("@/app/modules/personal-ledger/hooks/use-personal-ledger-form");
+    const render = () => { cursor = 0; return runLedgerForm(personA, () => {}); };
+    let state = render();
+    const pending = state.createPerson?.(" Person B ");
+    await state.save();
+    assert.equal(updates.length, 0);
+    assert.equal(render().saving, true);
+    await render().createPerson("Person B");
+    assert.deepEqual(creates, [{ name: "Person B" }]);
+    resolveContact({ id: "b", name: "Person B", isActive: true });
+    await pending;
+    state = render(); assert.equal(state.saving, false);
+    await state.save();
+    assert.equal(updates.length, 1); assert.equal(updates[0].input.contactId, "b");
+    rejectCreate = true;
+    assert.equal(await render().createPerson("Another person"), false);
+    state = render(); assert.equal(state.saving, false); assert.equal(state.error, "Person save failed");
+    assert.equal(state.form.person.referenceId, "b");
+    rejectCreate = false;
+    assert.equal(await state.createPerson("Person B"), true);
+    assert.equal(render().error, null);
+    rejectSave = true;
+    assert.equal(await render().save(), false);
+    state = render(); assert.equal(state.saving, false); assert.equal(state.error, "Movement save failed");
+    rejectSave = false;
+    assert.equal(await state.save(), true);
+    assert.equal(render().error, null);
+  } finally {
+    resolveContact?.({ id: "b", name: "Person B", isActive: true });
+    for (const key of ["react", "next-intl", "@/lib/api/use-api-error-message", "../services/personal-ledger.service"]) overrides.delete(key);
+    for (const key of cache.keys()) if (!cachedBefore.has(key)) cache.delete(key);
+  }
+});
+
+
 test("receipt column layouts give optional-column space back to the item and always total 100 percent", () => {
   const React = nativeRequire("react");
   const { renderToStaticMarkup } = nativeRequire("react-dom/server");
@@ -59,6 +310,7 @@ test("invoice item search matches names and categories, supports keyboard choice
   const states = [];
   let cursor = 0;
   overrides.set("react", {
+    useMemo: (fn) => fn(),
     useId: () => "item-picker",
     useRef(initial) { const index = cursor++; if (!(index in states)) states[index] = { current: initial }; return states[index]; },
     useState(initial) { const index = cursor++; if (!(index in states)) states[index] = initial; return [states[index], (value) => { states[index] = value; }]; },
@@ -68,10 +320,10 @@ test("invoice item search matches names and categories, supports keyboard choice
   cache.delete(file);
   const chosen = [];
   const props = { labels: { label: "Item", placeholder: "Search", empty: "No items" }, name: "item-one", value: "", items: [
-    { id: "oak", name: "Oak 18", category: { name: "Wood" }, isActive: true },
-    { id: "pine", name: "Pine 12", category: { name: "Wood" }, isActive: true },
-    { id: "arabic", name: "صنف", category: { name: "ألواح" }, isActive: true },
-    { id: "inactive", name: "Hidden item", category: { name: "Wood" }, isActive: false },
+    { id: "pine", name: "Pine 12", category: { id: "wood", name: "Wood", createdAt: "2020-01-01" }, isActive: true },
+    { id: "oak", name: "Oak 18", category: { id: "wood", name: "Wood", createdAt: "2020-01-01" }, isActive: true },
+    { id: "arabic", name: "صنف", category: { id: "boards", name: "ألواح", createdAt: "2019-01-01" }, isActive: true },
+    { id: "inactive", name: "Hidden item", category: { id: "wood", name: "Wood", createdAt: "2020-01-01" }, isActive: false },
   ], onSelect(id) { props.value = id; chosen.push(id); } };
   try {
     const { ItemCombobox } = load("@/app/modules/shared/components/item-combobox");
@@ -84,6 +336,7 @@ test("invoice item search matches names and categories, supports keyboard choice
     input().props.onFocus({ currentTarget: { select() {} } });
     assert.equal(options().length, 3);
     assert.equal(groups().length, 2);
+    assert.deepEqual(options().map((node) => node.props.children.props.children), ["صنف", "Oak 18", "Pine 12"]);
     const woodGroup = groups().find((group) => nodes(group).some((node) => node.props?.children === "Wood"));
     assert.equal(nodes(woodGroup).filter((node) => node.props?.role === "option").length, 2);
     input().props.onChange({ target: { value: "  WOOD " } });
@@ -356,7 +609,7 @@ test("catalog pagination keeps complete item groups, resets filters and refresh,
   const cachedBefore = new Set(cache.keys());
   const states = [], effects = [], pending = [];
   let cursor = 0;
-  const categories = Array.from({ length: 12 }, (_, index) => ({ id: `cat-${index}`, name: `Category ${String(index).padStart(2, "0")}`, isActive: index !== 11, isDeleted: false }));
+  const categories = Array.from({ length: 12 }, (_, index) => ({ id: `cat-${index}`, name: index === 0 ? "Zulu oldest" : `Category ${String(index).padStart(2, "0")}`, createdAt: new Date(Date.UTC(2020 + index, 0, 1)).toISOString(), isActive: index !== 11, isDeleted: false }));
   let catalogCategories = categories;
   const items = categories.flatMap((category, index) => Array.from({ length: index === 0 ? 25 : 1 }, (_, row) => ({ id: `${category.id}-${row}`, name: `Item ${row}`, category, isActive: index !== 11, isDeleted: false })));
   overrides.set("react", {
@@ -379,6 +632,8 @@ test("catalog pagination keeps complete item groups, resets filters and refresh,
       if (kind === "items-page") {
         assert.equal(state.totalPages, 3); assert.equal(state.page, 1);
         assert.equal(state.groupedItems.length, 5); assert.equal(state.groupedItems[0].items.length, 25);
+        assert.deepEqual(state.groupedItems.map((group) => group.category.id), ["cat-0", "cat-1", "cat-2", "cat-3", "cat-4"]);
+        assert.deepEqual(state.groupedItems[0].items.map((item) => item.id), items.slice(0, 25).map((item) => item.id), "preserve the item order returned by the API");
         assert.equal(state.totalItems, 36);
         state.setPage(3); state = render(); assert.equal(state.groupedItems.length, 2);
         state.setIsActive("inactive"); state = render(); assert.equal(state.page, 1); assert.equal(state.totalPages, 1); assert.equal(state.totalItems, 36);
@@ -696,6 +951,39 @@ test("inventory stock table renders category counts and pages using both real lo
       assert.ok(edgeHtml.indexOf("Tie Last") < edgeHtml.indexOf("Tie First"));
       assert.ok(edgeHtml.indexOf("Tie Last") < edgeHtml.indexOf(translate("inventory")("uncategorized")));
     } finally { overrides.delete("next-intl"); cache.delete(file); }
+  }
+});
+
+test("inventory merges negative quantities into out-of-stock badges, filters and alerts in both locales", () => {
+  const React = nativeRequire("react");
+  const { renderToStaticMarkup } = nativeRequire("react-dom/server");
+  const { createTranslator } = nativeRequire("next-intl");
+  const paths = ["stock-table", "stock-filters", "inventory-kpi-cards"].map((name) => `@/app/modules/inventory/components/${name}`);
+  const cachedBefore = new Set(cache.keys());
+  for (const locale of ["en", "ar"]) {
+    const messages = JSON.parse(readFileSync(resolve(root, `messages/${locale}.json`), "utf8"));
+    const translate = (namespace) => createTranslator({ locale, messages, namespace, onError(error) { throw error; } });
+    overrides.set("next-intl", { useLocale: () => locale, useTranslations: translate });
+    for (const path of paths) cache.delete(resolve(root, path.replace("@/", "") + ".tsx"));
+    try {
+      const { StockTable } = load(paths[0]);
+      const { StockFilters } = load(paths[1]);
+      const { InventoryKpiCards } = load(paths[2]);
+      const summary = { totalItems: 4, normalStockCount: 1, lowStockCount: 1, outOfStockCount: 2 };
+      const render = (Component, props) => renderToStaticMarkup(React.createElement(Component, props));
+      const html = render(StockTable, { items: [-3, 0].map((stockQuantity) => ({ id: String(stockQuantity), name: `Stock ${stockQuantity}`, category: { id: "wood", name: "Wood" }, stockQuantity, isOutOfStock: true, cost: 5, unitPrice: 10, valuationAtCost: 0 })), isLoading: false, page: 1, totalPages: 1, onPageChange() {}, onAdjustStock() {}, onUpdateThreshold() {}, onViewAdjustmentsForItem() {} });
+      assert.ok(html.includes("-3"));
+      assert.equal(html.split(translate("inventory")("badgeOutOfStock")).length - 1, 2);
+      const filters = render(StockFilters, { searchInput: "", categoryId: "", statusFilter: "all", categories: [], summary, onSearchChange() {}, onCategoryChange() {}, onStatusFilterChange() {} });
+      assert.ok(filters.includes(`${translate("inventory")("statusOutOfStock")} (2)`));
+      assert.doesNotMatch(filters, /negative_stock|Negative|سالب/);
+      const cards = render(InventoryKpiCards, { summary, valuation: null });
+      assert.ok(cards.includes(`2 ${translate("inventory")("badgeOutOfStock")}`));
+      assert.doesNotMatch(cards, /NaN|negative_stock|Negative|سالب/);
+    } finally {
+      overrides.delete("next-intl");
+      for (const key of cache.keys()) if (!cachedBefore.has(key)) cache.delete(key);
+    }
   }
 });
 

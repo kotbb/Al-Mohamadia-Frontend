@@ -36,7 +36,6 @@ export function StockFilters({
     { value: "normal", label: `${t("statusNormal")} (${summary.normalStockCount})` },
     { value: "low_stock", label: `${t("statusLowStock")} (${summary.lowStockCount})` },
     { value: "out_of_stock", label: `${t("statusOutOfStock")} (${summary.outOfStockCount})` },
-    { value: "negative_stock", label: `${t("statusNegativeStock")} (${summary.negativeStockCount})` },
   ];
 
   return (

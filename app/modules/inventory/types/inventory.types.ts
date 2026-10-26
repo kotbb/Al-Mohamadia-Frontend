@@ -12,8 +12,7 @@ export type StockStatusFilter =
   | "all"
   | "normal"
   | "low_stock"
-  | "out_of_stock"
-  | "negative_stock";
+  | "out_of_stock";
 
 export interface StockItemCategory {
   id: string;
@@ -34,7 +33,6 @@ export interface StockItem {
   isActive: boolean;
   isLowStock: boolean;
   isOutOfStock: boolean;
-  isNegativeStock: boolean;
   valuationAtCost: number;
   valuationAtSellingPrice: number;
   createdAt?: string;
@@ -45,7 +43,6 @@ export interface StockListSummary {
   totalItems: number;
   lowStockCount: number;
   outOfStockCount: number;
-  negativeStockCount: number;
   normalStockCount: number;
 }
 

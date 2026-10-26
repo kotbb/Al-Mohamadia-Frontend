@@ -11,6 +11,7 @@ interface NavItem {
     | "hubSales"
     | "hubProcurement"
     | "hubInventory"
+    | "personalLedger"
     | "audit"
     | "users";
   href: string;
@@ -45,6 +46,13 @@ const NAV_ITEMS: NavItem[] = [
     enabled: true,
   },
   {
+    key: "personalLedger",
+    href: "/personal-ledger",
+    matchPrefixes: ["/personal-ledger"],
+    enabled: true,
+    superAdminOnly: true,
+  },
+  {
     key: "audit",
     href: "/audit",
     matchPrefixes: ["/audit"],
@@ -62,6 +70,10 @@ const NAV_ITEMS: NavItem[] = [
 function NavIcon({ name }: { name: NavItem["key"] }) {
   const common = "h-5 w-5 shrink-0";
   switch (name) {
+    case "personalLedger":
+      return <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden>
+        <path d="M7 3h12a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z M8 3v18 M3 7h4 M3 12h4 M3 17h4 M12 8h4 M12 12h4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>;
     case "home":
       return (
         <svg className={common} viewBox="0 0 24 24" fill="none" aria-hidden>

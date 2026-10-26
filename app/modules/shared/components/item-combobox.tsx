@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState, type KeyboardEvent } from "react";
+import { useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { useLocale } from "next-intl";
 import type { Item } from "@/app/modules/items/types/items.types";
 
@@ -23,12 +23,20 @@ export function ItemCombobox({ items, value, name, onSelect, labels, eligibleIna
   const [activeId, setActiveId] = useState<string | null>(null);
   const selected = items.find((item) => item.id === value);
   const search = (query ?? "").trim().toLocaleLowerCase(locale);
-  const collator = new Intl.Collator(locale, { sensitivity: "base", numeric: true });
-  const options = items.filter((item) => (item.isActive || item.id === value || eligibleInactiveItemIds.includes(item.id)) &&
-    (!search || item.name.toLocaleLowerCase(locale).includes(search) || item.category.name.toLocaleLowerCase(locale).includes(search)))
-    .sort((a, b) => collator.compare(a.category.name, b.category.name) || collator.compare(a.name, b.name));
+  const orderedItems = useMemo(() => {
+    const collator = new Intl.Collator(locale, { sensitivity: "base", numeric: true });
+    // Missing legacy dates follow dated categories; IDs keep ties deterministic.
+    const categoryTime = (item: Item) => {
+      const time = Date.parse(item.category.createdAt ?? "");
+      return Number.isFinite(time) ? time : Number.MAX_SAFE_INTEGER;
+    };
+    return [...items].sort((a, b) => categoryTime(a) - categoryTime(b) ||
+      a.category.id.localeCompare(b.category.id) || collator.compare(a.name, b.name) || a.id.localeCompare(b.id));
+  }, [items, locale]);
+  const options = orderedItems.filter((item) => (item.isActive || item.id === value || eligibleInactiveItemIds.includes(item.id)) &&
+    (!search || item.name.toLocaleLowerCase(locale).includes(search) || item.category.name.toLocaleLowerCase(locale).includes(search)));
   const activeIndex = options.findIndex((item) => item.id === activeId);
-  const groups = Map.groupBy(options.map((item, index) => ({ item, index })), ({ item }) => item.category.name);
+  const groups = Map.groupBy(options.map((item, index) => ({ item, index })), ({ item }) => item.category.id);
 
   function close() {
     setOpen(false);
@@ -85,7 +93,7 @@ export function ItemCombobox({ items, value, name, onSelect, labels, eligibleIna
               <div role="group" aria-labelledby={`${id}-category-${entries[0].index}`}>
                 <div id={`${id}-category-${entries[0].index}`} role="presentation"
                   className="sticky top-0 z-10 bg-surface px-3 py-2 text-start text-base font-bold text-text-primary">
-                  {category}
+                  {entries[0].item.category.name}
                 </div>
                 <ul role="presentation">
                   {entries.map(({ item, index }) => (

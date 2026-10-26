@@ -217,7 +217,7 @@ export function StockTable({
                               <td className="whitespace-nowrap px-3 py-1 text-end tabular-nums">
                                 <span
                                   className={
-                                    item.isNegativeStock || item.isOutOfStock
+                                    item.isOutOfStock
                                       ? "font-semibold text-danger"
                                       : item.isLowStock
                                         ? "font-semibold text-warning"
@@ -246,11 +246,7 @@ export function StockTable({
 
                               {/* Status Badge */}
                               <td className="px-3 py-1 text-center">
-                                {item.isNegativeStock ? (
-                                  <Badge variant="danger" className="lg:text-sm">
-                                    {t("badgeNegativeStock")}
-                                  </Badge>
-                                ) : item.isOutOfStock ? (
+                                {item.isOutOfStock ? (
                                   <Badge variant="danger" className="lg:text-sm">
                                     {t("badgeOutOfStock")}
                                   </Badge>

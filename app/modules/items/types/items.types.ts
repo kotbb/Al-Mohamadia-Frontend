@@ -36,6 +36,7 @@ export interface UpdateCategoryInput {
 export interface ItemCategorySummary {
   id: string;
   name: string;
+  createdAt?: string;
 }
 
 export interface Item {

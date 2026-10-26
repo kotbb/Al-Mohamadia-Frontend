@@ -108,7 +108,7 @@ flowchart LR
 | Area | Purpose |
 |------|---------|
 | Items & pricing | Categories, items, per-piece / per-m³ / مبلغ حر; cost, unit price and price history for stocked items *(Phase 2 — live)* |
-| Inventory | Stock list, low/negative stock flags, manual جرد, inventory valuation at cost & selling *(Phase 7 — live)* |
+| Inventory | Stock list, low/out-of-stock flags (out includes zero and negative quantities), manual جرد, inventory valuation at cost & selling *(Phase 7 — live)* |
 | Purchases | Restock invoices from suppliers; dedicated create/edit pages and detail *(Phase 6 — live)* |
 | Supplier payments | Standalone debt/advance payments + payments captured on purchases, active supplier picker *(Phase 6 — live)* |
 
@@ -120,6 +120,7 @@ flowchart LR
 | Suppliers | CRUD, amount owed |
 | Users | Super-admin manage admins; login / logout / refresh |
 | Audit log | Read-only filtered trail of sensitive actions |
+| Personal ledger | Shared superadmin-only people, deposits/withdrawals, lifetime totals |
 
 ### Cross-cutting
 
@@ -146,7 +147,7 @@ disabled; unprefixed visits select Arabic even with English browser preferences.
 `dir` on `<html>` always follows locale (`ar` → `rtl`, `en` → `ltr`).
 
 Feature domains: `auth`, `dashboard`, `invoices`, `payments`, `supplier-payments`,
-`inventory`, `items`, `customers`, `suppliers`, `purchases`, `audit`, `shared`.
+`inventory`, `items`, `customers`, `suppliers`, `purchases`, `personal-ledger`, `audit`, `shared`.
 
 ### 3-Hub Navigation Structure
 
@@ -156,7 +157,7 @@ The admin shell organizes primary navigation into 3 domain hubs with horizontal 
 2. **Purchases & Suppliers** (`/purchases`, `/suppliers`, `/supplier-payments`)
 3. **Inventory & Catalog** (`/inventory`, `/items`, `/categories`)
 
-Direct top-level routes: **Home / Dashboard** (`/`), **Audit log** (`/audit`), **Users** (`/users`).
+Direct top-level routes: **Home / Dashboard** (`/`), **Personal ledger** (`/personal-ledger`, superadmin only), **Audit log** (`/audit`), **Users** (`/users`).
 Detail views (`/customers/[id]`, `/suppliers/[id]`) accept `?from=...` to contextually route the "Back to list" action back to the user's originating list.
 
 - **HTTP:** native `fetch` via a shared client under `lib/api/` — Bearer
@@ -234,8 +235,8 @@ Implemented since Phase 1 (see [`PHASES.md`](./PHASES.md)):
   single-flight lock.
 - **Logout** — clears session and returns to login.
 - **Protected routes** — unauthenticated users → login; `super_admin`-only
-  UI for manage-admins; admins see all operational modules, not user
-  management.
+  UI for manage-admins and the shared personal ledger; admins see operational
+  modules without user management or personal-ledger access.
 - **API is the authority** — hiding a nav item is not security; the backend
   enforces roles.
 
@@ -278,6 +279,43 @@ API: [Backend PHASES.md — Phase 8](../../Al-Mohamadia-Backend/docs/PHASES.md#p
 Invoice filters keep the last successful table and total visible during refresh, with an Updating indicator. Row actions and pagination are disabled until the selected filters load successfully. Refresh failures retain the previous results with a retry message; aborted requests cannot overwrite newer results.
 
 Sales and purchase create/edit use compact desktop line rows, a second row for meter dimensions, and one dashed Add line button below the rows. Controls stack on mobile and keep 44px touch targets.
+
+### Personal ledger — دفترك
+
+`/[locale]/personal-ledger` is a separate sidebar destination before Audit,
+visible and accessible only to superadmins. All superadmins share all people
+and movements through the existing AuthGuard and backend role guard.
+
+- Default to No period, with no date bounds. Show deposits, withdrawals and signed net,
+  search, standard period/custom-date controls and a paginated ledger. Summary
+  totals cover the full filter; person details show independent lifetime totals.
+- Add/edit requires a person, deposit/withdrawal, positive two-decimal EGP amount
+  and past/today Cairo date. Method and notes are optional; absent methods render
+  as `""` everywhere. There is no opening-balance entry.
+- Choose a store customer by saved name snapshot or explicitly create a reusable
+  ledger person outside Customers. Manage contacts supports adding/renaming people; Archive is removed.
+- Confirm soft deletion. Personal history is removed from the interface and API;
+  new changes do not create history events. Existing stored history is untouched.
+- Use `/api/v1/personal-ledger` through the shared client. Store balances,
+  invoices, stock, dashboard KPIs and the operational audit feed are independent.
+
+### Manual verification (personal ledger)
+
+1. Compare Arabic/English, both themes and a narrow screen. Confirm No period
+   defaults and the full date range when selecting Month or Week, period/custom controls, summaries, row actions and modal focus.
+2. Create deposits/withdrawals, including negative net. Leave method blank,
+   assign it on edit, then clear it; all unspecified method displays stay blank.
+3. Select a store customer and create a ledger person. Verify reuse, isolation
+   from Customers and saved names after store customer edits/merge/deletion.
+4. Start person creation on a slow connection; movement Save/Close/selection
+   stay blocked until it resolves. Check failed-save retry and repeat-click prevention.
+5. Use two superadmins to view/edit the same records. Verify admins cannot open
+   the route. Search, filter and paginate; contact lifetime totals ignore the main range.
+6. Add/rename people and confirm there is no Archive or Ledger history action.
+   Edit/delete a movement and confirm summaries refresh while store KPIs and
+   operational audit stay unchanged.
+
+---
 
 ## Related repositories
 
@@ -448,9 +486,10 @@ The Categories page uses the same full-width count card as Items, showing all no
 
 Catalog pagination: Items shows five complete matching category groups per page after search, category and active-status filtering; a large category stays on one longer page. Categories supports case-insensitive name search and All/Active/Inactive status filters in the Items-style toolbar, then shows ten matching rows per page. Filtering resets to page one without changing the total-category KPI. Filtered empty results suggest adjusting the filters. Both use localized Previous / page counter / Next controls, hidden for a single page. Filters and catalog refreshes return to page one; KPI counts remain catalog-wide. These pages paginate the existing complete catalog responses locally; invoice selectors continue to receive the complete lists.
 
+Items & Prices category groups follow the categories API's creation-date order, oldest first with ID ties, before pagination. Item rows retain the backend's ascending name order. Missing category references follow known categories with ID ties; filters preserve this ordering without additional requests.
+
 Items and Inventory share Close all / Expand all controls and category collapse behavior. The global choice carries across pagination and filters during the page visit, with individual category overrides. A later global action clears those overrides. Item category headers are keyboard-accessible buttons with expanded state; closed tables are hidden from interaction.
 
 ## Item identification
 
 Items are identified by database ID and displayed by name/category. Create and update item requests do not accept `code`; item, inventory and dashboard top-selling responses do not return it. Item-name duplicates are allowed. Item forms do not fetch the complete catalog to generate identifiers. Items and Inventory search names only; invoice selectors retain item/category-name search. Historical audit code hiding remains for old audit entries. Database cleanup is a manual rollout step; no database fields or indexes are removed automatically.
-

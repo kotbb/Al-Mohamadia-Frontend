@@ -113,7 +113,7 @@ lib/
 
 ### Inventory (`/inventory`)
 
-- Live stock, low-stock and negative-stock flags
+- Live signed stock quantities, low-stock alerts, and out-of-stock flags for quantities at or below zero
 - Valuation at cost and selling price
 - Manual stock adjustment (جرد) with a reason
 - Compact category tables retaining eight columns, collapse controls, history actions, and pagination of five complete matching categories per page; a category is never split
@@ -129,6 +129,13 @@ lib/
 - Dedicated Add/Edit pages with multiple dimension defaults per axis
 
 Items use database IDs for references and names/categories for display. Item codes are no longer generated, accepted by item create/update requests, or returned by item, inventory or dashboard top-selling responses. Items and Inventory search by name; invoice selectors also match category names. Duplicate item names remain allowed. Use the matching backend version and follow [manual database cleanup](../Al-Mohamadia-Backend/docs/REMOVE-ITEM-CODES.md) for existing code fields/indexes.
+
+### Personal ledger (`/personal-ledger`)
+
+- **Super admin only.** All superadmins share the same people and movements.
+- Record deposits/withdrawals with optional payment method and notes; blank methods display blank.
+- All-time summaries by default (No period), standard period/custom filters and lifetime person totals.
+- Add/rename people and edit/soft-delete movements without personal history or changes to store accounts or KPIs.
 
 ### Audit log (`/audit`)
 
@@ -221,7 +228,7 @@ Locales are prefixed: `/ar/...` and `/en/...`. Unprefixed visits select Arabic
 with RTL layout; browser language and locale cookies do not override that default.
 Explicit `/en` routes stay English/LTR. Paths below omit the prefix.
 
-Unauthenticated users are sent to `/login`. The **Users** screen is `super_admin` only. Other protected screens below are available to `admin` and `super_admin`. The shared receipt is public and does not require sign-in.
+Unauthenticated users are sent to `/login`. The **Users** and **Personal ledger** screens are `super_admin` only. Other protected screens below are available to `admin` and `super_admin`. The shared receipt is public and does not require sign-in.
 
 | Path                       | Who         | Screen              |
 | -------------------------- | ----------- | ------------------- |
@@ -249,6 +256,7 @@ Unauthenticated users are sent to `/login`. The **Users** screen is `super_admin
 | `/items/:id/edit`          | Both        | Edit item           |
 | `/items/:id/price-history` | Both        | Price history       |
 | `/categories`              | Both        | Categories          |
+| `/personal-ledger`         | Super admin | Shared personal ledger |
 | `/audit`                   | Both        | Audit log           |
 | `/users`                   | Super admin | User management     |
 
@@ -258,14 +266,14 @@ The sidebar groups those screens into three hubs:
 2. **Purchases & Suppliers** - purchase invoices, suppliers, supplier payments
 3. **Inventory** - stock, items, categories
 
-Dashboard, audit, and users sit outside those hubs.
+Dashboard, personal ledger, audit, and users sit outside those hubs.
 
 ## Roles
 
 | Role        | Value         | Notes                                                                                              |
 | ----------- | ------------- | -------------------------------------------------------------------------------------------------- |
-| Admin       | `admin`       | Shop screens: dashboard, sales, purchases, inventory, audit. The Users item is hidden. |
-| Super admin | `super_admin` | Everything an admin sees, plus Users.                                                              |
+| Admin       | `admin`       | Shop screens: dashboard, sales, purchases, inventory, audit. Users and Personal ledger are hidden. |
+| Super admin | `super_admin` | Everything an admin sees, plus Users and the shared Personal ledger.                                                              |
 
 The API is the authority. Hiding a nav item does not grant access.
 
