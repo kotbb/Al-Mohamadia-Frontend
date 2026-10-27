@@ -1,3 +1,5 @@
+import type { Supplier } from "@/app/modules/suppliers/types/suppliers.types";
+import type { Item } from "@/app/modules/items/types/items.types";
 import type { PricingMode } from "@/app/modules/items/types/items.types";
 
 export type PurchaseInvoiceStatus = "saved" | "cancelled";
@@ -41,7 +43,7 @@ export interface PurchaseInvoiceListSummary {
 }
 
 export interface PurchaseInvoiceListResponse {
-  items: PurchaseInvoice[];
+  items: PurchaseInvoiceListItem[];
   meta: PurchaseInvoiceListMeta;
   summary: PurchaseInvoiceListSummary;
 }
@@ -88,4 +90,13 @@ export interface PurchaseLineFormState {
   lengthM: string;
   thicknessM: string;
   note: string;
+}
+
+export interface PurchaseInvoiceListItem extends PurchaseInvoice {
+  supplierName: string | null;
+}
+
+export interface PurchaseInvoiceDetail extends PurchaseInvoice {
+  supplier: Supplier | null;
+  items: Item[];
 }

@@ -31,7 +31,7 @@ export interface SupplierPaymentListSummary {
 }
 
 export interface SupplierPaymentListResponse {
-  items: SupplierPayment[];
+  items: SupplierPaymentListItem[];
   meta: SupplierPaymentListMeta;
   summary: SupplierPaymentListSummary;
 }
@@ -55,4 +55,8 @@ export interface RecordSupplierPaymentInput {
   amount: number;
   method?: PaymentMethod;
   notes?: string;
+}
+
+export interface SupplierPaymentListItem extends SupplierPayment {
+  supplierName: string | null;
 }

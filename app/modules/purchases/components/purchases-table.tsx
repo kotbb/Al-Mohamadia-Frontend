@@ -5,7 +5,7 @@ import { NavigableTableRow } from "@/app/modules/shared/components/navigable-tab
 import { Link } from "@/i18n/navigation";
 import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
 import { formatMoney } from "@/app/modules/shared/utils/format-money";
-import type { PurchaseInvoice } from "@/app/modules/purchases/types/purchases.types";
+import type { PurchaseInvoice, PurchaseInvoiceListItem } from "@/app/modules/purchases/types/purchases.types";
 import { Badge } from "@/app/modules/shared/components/badge";
 import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
@@ -17,8 +17,7 @@ import {
 } from "@/app/modules/shared/components/row-actions-menu";
 
 interface PurchasesTableProps {
-  purchases: PurchaseInvoice[];
-  supplierNames?: Record<string, string>;
+  purchases: PurchaseInvoiceListItem[];
   showSupplier?: boolean;
   status: "idle" | "loading" | "success" | "error";
   error: string | null;
@@ -55,7 +54,6 @@ function PurchaseBagIcon({ className = "h-4 w-4" }: { className?: string }) {
 
 export function PurchasesTable({
   purchases,
-  supplierNames = {},
   showSupplier = true,
   status,
   error,
@@ -123,7 +121,7 @@ export function PurchasesTable({
         <tbody>
           {purchases.map((purchase) => {
             const supplierName = purchase.supplierId
-              ? (supplierNames[purchase.supplierId] ?? "…")
+              ? (purchase.supplierName ?? "-")
               : "-";
 
             const actions: RowActionItem[] = [
@@ -173,12 +171,16 @@ export function PurchasesTable({
                 {/* Supplier */}
                 {showSupplier ? (
                   <td className="px-4 py-3 whitespace-nowrap text-text-primary">
-                    <Link
-                      href={`/suppliers/${purchase.supplierId}?from=/purchases`}
-                      className="hover:underline font-medium whitespace-nowrap"
-                    >
-                      {supplierName}
-                    </Link>
+                    {purchase.supplierId && purchase.supplierName !== null ? (
+                      <Link
+                        href={`/suppliers/${purchase.supplierId}?from=/purchases`}
+                        className="hover:underline font-medium whitespace-nowrap"
+                      >
+                        {supplierName}
+                      </Link>
+                    ) : (
+                      <span className="text-text-secondary">-</span>
+                    )}
                   </td>
                 ) : null}
 

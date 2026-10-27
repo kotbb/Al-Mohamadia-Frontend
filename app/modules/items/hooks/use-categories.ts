@@ -17,7 +17,6 @@ import {
   listCategories,
   updateCategory,
 } from "@/app/modules/items/services/categories.service";
-import { listItems } from "@/app/modules/items/services/items.service";
 import type { Category } from "@/app/modules/items/types/items.types";
 
 const PAGE_SIZE = 10;
@@ -25,7 +24,6 @@ const PAGE_SIZE = 10;
 export function useCategories(): UseCategoriesResult {
   const describeError = useApiErrorMessage();
   const [categories, setCategories] = useState<Category[]>([]);
-  const [itemCounts, setItemCounts] = useState<Record<string, number>>({});
   const [listStatus, setListStatus] = useState<ListStatus>("loading");
   const [listError, setListError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
@@ -58,22 +56,10 @@ export function useCategories(): UseCategoriesResult {
   useEffect(() => {
     const controller = new AbortController();
 
-    Promise.all([
-      listCategories(controller.signal),
-      listItems(undefined, controller.signal),
-    ])
-      .then(([categoryList, itemList]) => {
-        const liveCategories = categoryList.filter(
-          (category) => !category.isDeleted,
-        );
-        const counts: Record<string, number> = {};
-        for (const item of itemList) {
-          if (item.isDeleted) continue;
-          const categoryId = item.category.id;
-          counts[categoryId] = (counts[categoryId] ?? 0) + 1;
-        }
-        setCategories(liveCategories);
-        setItemCounts(counts);
+    listCategories(controller.signal, { includeItemCount: true })
+      .then((categoryList) => {
+        if (controller.signal.aborted) return;
+        setCategories(categoryList.filter((category) => !category.isDeleted));
         setListStatus("success");
         setListError(null);
       })
@@ -81,7 +67,6 @@ export function useCategories(): UseCategoriesResult {
         if (controller.signal.aborted) return;
         const message = describeError(error, "Request failed");
         setCategories([]);
-        setItemCounts({});
         setListError(message);
         setListStatus("error");
       });
@@ -93,9 +78,9 @@ export function useCategories(): UseCategoriesResult {
     () =>
       categories.map((category) => ({
         ...category,
-        itemCount: itemCounts[category.id] ?? 0,
+        itemCount: category.itemCount ?? 0,
       })),
-    [categories, itemCounts],
+    [categories],
   );
 
   const clearToast = useCallback(() => setToast(null), []);

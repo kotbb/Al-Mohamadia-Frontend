@@ -66,7 +66,7 @@ lib/
 - Customer Sale by default, or Cash Sale, with piece, cubic-meter, or free amount-only lines
 - One searchable customer field with name-only lookup and a selected-account debt/credit panel
 - One Paid amount field before Discount; excess above invoice net becomes an independent account payment and remaining stays zero
-- Payment allocation and resulting account debt/credit preview; details, modal, receipts and exports show combined paid with a conditional invoice/previous-debt breakdown
+- Payment allocation and resulting account debt/credit preview; details, receipts and export previews show combined paid with a conditional invoice/previous-debt breakdown
 - Dedicated creation/editing pages with compact rows and item/category search inside a grouped dropdown
 - Meter dimensions for piece and cubic items; single defaults auto-fill, multiple defaults offer editable choices
 - Save a new dimension preset inline or type a custom value without saving it
@@ -87,6 +87,7 @@ lib/
 - Invoice-linked payments are captured through invoice create/edit; independent extras stay separate in history
 - Customer search matches names only; additional-payment notes identify previous-debt payments
 - List and cancel payments
+- Payment rows include account names in one list response; deleted/missing accounts show an unlinked `-`. Cancellation can restore a deleted customer's retained balance without reactivating the account.
 
 ### Suppliers (`/suppliers`)
 
@@ -104,6 +105,7 @@ lib/
 - One Paid amount field splits invoice payment from independent excess; preview resulting supplier debt/credit
 - Category-grouped items, meter dimensions, and inline saved dimension defaults
 - Purchase list and detail
+- Purchase rows include supplier names directly. Sales/purchase details provide the selected account and referenced items; editors reuse these while loading the active catalog for new selections.
 - Cancel a purchase
 
 ### Supplier payments (`/supplier-payments`)

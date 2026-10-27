@@ -11,7 +11,6 @@ import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
 import {
-  getCustomer,
   listCustomers,
 } from "@/app/modules/customers/services/customers.service";
 import type { Customer } from "@/app/modules/customers/types/customers.types";
@@ -20,14 +19,14 @@ import {
   cancelPayment,
   listPayments,
 } from "@/app/modules/payments/services/payments.service";
-import type { Payment } from "@/app/modules/payments/types/payments.types";
+import type { Payment, PaymentListItem } from "@/app/modules/payments/types/payments.types";
 
 const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
 
 export function usePayments() {
   const describeError = useApiErrorMessage();
-  const [payments, setPayments] = useState<Payment[]>([]);
+  const [payments, setPayments] = useState<PaymentListItem[]>([]);
   const [total, setTotal] = useState(0);
   const [summaryTotal, setSummaryTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -56,9 +55,6 @@ export function usePayments() {
   const [listError, setListError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
 
-  const [customerNames, setCustomerNames] = useState<Record<string, string>>(
-    {},
-  );
 
   // Cancel flow
   const [confirmPayment, setConfirmPayment] = useState<Payment | null>(null);
@@ -149,40 +145,6 @@ export function usePayments() {
     tick,
   ]);
 
-  // Load customer names for table rows
-  useEffect(() => {
-    const ids = [
-      ...new Set(
-        payments
-          .map((p) => p.customerId)
-          .filter((id): id is string => Boolean(id)),
-      ),
-    ].filter((id) => customerNames[id] === undefined);
-
-    if (ids.length === 0) return;
-
-    const controller = new AbortController();
-    Promise.all(
-      ids.map(async (id) => {
-        try {
-          const customer = await getCustomer(id, controller.signal);
-          return [id, customer.name] as const;
-        } catch {
-          return [id, "-"] as const;
-        }
-      }),
-    ).then((entries) => {
-      if (controller.signal.aborted) return;
-      setCustomerNames((prev) => {
-        const next = { ...prev };
-        for (const [id, name] of entries) next[id] = name;
-        return next;
-      });
-    });
-
-    return () => controller.abort();
-  }, [payments, customerNames]);
-
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   function selectCustomer(customer: Customer) {
@@ -270,7 +232,6 @@ export function usePayments() {
     isSearchingCustomers,
     listStatus,
     listError,
-    customerNames,
     refresh,
     confirmPayment,
     isCancelling,

@@ -48,7 +48,6 @@ export function SupplierPaymentsPage() {
     isSearchingSuppliers,
     listStatus,
     listError,
-    supplierNames,
     refresh,
     confirmPayment,
     isCancelling,
@@ -181,7 +180,7 @@ export function SupplierPaymentsPage() {
         {/* Table */}
         <SupplierPaymentsTable
           payments={payments}
-          supplierNames={supplierNames}
+
           showSupplier={true}
           status={listStatus}
           error={listError}

@@ -8,13 +8,13 @@ import {
   cancelSupplierPayment,
   listSupplierPayments,
 } from "@/app/modules/supplier-payments/services/supplier-payments.service";
-import type { SupplierPayment } from "@/app/modules/supplier-payments/types/supplier-payments.types";
+import type { SupplierPayment, SupplierPaymentListItem } from "@/app/modules/supplier-payments/types/supplier-payments.types";
 
 const PAGE_SIZE = 10;
 
 export function useSupplierAccountPayments(supplierId: string) {
   const describeError = useApiErrorMessage();
-  const [payments, setPayments] = useState<SupplierPayment[]>([]);
+  const [payments, setPayments] = useState<SupplierPaymentListItem[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [status, setStatus] = useState<ListStatus>("loading");

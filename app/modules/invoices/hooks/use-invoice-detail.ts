@@ -4,18 +4,16 @@ import type { Status } from "../types/use-invoice-detail.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
-import { getCustomer } from "@/app/modules/customers/services/customers.service";
 import {
   cancelSalesInvoice,
   getSalesInvoice,
 } from "@/app/modules/invoices/services/invoices.service";
-import type { SalesInvoice } from "@/app/modules/invoices/types/invoices.types";
-import { getItem, listItems } from "@/app/modules/items/services/items.service";
+import type { SalesInvoiceDetail } from "@/app/modules/invoices/types/invoices.types";
 import type { Item } from "@/app/modules/items/types/items.types";
 
 export function useInvoiceDetail(invoiceId: string) {
   const describeError = useApiErrorMessage();
-  const [invoice, setInvoice] = useState<SalesInvoice | null>(null);
+  const [invoice, setInvoice] = useState<SalesInvoiceDetail | null>(null);
   const [status, setStatus] = useState<Status>("loading");
   const [error, setError] = useState<string | null>(null);
   const [customerName, setCustomerName] = useState<string | null>(null);
@@ -44,45 +42,14 @@ export function useInvoiceDetail(invoiceId: string) {
     const controller = new AbortController();
     setStatus("loading");
 
-    Promise.all([
-      getSalesInvoice(invoiceId, controller.signal),
-      listItems(undefined, controller.signal),
-    ])
-      .then(async ([doc, items]) => {
+    getSalesInvoice(invoiceId, controller.signal)
+      .then((doc) => {
+        if (controller.signal.aborted) return;
         setInvoice(doc);
         const map: Record<string, Item> = {};
-        for (const item of items) map[item.id] = item;
+        for (const item of doc.items) map[item.id] = item;
         setItemsById(map);
-
-        if (doc.type === "cash_sale" || !doc.customerId) {
-          setCustomerName(null);
-        } else {
-          try {
-            const customer = await getCustomer(
-              doc.customerId,
-              controller.signal,
-            );
-            setCustomerName(customer.name);
-          } catch {
-            setCustomerName("-");
-          }
-        }
-
-        const missingItemIds = [
-          ...new Set(doc.lines.map((l) => l.itemId).filter((id) => !map[id])),
-        ];
-        if (missingItemIds.length > 0) {
-          await Promise.all(
-            missingItemIds.map(async (id) => {
-              try {
-                const fetched = await getItem(id, controller.signal);
-                map[fetched.id] = fetched;
-              } catch {}
-            }),
-          );
-          setItemsById({ ...map });
-        }
-
+        setCustomerName(doc.type === "customer_sale" ? doc.customer?.name ?? "-" : null);
         setStatus("success");
         setError(null);
       })
@@ -112,7 +79,7 @@ export function useInvoiceDetail(invoiceId: string) {
     setCancelError(null);
     try {
       const updated = await cancelSalesInvoice(invoice.id);
-      setInvoice(updated);
+      setInvoice((previous) => previous?.id === updated.id ? { ...previous, ...updated } : previous);
       setIsCancelOpen(false);
       setToastKind("cancelled");
     } catch (err: unknown) {

@@ -30,14 +30,16 @@ export function NewInvoicePage({ invoiceId }: { invoiceId?: string }) {
   useEffect(() => {
     if (!invoiceId) return;
     const controller = new AbortController();
+    setEditStatus("loading");
+    setEditError(null);
     getSalesInvoice(invoiceId, controller.signal)
-      .then(async (invoice) => {
+      .then((invoice) => {
         if (controller.signal.aborted) return;
         if (invoice.status !== "saved") {
           setEditStatus("error");
           return;
         }
-        await form.initializeForEdit(invoice);
+        form.initializeForEdit(invoice);
         if (!controller.signal.aborted) setEditStatus("success");
       })
       .catch((error: unknown) => {

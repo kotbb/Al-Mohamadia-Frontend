@@ -86,31 +86,13 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
     const controller = new AbortController();
     const hasDebt = debtFilter === "hasDebt" ? true : undefined;
 
-    Promise.all([
-      listCustomers(
-        {
-          q: debouncedQ || undefined,
-          hasDebt,
-          page,
-          limit: PAGE_SIZE,
-        },
-        controller.signal,
-      ),
-      listCustomers(
-        {
-          q: debouncedQ || undefined,
-          hasDebt: true,
-          page: 1,
-          limit: 1,
-        },
-        controller.signal,
-      ),
-    ])
-      .then(([list, debtors]) => {
+    listCustomers({ q: debouncedQ || undefined, hasDebt, page, limit: PAGE_SIZE }, controller.signal)
+      .then((list) => {
+        if (controller.signal.aborted) return;
         setCustomers(list.items);
         setTotal(list.meta.total);
         setTotalDebt(list.summary.totalDebt);
-        setDebtorCount(debtors.meta.total);
+        setDebtorCount(list.summary.debtorCount);
         setListStatus("success");
         setListError(null);
       })

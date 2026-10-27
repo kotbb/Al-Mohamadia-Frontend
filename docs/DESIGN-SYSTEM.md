@@ -8,6 +8,12 @@
 
 ## 1. Design Philosophy
 
+List loading: Customer/Supplier Payments and Purchase Invoices receive complete names with rows. Deleted/missing accounts render plain `-`, without an account link or a delayed ellipsis; inactive accounts retain working links. Customer payments without an account keep the cash label. Keep valid invoice row navigation and audit/cancel actions independent of account links. Refreshes preserve prior rows while disabling actions, and obsolete requests must not replace newer rows.
+
+Invoice details/editors reuse account and referenced-item data from detail responses, preserving original inactive items while the selectable active catalog loads. Categories obtains item counts from its list response; Customers obtains debtor count from its list summary. No new UI tokens, layouts or translations are required. Live preview/export remains PublicInvoiceSheet; the unused alternate modal is retired.
+
+Manual checks: in Arabic/English and both themes, paginate all three list tables, confirm deleted account cells are unlinked `-`, rename an account then refresh, rapidly change filters, open sales/purchase details and edit inactive original lines, and check category counts and customer KPIs. On a temporary account, cancel a standalone payment after deletion and verify the reversal appears without reactivating the account. Compare existing receipt preview, PNG, PDF and print output; do not use live records for automated tests.
+
 **Quiet Ledger** is a modern Arabic business workspace inspired by the clarity, trust, and organization of traditional accounting — not by its appearance. Nothing in the UI should look like paper, wood, or an antique. What carries over from that inspiration is the _discipline_: every number has one obvious place, every action has one obvious color, every status has one obvious meaning.
 
 The product should feel modern, professional, warm, human, calm, and operational — like software built by people who understood the job, not like a themed skin. It should never feel vintage, retro, paper-textured, overly corporate, generic-SaaS, or AI-generated.

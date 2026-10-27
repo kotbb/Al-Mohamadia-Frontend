@@ -27,13 +27,14 @@ import {
 import type {
   CreateSalesInvoiceInput,
   SalesInvoice,
+  SalesInvoiceDetail,
   SalesInvoiceType,
 } from "@/app/modules/invoices/types/invoices.types";
 import {
   computeInvoiceTotals,
   roundMoney,
 } from "@/app/modules/shared/utils/invoice-math";
-import { getItem, listItems } from "@/app/modules/items/services/items.service";
+import { listItems } from "@/app/modules/items/services/items.service";
 import type { Item } from "@/app/modules/items/types/items.types";
 import { initialDimensions } from "@/app/modules/items/utils/dimension-defaults";
 import { roundMoneyAmount } from "@/app/modules/shared/utils/format-money";
@@ -97,7 +98,12 @@ export function useInvoiceForm(options?: UseInvoiceFormOptions) {
     setItemsStatus("loading");
     listItems({ isActive: true }, controller.signal)
       .then((result) => {
-        setItems(result);
+        if (controller.signal.aborted) return;
+        setItems((previous) => {
+          const merged = new Map(previous.map((item) => [item.id, item]));
+          for (const item of result) merged.set(item.id, item);
+          return [...merged.values()];
+        });
         setItemsStatus("success");
         setItemsError(null);
       })
@@ -168,36 +174,6 @@ export function useInvoiceForm(options?: UseInvoiceFormOptions) {
     for (const item of items) map.set(item.id, item);
     return map;
   }, [items]);
-
-  // Load missing items for existing lines (e.g. inactive items on edit)
-  useEffect(() => {
-    const missingIds = [
-      ...new Set(
-        lines.map((l) => l.itemId).filter((id) => id && !itemsById.has(id)),
-      ),
-    ];
-    if (missingIds.length === 0) return;
-    const controller = new AbortController();
-    Promise.all(
-      missingIds.map((id) => getItem(id, controller.signal).catch(() => null)),
-    ).then((fetched) => {
-      const valid = fetched.filter((i): i is Item => i !== null);
-      if (valid.length > 0) {
-        setItems((prev) => {
-          const currentMap = new Map(prev.map((i) => [i.id, i]));
-          let changed = false;
-          for (const item of valid) {
-            if (!currentMap.has(item.id)) {
-              currentMap.set(item.id, item);
-              changed = true;
-            }
-          }
-          return changed ? Array.from(currentMap.values()) : prev;
-        });
-      }
-    });
-    return () => controller.abort();
-  }, [lines, itemsById]);
 
   // Identify any selected items that are currently inactive
   const inactiveItemNames = useMemo(() => {
@@ -520,7 +496,12 @@ export function useInvoiceForm(options?: UseInvoiceFormOptions) {
   }
 
   const initializeForEdit = useCallback(
-    async (invoice: SalesInvoice, customer?: Customer | null) => {
+    (invoice: SalesInvoiceDetail) => {
+      setItems((previous) => {
+        const merged = new Map(previous.map((item) => [item.id, item]));
+        for (const item of invoice.items) merged.set(item.id, item);
+        return [...merged.values()];
+      });
       setMode("edit");
       setOriginalInvoice(invoice);
       setInvoiceId(invoice.id);
@@ -528,7 +509,7 @@ export function useInvoiceForm(options?: UseInvoiceFormOptions) {
       setOriginalItemIds(invoice.lines.map((line) => line.itemId));
       setType(invoice.type);
       setCustomerId(invoice.customerId);
-      setSelectedCustomer(customer ?? null);
+      setSelectedCustomer(invoice.customer);
       setCustomerQuery("");
       setCustomerResults([]);
       setDiscountInput(String(invoice.discount));
@@ -546,15 +527,6 @@ export function useInvoiceForm(options?: UseInvoiceFormOptions) {
         note: line.note ?? "",
       }));
       setLines(formLines.length > 0 ? formLines : [newLine()]);
-
-      if (invoice.type === "customer_sale" && invoice.customerId && !customer) {
-        try {
-          const fetched = await getCustomer(invoice.customerId);
-          setSelectedCustomer(fetched);
-        } catch {
-          // Customer might be deleted or offline
-        }
-      }
     },
     [],
   );

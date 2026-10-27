@@ -18,18 +18,15 @@ import {
 import type {
   ListPurchasesFilters,
   PurchaseInvoice,
+  PurchaseInvoiceListItem,
 } from "@/app/modules/purchases/types/purchases.types";
-import {
-  getSupplier,
-  listSuppliers,
-} from "@/app/modules/suppliers/services/suppliers.service";
 
 const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
 
 export function usePurchases(options?: UsePurchasesOptions) {
   const describeError = useApiErrorMessage();
-  const [purchases, setPurchases] = useState<PurchaseInvoice[]>([]);
+  const [purchases, setPurchases] = useState<PurchaseInvoiceListItem[]>([]);
   const [total, setTotal] = useState(0);
   const [summaryTotalAmount, setSummaryTotalAmount] = useState(0);
   const [page, setPage] = useState(1);
@@ -51,9 +48,6 @@ export function usePurchases(options?: UsePurchasesOptions) {
   const [listError, setListError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
 
-  const [supplierNames, setSupplierNames] = useState<Record<string, string>>(
-    {},
-  );
 
   // Cancel invoice state
   const [confirmPurchase, setConfirmPurchase] =
@@ -71,21 +65,6 @@ export function usePurchases(options?: UsePurchasesOptions) {
     }, SEARCH_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
   }, [searchInput]);
-
-  // Load suppliers map for readable names
-  useEffect(() => {
-    const controller = new AbortController();
-    listSuppliers({ page: 1, limit: 100 }, controller.signal)
-      .then((res) => {
-        const map: Record<string, string> = {};
-        for (const s of res.items) {
-          map[s.id] = s.name;
-        }
-        setSupplierNames((prev) => ({ ...prev, ...map }));
-      })
-      .catch(() => {});
-    return () => controller.abort();
-  }, []);
 
   const refresh = useCallback(() => {
     setListStatus("loading");
@@ -131,25 +110,7 @@ export function usePurchases(options?: UsePurchasesOptions) {
         setSummaryTotalAmount(res.summary?.totalAmount ?? 0);
         setListStatus("success");
 
-        // Fetch supplier names for unknown supplierId
-        const missingIds = res.items
-          .map((p) => p.supplierId)
-          .filter((id) => Boolean(id));
 
-        if (missingIds.length > 0) {
-          const uniqueMissing = [...new Set(missingIds)];
-          Promise.all(
-            uniqueMissing.map((id) => getSupplier(id).catch(() => null)),
-          ).then((results) => {
-            const updates: Record<string, string> = {};
-            for (const item of results) {
-              if (item) updates[item.id] = item.name;
-            }
-            if (Object.keys(updates).length > 0) {
-              setSupplierNames((prev) => ({ ...prev, ...updates }));
-            }
-          });
-        }
       })
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
@@ -216,7 +177,6 @@ export function usePurchases(options?: UsePurchasesOptions) {
 
   return {
     purchases,
-    supplierNames,
     total,
     summaryTotalAmount,
     page,

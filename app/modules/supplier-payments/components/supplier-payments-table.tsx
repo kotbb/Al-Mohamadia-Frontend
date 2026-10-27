@@ -7,7 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
 import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { PaymentMethodBadge } from "@/app/modules/payments/components/payment-method-badge";
-import type { SupplierPayment } from "@/app/modules/supplier-payments/types/supplier-payments.types";
+import type { SupplierPayment, SupplierPaymentListItem } from "@/app/modules/supplier-payments/types/supplier-payments.types";
 import { Badge } from "@/app/modules/shared/components/badge";
 import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
@@ -19,8 +19,7 @@ import {
 } from "@/app/modules/shared/components/row-actions-menu";
 
 interface SupplierPaymentsTableProps {
-  payments: SupplierPayment[];
-  supplierNames?: Record<string, string>;
+  payments: SupplierPaymentListItem[];
   showSupplier?: boolean;
   status: "idle" | "loading" | "success" | "error";
   error: string | null;
@@ -31,7 +30,6 @@ interface SupplierPaymentsTableProps {
 
 export function SupplierPaymentsTable({
   payments,
-  supplierNames = {},
   showSupplier = false,
   status,
   error,
@@ -98,7 +96,7 @@ export function SupplierPaymentsTable({
         <tbody>
           {payments.map((payment) => {
             const supplierName = payment.supplierId
-              ? (supplierNames[payment.supplierId] ?? "…")
+              ? (payment.supplierName ?? "-")
               : "-";
 
             const actions: RowActionItem[] = [
@@ -126,7 +124,7 @@ export function SupplierPaymentsTable({
                 </td>
                 {showSupplier ? (
                   <td className="px-4 py-3 text-text-primary">
-                    {payment.supplierId ? (
+                    {payment.supplierId && payment.supplierName !== null ? (
                       <Link
                         href={`/suppliers/${payment.supplierId}?from=/supplier-payments`}
                         className="ds-focus-ring rounded font-medium text-text-primary hover:underline"

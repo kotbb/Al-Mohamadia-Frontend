@@ -1,12 +1,13 @@
 import { apiClient } from "@/lib/api/client";
 import type {
   Category,
+  ListCategoriesOptions,
   CreateCategoryInput,
   UpdateCategoryInput,
 } from "@/app/modules/items/types/items.types";
 
-export async function listCategories(signal?: AbortSignal): Promise<Category[]> {
-  return apiClient.get<Category[]>("/categories", { signal });
+export async function listCategories(signal?: AbortSignal, options?: ListCategoriesOptions): Promise<Category[]> {
+  return apiClient.get<Category[]>(options?.includeItemCount ? "/categories?includeItemCount=true" : "/categories", { signal });
 }
 
 export async function createCategory(

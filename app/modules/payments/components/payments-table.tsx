@@ -6,7 +6,7 @@ import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-d
 import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { PaymentMethodBadge } from "@/app/modules/payments/components/payment-method-badge";
 import { PaymentNotes } from "@/app/modules/shared/components/payment-notes";
-import type { Payment } from "@/app/modules/payments/types/payments.types";
+import type { Payment, PaymentListItem } from "@/app/modules/payments/types/payments.types";
 import { Badge } from "@/app/modules/shared/components/badge";
 import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
@@ -18,8 +18,7 @@ import {
 } from "@/app/modules/shared/components/row-actions-menu";
 
 interface PaymentsTableProps {
-  payments: Payment[];
-  customerNames?: Record<string, string>;
+  payments: PaymentListItem[];
   showCustomer?: boolean;
   status: "idle" | "loading" | "success" | "error";
   error: string | null;
@@ -30,7 +29,6 @@ interface PaymentsTableProps {
 
 export function PaymentsTable({
   payments,
-  customerNames = {},
   showCustomer = false,
   status,
   error,
@@ -97,7 +95,7 @@ export function PaymentsTable({
         <tbody>
           {payments.map((payment) => {
             const customerName = payment.customerId
-              ? (customerNames[payment.customerId] ?? "…")
+              ? (payment.customerName ?? "-")
               : t("cashCustomer");
 
             const actions: RowActionItem[] = [
@@ -126,7 +124,7 @@ export function PaymentsTable({
                 </td>
                 {showCustomer ? (
                   <td className="px-4 py-3 text-text-primary">
-                    {payment.customerId ? (
+                    {payment.customerId && payment.customerName !== null ? (
                       <Link
                         href={`/customers/${payment.customerId}?from=/payments`}
                         className="ds-focus-ring rounded font-medium text-text-primary hover:underline"
@@ -135,7 +133,7 @@ export function PaymentsTable({
                       </Link>
                     ) : (
                       <span className="text-text-secondary">
-                        {t("cashCustomer")}
+                        {customerName}
                       </span>
                     )}
                   </td>

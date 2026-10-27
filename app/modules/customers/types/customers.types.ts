@@ -19,6 +19,7 @@ export interface CustomerListMeta {
 
 export interface CustomerListSummary {
   totalDebt: number;
+  debtorCount: number;
 }
 
 export interface CustomerListResponse {

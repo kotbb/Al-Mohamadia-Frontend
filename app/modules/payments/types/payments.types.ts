@@ -34,7 +34,7 @@ export interface PaymentListSummary {
 }
 
 export interface PaymentListResponse {
-  items: Payment[];
+  items: PaymentListItem[];
   meta: PaymentListMeta;
   summary: PaymentListSummary;
 }
@@ -58,4 +58,8 @@ export interface RecordPaymentInput {
   amount: number;
   method?: PaymentMethod;
   notes?: string;
+}
+
+export interface PaymentListItem extends Payment {
+  customerName: string | null;
 }

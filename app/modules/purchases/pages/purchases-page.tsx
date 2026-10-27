@@ -25,7 +25,6 @@ export function PurchasesPage() {
 
   const {
     purchases,
-    supplierNames,
     summaryTotalAmount,
     page,
     totalPages,
@@ -169,7 +168,7 @@ export function PurchasesPage() {
 
         <PurchasesTable
           purchases={purchases}
-          supplierNames={supplierNames}
+
           showSupplier={true}
           status={listStatus}
           error={listError}

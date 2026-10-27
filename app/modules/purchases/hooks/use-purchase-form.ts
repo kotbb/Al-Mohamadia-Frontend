@@ -24,9 +24,10 @@ import type {
   CreatePurchaseInvoiceLineInput,
   PurchaseLineFormState,
   PurchaseInvoice,
+  PurchaseInvoiceDetail,
 } from "@/app/modules/purchases/types/purchases.types";
 import { roundMoney } from "@/app/modules/shared/utils/invoice-math";
-import { getItem, listItems } from "@/app/modules/items/services/items.service";
+import { listItems } from "@/app/modules/items/services/items.service";
 import type { Item } from "@/app/modules/items/types/items.types";
 import { initialDimensions } from "@/app/modules/items/utils/dimension-defaults";
 import { roundMoneyAmount } from "@/app/modules/shared/utils/format-money";
@@ -72,6 +73,7 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
     const controller = new AbortController();
     listItems({ isActive: true }, controller.signal)
       .then((result) => {
+        if (controller.signal.aborted) return;
         setItems((previous) => {
           const merged = new Map(previous.map((item) => [item.id, item]));
           for (const item of result) {
@@ -163,18 +165,16 @@ export function usePurchaseForm(options?: UsePurchaseFormOptions) {
     return map;
   }, [items]);
 
-  const initializeForEdit = useCallback(async (purchase: PurchaseInvoice) => {
-    const [supplier, loadedItems] = await Promise.all([
-      getSupplier(purchase.supplierId),
-      Promise.all([...new Set(purchase.lines.map((line) => line.itemId))].map((id) => getItem(id))),
-    ]);
+  const initializeForEdit = useCallback((purchase: PurchaseInvoiceDetail) => {
+    const supplier = purchase.supplier;
+    const loadedItems = purchase.items;
     setItems((previous) => {
       const merged = new Map(previous.map((item) => [item.id, item]));
       for (const item of loadedItems) merged.set(item.id, item);
       return [...merged.values()];
     });
     setEditInvoice(purchase);
-    setSupplierId(supplier.id);
+    setSupplierId(purchase.supplierId);
     setSelectedSupplier(supplier);
     setOriginalSupplier(supplier);
     setLines(purchase.lines.map((line, index) => ({

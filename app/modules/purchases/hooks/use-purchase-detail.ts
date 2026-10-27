@@ -8,15 +8,13 @@ import {
   cancelPurchase,
   getPurchase,
 } from "@/app/modules/purchases/services/purchases.service";
-import type { PurchaseInvoice } from "@/app/modules/purchases/types/purchases.types";
-import { getSupplier } from "@/app/modules/suppliers/services/suppliers.service";
+import type { PurchaseInvoiceDetail } from "@/app/modules/purchases/types/purchases.types";
 import type { Supplier } from "@/app/modules/suppliers/types/suppliers.types";
-import { listItems } from "@/app/modules/items/services/items.service";
 import type { Item } from "@/app/modules/items/types/items.types";
 
 export function usePurchaseDetail(purchaseId: string) {
   const describeError = useApiErrorMessage();
-  const [purchase, setPurchase] = useState<PurchaseInvoice | null>(null);
+  const [purchase, setPurchase] = useState<PurchaseInvoiceDetail | null>(null);
   const [supplier, setSupplier] = useState<Supplier | null>(null);
   const [itemsMap, setItemsMap] = useState<Record<string, Item>>({});
   const [status, setStatus] = useState<DetailStatus>("loading");
@@ -40,28 +38,18 @@ export function usePurchaseDetail(purchaseId: string) {
 
   useEffect(() => {
     const controller = new AbortController();
+    setStatus("loading");
 
-    Promise.all([
-      getPurchase(purchaseId, controller.signal),
-      listItems({}, controller.signal).catch(() => [] as Item[]),
-    ])
-      .then(async ([invoice, items]) => {
-        setPurchase(invoice);
-
+    getPurchase(purchaseId, controller.signal)
+      .then((doc) => {
+        if (controller.signal.aborted) return;
+        setPurchase(doc);
         const map: Record<string, Item> = {};
-        for (const it of items) {
-          map[it.id] = it;
-        }
+        for (const item of doc.items) map[item.id] = item;
         setItemsMap(map);
-
-        try {
-          const supp = await getSupplier(invoice.supplierId, controller.signal);
-          setSupplier(supp);
-        } catch {
-          setSupplier(null);
-        }
-
+        setSupplier(doc.supplier);
         setStatus("success");
+        setError(null);
       })
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
@@ -89,7 +77,7 @@ export function usePurchaseDetail(purchaseId: string) {
 
     try {
       const updated = await cancelPurchase(purchaseId);
-      setPurchase(updated);
+      setPurchase((previous) => previous?.id === updated.id ? { ...previous, ...updated } : previous);
       closeCancelConfirm();
       setToast({ kind: "cancelled", variant: "success" });
       onSuccess?.();

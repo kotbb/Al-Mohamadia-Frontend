@@ -273,14 +273,13 @@ test("receipt column layouts give optional-column space back to the item and alw
   }
 });
 
-test("receipt notes share Arabic spacing and isolated numbers across compact, standard and modal receipts", () => {
+test("receipt notes share Arabic spacing and isolated numbers across compact and standard receipts", () => {
   const React = nativeRequire("react");
   const { renderToStaticMarkup } = nativeRequire("react-dom/server");
   overrides.set("next/image", { default: () => null });
   overrides.set("next-intl", { useTranslations: () => (key) => key });
   try {
     const { PublicInvoiceSheet } = load("@/app/modules/invoices/components/public-invoice-sheet");
-    const { InvoicePreviewModal } = load("@/app/modules/invoices/components/invoice-preview-modal");
     for (const note of ["4ملي", "4 ملي"]) {
       const piece = { itemId: "piece", itemLabel: "18 ام اف ساده", quantity: 1, thickness: 18, width: 122, length: 244, pricingModeSnapshot: "per_piece", piecePrice: 900, lineTotal: 900, note };
       const lines = [piece, { ...piece, itemLabel: "ابلاكاش 6 ملي ارو" }, { ...piece, itemLabel: "2.7 ملي ته مربع" },
@@ -288,7 +287,6 @@ test("receipt notes share Arabic spacing and isolated numbers across compact, st
         { ...piece, itemId: "free", itemLabel: "مبلغ حر", pricingModeSnapshot: "free_amount", thickness: null, width: null, length: null }];
       const invoice = { id: "one", invoiceNumber: "INV-9124", type: "customer_sale", status: "saved", customerName: "عميل", total: 3753.04, discount: 0, paid: 1000, remaining: 2753.04, lines };
       const sheets = [false, true].map((compact) => renderToStaticMarkup(React.createElement(PublicInvoiceSheet, { invoice, compact })));
-      sheets.push(renderToStaticMarkup(React.createElement(InvoicePreviewModal, { open: true, invoiceId: "one", initialInvoice: invoice })));
       for (const html of sheets) {
         assert.match(html, /<colgroup><col style="width:25%"/);
         assert.doesNotMatch(html.match(/<thead>[\s\S]*?<\/thead>/)?.[0] ?? "", /w-\[/);
@@ -1064,6 +1062,7 @@ test("invoice form submissions split overpayments and do not replay them on edit
   const freeItem = { id: "charge", pricingMode: "free_amount", unitPrice: 0, cost: 999, isActive: true };
   const party = { id: "party", name: "Account", isActive: true, balance: 500, amountOwed: 500 };
   const captures = [];
+  let hydrationRequests = 0;
   const service = {
     createSalesInvoice: async (input) => { captures.push(input); return { id: "saved" }; },
     updateSalesInvoice: async (id, input) => { captures.push(input); return { id }; },
@@ -1073,9 +1072,9 @@ test("invoice form submissions split overpayments and do not replay them on edit
   const replacements = {
     "@/app/modules/items/hooks/use-item-dimension-defaults": { useItemDimensionDefaults: () => async () => {} },
     "@/lib/api/use-api-error-message": { useApiErrorMessage: () => (error) => error.message },
-    "@/app/modules/items/services/items.service": { listItems: async () => [item, freeItem], getItem: async (id) => id === "charge" ? freeItem : item },
-    "@/app/modules/customers/services/customers.service": { listCustomers: async () => ({ items: [party] }), getCustomer: async () => party },
-    "@/app/modules/suppliers/services/suppliers.service": { listSuppliers: async () => ({ items: [party] }), getSupplier: async () => party },
+    "@/app/modules/items/services/items.service": { listItems: async () => [item, freeItem], getItem: async (id) => { hydrationRequests++; return id === "charge" ? freeItem : item; } },
+    "@/app/modules/customers/services/customers.service": { listCustomers: async () => ({ items: [party] }), getCustomer: async () => { hydrationRequests++; return party; } },
+    "@/app/modules/suppliers/services/suppliers.service": { listSuppliers: async () => ({ items: [party] }), getSupplier: async () => { hydrationRequests++; return party; } },
     "@/app/modules/invoices/services/invoices.service": service,
     "@/app/modules/purchases/services/purchases.service": service,
   };
@@ -1110,7 +1109,9 @@ test("invoice form submissions split overpayments and do not replay them on edit
       assert.equal(captures.at(-1).accountPaymentAmount, 1000);
       assert.equal(captures.at(-1).existingDebtPayment, undefined);
       const invoice = { id: "saved", invoiceNumber: "INV-1", type: "customer_sale", customerId: "party", supplierId: "party", paid: 1000, remaining: 0, total: 1000, discount: 0, lines: [{ itemId: "wood", quantity: 1, piecePrice: 1000, unitCost: 1000, lineTotal: 1000 }] };
-      await form.initializeForEdit(invoice, party);
+      const requestsBeforeEdit = hydrationRequests;
+      await form.initializeForEdit({ ...invoice, customer: party, supplier: party, items: [item, freeItem] });
+      assert.equal(hydrationRequests, requestsBeforeEdit, "edit uses only the enriched detail response");
       form = render();
       assert.equal(form.paidInput, "1000");
       assert.equal(await form.submit({ print: false, t: (key) => key }), "saved");
@@ -1163,7 +1164,7 @@ test("invoice form submissions split overpayments and do not replay them on edit
         assert.deepEqual(captures.at(-1).lines, [{ itemId: "charge", quantity: 1, unitCost: 125.56, thickness: undefined, width: undefined, length: undefined, note: "delivery" }]);
         assert.equal(captures.at(-1).paid, 125.56);
         assert.equal(captures.at(-1).accountPaymentAmount, 74.44);
-        await form.initializeForEdit({ ...invoice, lines: [{ itemId: "charge", quantity: 1, unitCost: 125.56, lineTotal: 125.56, pricingModeSnapshot: "free_amount" }] });
+        await form.initializeForEdit({ ...invoice, customer: party, supplier: party, items: [item, freeItem], lines: [{ itemId: "charge", quantity: 1, unitCost: 125.56, lineTotal: 125.56, pricingModeSnapshot: "free_amount" }] });
         form = render();
         assert.equal(form.lines[0].unitCost, "125.56");
         assert.equal(await form.submit({ t: (key) => key }), "saved");
@@ -1192,21 +1193,19 @@ test("invoice form submissions split overpayments and do not replay them on edit
   }
 });
 
-test("printed receipt and invoice modal show total paid with a conditional previous-debt breakdown", () => {
+test("printed receipts show total paid with a conditional previous-debt breakdown", () => {
   const React = nativeRequire("react");
   const { renderToStaticMarkup } = nativeRequire("react-dom/server");
   overrides.set("next-intl", { useTranslations: () => (key) => key });
   overrides.set("next/image", { default: () => null });
   try {
     const { PublicInvoiceSheet } = load("@/app/modules/invoices/components/public-invoice-sheet");
-    const { InvoicePreviewModal } = load("@/app/modules/invoices/components/invoice-preview-modal");
     const invoice = { id: "independent", invoiceNumber: "INV-0020", createdAt: "2026-10-21T12:00:00Z",
       type: "customer_sale", customerName: "Account", status: "saved", total: 1000, discount: 0,
       paid: 200, remaining: 800, accountPaymentAmount: 4321,
       lines: [{ itemId: "wood", itemLabel: "Wood", pricingModeSnapshot: "per_piece", quantity: 1, piecePrice: 1000, lineTotal: 1000, thickness: null, width: null, length: null, note: null }] };
     const rendered = [
       renderToStaticMarkup(React.createElement(PublicInvoiceSheet, { invoice })),
-      renderToStaticMarkup(React.createElement(InvoicePreviewModal, { open: true, invoiceId: invoice.id, initialInvoice: invoice })),
     ];
     for (const html of rendered) {
       assert.match(html, /المدفوع:[\s\S]*?4,521/);
@@ -1829,32 +1828,6 @@ test("A4 and A5 customer sheets keep the requested RTL columns and right totals"
     assert.deepEqual(receiptHeadings(html), ["الصنف", "العدد", "سعر الوحدة", "الإجمالي"]);
   } finally { overrides.delete("next/image"); }
 });
-test("the in-app invoice preview matches the customer receipt headings", () => {
-  const React = nativeRequire("react");
-  const { renderToStaticMarkup } = nativeRequire("react-dom/server");
-  overrides.set("next-intl", { useTranslations: () => (key) => key });
-  overrides.set("next/image", { default: () => null });
-  try {
-    const { InvoicePreviewModal } = load("@/app/modules/invoices/components/invoice-preview-modal");
-    const initialInvoice = { id: "one", invoiceNumber: "INV-0001", createdAt: "2026-10-15T14:33:00.000Z", type: "cash_sale", status: "saved", total: 450, discount: 0, paid: 0, remaining: 450, lines: [{ itemId: "wood", quantity: 2, thickness: .25, width: .15, length: .6, pricingModeSnapshot: "per_piece", piecePrice: 225, lineTotal: 450, note: null }] };
-    const html = renderToStaticMarkup(React.createElement(InvoicePreviewModal, { open: true, invoiceId: "one", initialInvoice }));
-    assert.deepEqual(receiptHeadings(html), ["الصنف", "العدد", "التخانة", "العرض", "الطول", "سعر الوحدة", "الإجمالي"]);
-    assert.match(html, /فاتورة #0001/);
-    assert.match(html, /2026\/10\/15 05:33 م/);
-    assert.match(html, /bg-receipt-header/);
-    assert.match(html, /flex h-9 items-center justify-center whitespace-nowrap/);
-    assert.match(html, /text-\[\#b85d19\][^>]*>فاتورة #0001/);
-    assert.match(html, /text-\[\#b85d19\][^>]*>450<\/span>/);
-    assert.match(html, /text-\[11px\] text-\[\#666\]/);
-    assert.match(html, /flex flex-col items-center/);
-    assert.doesNotMatch(html, /print-color-adjust:exact/);
-    assert.match(html, /padding: 8mm !important/);
-    assert.match(html, /justify-start/);
-  } finally {
-    overrides.delete("next-intl");
-    overrides.delete("next/image");
-  }
-});
 test("mixed cubic receipts show the volume column and summary even without prices", () => {
   const React = nativeRequire("react");
   const { renderToStaticMarkup } = nativeRequire("react-dom/server");
@@ -1862,7 +1835,6 @@ test("mixed cubic receipts show the volume column and summary even without price
   overrides.set("next-intl", { useTranslations: () => (key) => key });
   try {
     const { PublicInvoiceSheet } = load("@/app/modules/invoices/components/public-invoice-sheet");
-    const { InvoicePreviewModal } = load("@/app/modules/invoices/components/invoice-preview-modal");
     const cubic = { itemId: "cubic", itemLabel: "خشب طويل جدا للاختبار", pricingModeSnapshot: "per_cubic_meter", quantity: 2, thickness: 0.25, width: 0.15, length: 0.6, piecePrice: 1000, lineTotal: 45, note: null };
     const piece = { ...cubic, itemId: "piece", itemLabel: "قطعة", pricingModeSnapshot: "per_piece", quantity: 1, lineTotal: 1000 };
     const shared = { invoiceNumber: "INV-0002", createdAt: "2026-10-15T14:33:00.000Z", type: "cash_sale", status: "saved", total: 1045, discount: 0, paid: 0, remaining: 1045, lines: [cubic, piece] };
@@ -1888,23 +1860,6 @@ test("mixed cubic receipts show the volume column and summary even without price
         if (!showPrices) assert.doesNotMatch(html, /المطلوب:/);
       }
     }
-    const preview = renderToStaticMarkup(React.createElement(InvoicePreviewModal, {
-      open: true,
-      invoiceId: "one",
-      initialInvoice: { ...shared, id: "one", lines: [cubic, piece] },
-    }));
-    assert.deepEqual(receiptHeadings(preview), expected);
-    assert.doesNotMatch(preview, /إجمالي المكعب/);
-    const previewFooter = preview.match(/<tfoot>([\s\S]*?)<\/tfoot>/)?.[1];
-    assert.ok(previewFooter);
-    const previewRows = [...previewFooter.matchAll(/<tr([^>]*)>([\s\S]*?)<\/tr>/g)];
-    assert.equal(previewRows.length, 1);
-    assert.match(previewRows[0][1], /border-t-2/);
-    const previewCubicCells = [...previewRows[0][2].matchAll(/<td([^>]*)>([\s\S]*?)<\/td>/g)];
-    assert.match(previewCubicCells[0][2], /الإجمالي/);
-    assert.match(previewCubicCells[2][1], /colSpan="3"/);
-    assert.match(previewCubicCells[3][2], /0\.04500/);
-    assert.equal([...preview.matchAll(/0\.04500/g)].length, 2);
   } finally {
     overrides.delete("next-intl");
     overrides.delete("next/image");
@@ -2086,7 +2041,6 @@ test("mixed receipts hide canonical fields for free-amount lines", () => {
   overrides.set("next-intl", { useTranslations: () => (key) => key });
   try {
     const { PublicInvoiceSheet } = load("@/app/modules/invoices/components/public-invoice-sheet");
-    const { InvoicePreviewModal } = load("@/app/modules/invoices/components/invoice-preview-modal");
     const physical = { itemId: "wood", itemLabel: "خشب", pricingModeSnapshot: "per_piece", quantity: 2, thickness: 0.2, width: 0.1, length: 1, piecePrice: 100, lineTotal: 200, note: null };
     const charge = { itemId: "charge", itemLabel: "تصنيع مكتب", pricingModeSnapshot: "free_amount", quantity: 1, thickness: null, width: null, length: null, piecePrice: 125.5, lineTotal: 125.5, note: "ملاحظة" };
     const invoice = { id: "one", invoiceNumber: "INV-0001", createdAt: "2026-10-15T14:33:00.000Z", type: "cash_sale", status: "saved", customerName: null, total: 325.5, discount: 0, paid: 325.5, remaining: 0, lines: [physical, charge] };
@@ -2100,11 +2054,6 @@ test("mixed receipts hide canonical fields for free-amount lines", () => {
       assert.match(html.match(/<tfoot>[\s\S]*?<\/tfoot>/)?.[0] ?? "", />2<\/td>/);
       if (showPrices) assert.match(row, /125\.50/);
     }
-    const preview = renderToStaticMarkup(React.createElement(InvoicePreviewModal, { open: true, invoiceId: "one", initialInvoice: invoice }));
-    const previewRow = preview.match(/ملاحظة[\s\S]*?<\/tr>/)?.[0];
-    assert.ok(previewRow);
-    assert.match(previewRow, /ملاحظة/);
-    assert.match(previewRow, /125\.50/);
   } finally { overrides.delete("next/image"); overrides.delete("next-intl"); }
 });
 
@@ -2330,4 +2279,147 @@ test("audit table renders persisted summaries in the selected language", () => {
   } finally {
     overrides.delete("next-intl");
   }
+});
+
+function loadingHookHarness() {
+  const states = [], effects = [], pending = [];
+  let cursor = 0;
+  const react = {
+    useState(initial) { const i = cursor++; if (!(i in states)) states[i] = typeof initial === "function" ? initial() : initial; return [states[i], (value) => { states[i] = typeof value === "function" ? value(states[i]) : value; }]; },
+    useRef(initial) { const i = cursor++; if (!(i in states)) states[i] = { current: initial }; return states[i]; },
+    useCallback: (fn) => fn, useMemo: (fn) => fn(),
+    useEffect(fn, deps) { const i = cursor++; const before = effects[i]; if (!before || deps.some((v, j) => before.deps[j] !== v)) { before?.cleanup?.(); effects[i] = { deps }; pending.push(() => { effects[i].cleanup = fn(); }); } },
+  };
+  return { react, render(fn) { cursor = 0; const value = fn(); while (pending.length) pending.shift()(); return value; }, cleanup() { for (const effect of effects) effect?.cleanup?.(); } };
+}
+
+function loadingTestEnvironment(replacements) {
+  const savedCache = new Map(cache);
+  cache.clear();
+  const savedOverrides = new Map(overrides);
+  for (const [key, value] of Object.entries(replacements)) overrides.set(key, value);
+  return () => { cache.clear(); for (const [key, value] of savedCache) cache.set(key, value); overrides.clear(); for (const [key, value] of savedOverrides) overrides.set(key, value); };
+}
+
+test("enriched details load once, retain cancellation metadata and ignore late navigation results", async () => {
+  for (const kind of ["sales", "purchase"]) {
+    const h = loadingHookHarness();
+    let detail = { id: "one", type: "customer_sale", customer: null, supplier: { id: "supplier", name: "Original" }, items: [{ id: "inactive", isActive: false }], lines: [] };
+    let requests = 0, hydration = 0, resolveCancel, resolveDetail;
+    let deferDetail = false;
+    const getDetail = async () => { requests++; return deferDetail ? new Promise((resolve) => { resolveDetail = resolve; }) : detail; };
+    const service = { getSalesInvoice: getDetail, getPurchase: getDetail, cancelSalesInvoice: () => new Promise((resolve) => { resolveCancel = resolve; }), cancelPurchase: () => new Promise((resolve) => { resolveCancel = resolve; }) };
+    const restore = loadingTestEnvironment({ react: h.react,
+      "@/lib/api/use-api-error-message": { useApiErrorMessage: () => (error) => error.message },
+      "@/app/modules/items/services/items.service": { listItems: async () => { hydration++; return []; }, getItem: async () => { hydration++; } },
+      "@/app/modules/customers/services/customers.service": { getCustomer: async () => { hydration++; } },
+      "@/app/modules/suppliers/services/suppliers.service": { getSupplier: async () => { hydration++; } },
+      [`@/app/modules/${kind === "sales" ? "invoices" : "purchases"}/services/${kind === "sales" ? "invoices" : "purchases"}.service`]: service,
+    });
+    try {
+      const hook = kind === "sales" ? load("@/app/modules/invoices/hooks/use-invoice-detail").useInvoiceDetail : load("@/app/modules/purchases/hooks/use-purchase-detail").usePurchaseDetail;
+      let id = "one";
+      const render = () => h.render(() => hook(id));
+      render(); await new Promise(setImmediate); let state = render();
+      assert.equal(requests, 1); assert.equal(hydration, 0);
+      assert.equal((state.itemsById ?? state.itemsMap).inactive.isActive, false);
+      if (kind === "sales") assert.equal(state.customerName, "-");
+      const cancellation = state.submitCancel(); resolveCancel({ id: "one", status: "cancelled" }); await cancellation;
+      state = render(); assert.deepEqual((state.invoice ?? state.purchase).items, detail.items);
+      const stale = state.submitCancel();
+      id = "two"; detail = { ...detail, id: "two" }; deferDetail = true; render();
+      assert.equal(render().status, "loading", "route changes hide old actions while loading the next record");
+      resolveDetail(detail); await new Promise(setImmediate); state = render();
+      resolveCancel({ id: "one", status: "cancelled" }); await stale;
+      assert.equal((render().invoice ?? render().purchase).id, "two");
+    } finally { h.cleanup(); restore(); }
+  }
+});
+
+test("list tables render enriched names and deleted accounts as plain dashes", () => {
+  const React = nativeRequire("react"); const { renderToStaticMarkup } = nativeRequire("react-dom/server");
+  const restore = loadingTestEnvironment({ "next-intl": { useLocale: () => "en", useTranslations: () => (key) => key },
+    "@/i18n/navigation": { Link: ({ children, ...props }) => React.createElement("a", props, children) },
+    "@/app/modules/shared/components/navigable-table-row": { NavigableTableRow: ({ children }) => React.createElement("tr", null, children) },
+    "@/app/modules/shared/components/row-actions-menu": { historyRowAction: () => ({}), RowActionsMenu: () => null },
+  });
+  try {
+    for (const [feature, component, rows, party] of [["payments", "PaymentsTable", "payments", "customer"], ["supplier-payments", "SupplierPaymentsTable", "payments", "supplier"], ["purchases", "PurchasesTable", "purchases", "supplier"]]) {
+      const Table = load(`@/app/modules/${feature}/components/${feature}-table`)[component];
+      const row = { id: "row", invoiceNumber: "INV-1", createdAt: "2026-10-21", amount: 5, total: 5, remaining: 0, method: "cash", status: "saved", [`${party}Id`]: "deleted", [`${party}Name`]: null };
+      const props = { [rows]: [row], status: "success", showCustomer: true, showSupplier: true, onHistory() {} };
+      const deleted = renderToStaticMarkup(React.createElement(Table, props));
+      assert.doesNotMatch(deleted, /href="\/(customers|suppliers)\//); assert.match(deleted, />-<\/span>/); assert.doesNotMatch(deleted, /…/);
+      const valid = renderToStaticMarkup(React.createElement(Table, { ...props, [rows]: [{ ...row, [`${party}Id`]: "valid", [`${party}Name`]: "Named account" }] }));
+      assert.match(valid, /href="\/(customers|suppliers)\/valid/); assert.match(valid, /Named account/);
+      const hidden = renderToStaticMarkup(React.createElement(Table, { ...props, showCustomer: false, showSupplier: false })); assert.doesNotMatch(hidden, /colCustomer|colSupplier/);
+      if (party === "customer") { const cash = renderToStaticMarkup(React.createElement(Table, { ...props, payments: [{ ...row, customerId: null }] })); assert.match(cash, /cashCustomer/); }
+    }
+  } finally { restore(); }
+});
+
+test("edit detail seeds inactive originals before or after the active catalog without hydration requests", async () => {
+  for (const kind of ["sales", "purchase"]) for (const catalogFirst of [true, false]) {
+    const h = loadingHookHarness(); let resolveCatalog, hydration = 0;
+    const party = { id: "party", name: "Original", isActive: false, balance: 10, amountOwed: 10 };
+    const original = { id: "inactive", name: "Original wood", isActive: false, pricingMode: "per_cubic_meter", unitPrice: 999, cost: 999, stock: 20 };
+    const active = { ...original, id: "active", isActive: true };
+    const restore = loadingTestEnvironment({ react: h.react,
+      "@/app/modules/items/hooks/use-item-dimension-defaults": { useItemDimensionDefaults: () => async () => {} },
+      "@/lib/api/use-api-error-message": { useApiErrorMessage: () => (e) => e.message },
+      "@/app/modules/items/services/items.service": { listItems: () => new Promise((resolve) => { resolveCatalog = resolve; }), getItem: async () => { hydration++; } },
+      "@/app/modules/customers/services/customers.service": { listCustomers: async () => ({ items: [] }), getCustomer: async () => { hydration++; } },
+      "@/app/modules/suppliers/services/suppliers.service": { listSuppliers: async () => ({ items: [] }), getSupplier: async () => { hydration++; } },
+    });
+    try {
+      const hook = kind === "sales" ? load("@/app/modules/invoices/hooks/use-invoice-form").useInvoiceForm : load("@/app/modules/purchases/hooks/use-purchase-form").usePurchaseForm;
+      const render = () => h.render(() => hook()); let state = render();
+      if (catalogFirst) { resolveCatalog([active]); await new Promise(setImmediate); state = render(); }
+      state.initializeForEdit({ id: "edit", invoiceNumber: "INV-1", type: "customer_sale", customerId: "party", supplierId: "party", customer: party, supplier: party, items: [original], total: 24, discount: 0, paid: 7, remaining: 17, lines: [{ itemId: "inactive", quantity: 2, piecePrice: 100, unitCost: 100, width: .3, length: .4, thickness: 1, note: "saved", pricingModeSnapshot: "per_cubic_meter", lineTotal: 24 }] });
+      state = render();
+      assert.equal(state.itemsById.get("inactive").isActive, false);
+      assert.equal((state.selectedCustomer ?? state.selectedSupplier).name, "Original");
+      assert.equal(state.lines[0].quantity, "2"); assert.equal(state.lines[0].piecePrice ?? state.lines[0].unitCost, "100"); assert.equal(state.paidInput, "7");
+      if (!catalogFirst) { resolveCatalog([active]); await new Promise(setImmediate); state = render(); }
+      assert.deepEqual([...state.itemsById.keys()].sort(), ["active", "inactive"]);
+      assert.equal(state.itemsById.get("inactive").isActive, false); assert.equal(hydration, 0);
+      assert.equal(state.lines[0].note, "saved");
+    } finally { h.cleanup(); restore(); }
+  }
+});
+
+test("list hooks use row names and server counts with one primary request per load", async () => {
+  const previousWindow = globalThis.window; globalThis.window = { setTimeout: () => 1, clearTimeout() {} };
+  try {
+    for (const [feature, hookName] of [["payments", "usePayments"], ["supplier-payments", "useSupplierPayments"], ["purchases", "usePurchases"], ["customers", "useCustomers"], ["items", "useCategories"]]) {
+      const h = loadingHookHarness(); let primary = 0, redundant = 0, options;
+      const row = { id: "row", customerId: "party", supplierId: "party", customerName: null, supplierName: null };
+      const list = async () => { primary++; return { items: [row], meta: { total: 1 }, summary: { totalAmount: 5, totalDebt: 12, debtorCount: 9 } }; };
+      const restore = loadingTestEnvironment({ react: h.react, "next-intl": { useTranslations: () => (key) => key },
+        "@/lib/api/use-api-error-message": { useApiErrorMessage: () => (e) => e.message },
+        "@/app/modules/payments/services/payments.service": { listPayments: list },
+        "@/app/modules/supplier-payments/services/supplier-payments.service": { listSupplierPayments: list },
+        "@/app/modules/purchases/services/purchases.service": { listPurchases: list },
+        "@/app/modules/customers/services/customers.service": { listCustomers: feature === "customers" ? list : async () => { redundant++; return { items: [] }; }, getCustomer: async () => { redundant++; } },
+        "@/app/modules/suppliers/services/suppliers.service": { listSuppliers: async () => { redundant++; return { items: [] }; }, getSupplier: async () => { redundant++; } },
+        "@/app/modules/items/services/items.service": { listItems: async () => { redundant++; return []; } },
+        "@/app/modules/items/services/categories.service": { listCategories: async (signal, requested) => { primary++; options = requested; assert.ok(signal instanceof AbortSignal); return [{ id: "cat", name: "Wood", isActive: true, itemCount: 42 }]; } },
+      });
+      try {
+        const hookPath = feature === "items" ? "categories" : feature;
+        const hook = load(`@/app/modules/${feature}/hooks/use-${hookPath}`)[hookName]; const render = () => h.render(() => hook());
+        render(); await new Promise(setImmediate); let state = render(); await new Promise(setImmediate); state = render();
+        assert.equal(primary, 1, feature); assert.equal(redundant, 0, feature);
+        if (feature === "customers") { assert.equal(state.debtorCount, 9); assert.equal(state.totalDebt, 12); }
+        else if (feature === "items") { assert.deepEqual(options, { includeItemCount: true }); assert.equal(state.categories[0].itemCount, 42); }
+        else assert.equal((state.payments ?? state.purchases)[0], row);
+        state.refresh(); render(); await new Promise(setImmediate); state = render(); assert.equal(primary, 2); assert.equal(redundant, 0);
+      } finally { h.cleanup(); restore(); }
+    }
+  } finally { if (previousWindow === undefined) delete globalThis.window; else globalThis.window = previousWindow; }
+});
+
+test("category list count query is opt-in and preserves the signal-first service contract", async () => {
+  const calls = []; const restore = loadingTestEnvironment({ "@/lib/api/client": { apiClient: { get: async (...args) => { calls.push(args); return []; } } } });
+  try { const { listCategories } = load("@/app/modules/items/services/categories.service"); const signal = new AbortController().signal; await listCategories(signal); await listCategories(signal, { includeItemCount: true }); assert.deepEqual(calls, [["/categories", { signal }], ["/categories?includeItemCount=true", { signal }]]); } finally { restore(); }
 });

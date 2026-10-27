@@ -16,6 +16,7 @@ export interface ItemDimensionDefaultsResponse {
 }
 
 export interface Category {
+  itemCount?: number;
   id: string;
   name: string;
   isActive: boolean;
@@ -96,4 +97,8 @@ export interface UpdateItemPricingInput {
 export interface ListItemsFilters {
   categoryId?: string;
   isActive?: boolean;
+}
+
+export interface ListCategoriesOptions {
+  includeItemCount?: boolean;
 }

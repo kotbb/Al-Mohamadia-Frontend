@@ -6,6 +6,7 @@ import type {
   ListSalesInvoicesFilters,
   PublicInvoice,
   SalesInvoice,
+  SalesInvoiceDetail,
   SalesInvoiceListResponse,
   SalesInvoiceSharePayload,
   UpdateSalesInvoiceInput,
@@ -43,8 +44,8 @@ export async function listSalesInvoices(
 export async function getSalesInvoice(
   id: string,
   signal?: AbortSignal,
-): Promise<SalesInvoice> {
-  return apiClient.get<SalesInvoice>(`/sales-invoices/${id}`, { signal });
+): Promise<SalesInvoiceDetail> {
+  return apiClient.get<SalesInvoiceDetail>(`/sales-invoices/${id}`, { signal });
 }
 
 export async function createSalesInvoice(

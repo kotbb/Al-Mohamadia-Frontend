@@ -11,7 +11,6 @@ import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
 import {
-  getSupplier,
   listSuppliers,
 } from "@/app/modules/suppliers/services/suppliers.service";
 import type { Supplier } from "@/app/modules/suppliers/types/suppliers.types";
@@ -20,14 +19,14 @@ import {
   cancelSupplierPayment,
   listSupplierPayments,
 } from "@/app/modules/supplier-payments/services/supplier-payments.service";
-import type { SupplierPayment } from "@/app/modules/supplier-payments/types/supplier-payments.types";
+import type { SupplierPayment, SupplierPaymentListItem } from "@/app/modules/supplier-payments/types/supplier-payments.types";
 
 const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
 
 export function useSupplierPayments() {
   const describeError = useApiErrorMessage();
-  const [payments, setPayments] = useState<SupplierPayment[]>([]);
+  const [payments, setPayments] = useState<SupplierPaymentListItem[]>([]);
   const [total, setTotal] = useState(0);
   const [summaryTotal, setSummaryTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -56,9 +55,6 @@ export function useSupplierPayments() {
   const [listError, setListError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
 
-  const [supplierNames, setSupplierNames] = useState<Record<string, string>>(
-    {},
-  );
 
   // Cancel flow
   const [confirmPayment, setConfirmPayment] = useState<SupplierPayment | null>(
@@ -151,40 +147,6 @@ export function useSupplierPayments() {
     tick,
   ]);
 
-  // Load supplier names for table rows
-  useEffect(() => {
-    const ids = [
-      ...new Set(
-        payments
-          .map((p) => p.supplierId)
-          .filter((id): id is string => Boolean(id)),
-      ),
-    ].filter((id) => supplierNames[id] === undefined);
-
-    if (ids.length === 0) return;
-
-    const controller = new AbortController();
-    Promise.all(
-      ids.map(async (id) => {
-        try {
-          const supplier = await getSupplier(id, controller.signal);
-          return [id, supplier.name] as const;
-        } catch {
-          return [id, "-"] as const;
-        }
-      }),
-    ).then((entries) => {
-      if (controller.signal.aborted) return;
-      setSupplierNames((prev) => {
-        const next = { ...prev };
-        for (const [id, name] of entries) next[id] = name;
-        return next;
-      });
-    });
-
-    return () => controller.abort();
-  }, [payments, supplierNames]);
-
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   function selectSupplier(supplier: Supplier) {
@@ -272,7 +234,6 @@ export function useSupplierPayments() {
     isSearchingSuppliers,
     listStatus,
     listError,
-    supplierNames,
     refresh,
     confirmPayment,
     isCancelling,

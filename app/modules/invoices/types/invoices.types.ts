@@ -1,3 +1,5 @@
+import type { Customer } from "@/app/modules/customers/types/customers.types";
+import type { Item } from "@/app/modules/items/types/items.types";
 export type SalesInvoiceType = "cash_sale" | "customer_sale";
 export type SalesInvoiceStatus = "saved" | "cancelled";
 export type SalesInvoicePeriod = "day" | "week" | "month" | "year";
@@ -124,4 +126,9 @@ export interface PublicInvoice {
   discount: number;
   paid: number;
   remaining: number;
+}
+
+export interface SalesInvoiceDetail extends SalesInvoice {
+  customer: Customer | null;
+  items: Item[];
 }

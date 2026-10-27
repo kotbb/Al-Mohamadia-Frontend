@@ -30,11 +30,13 @@ export function NewPurchasePage({ purchaseId }: { purchaseId?: string }) {
   useEffect(() => {
     if (!purchaseId) return;
     const controller = new AbortController();
+    setEditStatus("loading");
+    setEditError(null);
     getPurchase(purchaseId, controller.signal)
-      .then(async (purchase) => {
+      .then((purchase) => {
         if (controller.signal.aborted) return;
         if (purchase.status !== "saved") { setEditStatus("error"); return; }
-        await form.initializeForEdit(purchase);
+        form.initializeForEdit(purchase);
         if (!controller.signal.aborted) setEditStatus("success");
       })
       .catch((error: unknown) => {

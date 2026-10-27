@@ -48,7 +48,6 @@ export function PaymentsPage() {
     isSearchingCustomers,
     listStatus,
     listError,
-    customerNames,
     refresh,
     confirmPayment,
     isCancelling,
@@ -181,7 +180,7 @@ export function PaymentsPage() {
         {/* Table */}
         <PaymentsTable
           payments={payments}
-          customerNames={customerNames}
+
           showCustomer={true}
           status={listStatus}
           error={listError}
