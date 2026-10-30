@@ -1650,6 +1650,30 @@ const purchases = load("@/app/modules/purchases/utils/purchase-form");
 const math = load("@/app/modules/shared/utils/invoice-math");
 const defaults = load("@/app/modules/items/utils/dimension-defaults");
 const receipt = load("@/app/modules/invoices/utils/receipt-format");
+const invoiceDates = load("@/app/modules/invoices/utils/format-invoice-date");
+
+test("invoice timestamps always use Cairo summer and winter time regardless of device zone", () => {
+  const originalZone = process.env.TZ;
+  try {
+    for (const zone of ["Africa/Cairo", "Asia/Riyadh", "UTC"]) {
+      process.env.TZ = zone;
+      assert.equal(invoiceDates.formatInvoiceDate("2026-10-30T08:00:00Z", "en-GB"), "30 Oct 2026, 10:00");
+      assert.equal(invoiceDates.formatInvoiceDate("2026-07-15T08:00:00Z", "en-GB"), "15 Jul 2026, 11:00");
+      assert.equal(invoiceDates.formatInvoiceDate("2026-10-29T22:30:00Z", "en-GB", { dateOnly: true }), "30 Oct 2026");
+      assert.equal(invoiceDates.formatInvoiceDate("2026-10-30T08:00:00Z", "ar"), "30 أكتوبر 2026، 10:00 ص");
+    }
+  } finally {
+    if (originalZone === undefined) delete process.env.TZ;
+    else process.env.TZ = originalZone;
+  }
+});
+
+test("invoice date formatting preserves missing and invalid date fallbacks", () => {
+  for (const value of [undefined, "", "invalid"]) {
+    assert.equal(invoiceDates.formatInvoiceDate(value, "en"), "-");
+    assert.equal(invoiceDates.formatInvoiceDate(value, "ar", { dateOnly: true }), "-");
+  }
+});
 const piece = { id: "piece", pricingMode: "per_piece" };
 const cubic = { id: "cubic", pricingMode: "per_cubic_meter" };
 const items = new Map([

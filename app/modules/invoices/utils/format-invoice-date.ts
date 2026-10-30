@@ -1,4 +1,4 @@
-/** Formats an ISO date/datetime for display in the given locale (Day Month Year, Hour:Minute). */
+/** Formats an ISO date/datetime in Cairo time and the given locale (Day Month Year, Hour:Minute). */
 export function formatInvoiceDate(
   value: string | undefined,
   locale: string,
@@ -11,6 +11,7 @@ export function formatInvoiceDate(
   const resolvedLocale = locale === "ar" ? "ar-EG-u-nu-latn" : locale;
   if (options?.dateOnly) {
     return new Intl.DateTimeFormat(resolvedLocale, {
+      timeZone: "Africa/Cairo",
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -18,6 +19,7 @@ export function formatInvoiceDate(
   }
 
   return new Intl.DateTimeFormat(resolvedLocale, {
+    timeZone: "Africa/Cairo",
     day: "numeric",
     month: "short",
     year: "numeric",
