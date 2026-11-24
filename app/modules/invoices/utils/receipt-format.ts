@@ -18,7 +18,9 @@ export function formatReceiptDateTime(iso: string | undefined): string {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
-    }).formatToParts(date).map(({ type, value }) => [type, value]),
+    })
+      .formatToParts(date)
+      .map(({ type, value }) => [type, value]),
   );
   return `${parts.year}/${parts.month}/${parts.day} ${parts.hour}:${parts.minute} ${parts.dayPeriod === "AM" ? "ص" : "م"}`;
 }

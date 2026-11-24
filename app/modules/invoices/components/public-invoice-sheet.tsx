@@ -5,16 +5,8 @@ import type { PublicInvoice } from "../types/invoices.types";
 import { ReceiptPaidAmount } from "./receipt-paid-amount";
 import { ReceiptItemLabel } from "./receipt-item-label";
 import { ReceiptTableColumns } from "./receipt-table-columns";
-import {
-  formatReceiptCubicVolume,
-  receiptLineCubicVolume,
-  receiptTotalCubicVolume,
-} from "../utils/receipt-volume";
-import {
-  formatReceiptDateTime,
-  formatReceiptMoney as money,
-  receiptDisplayNumber,
-} from "../utils/receipt-format";
+import { formatReceiptCubicVolume, receiptLineCubicVolume, receiptTotalCubicVolume } from "../utils/receipt-volume";
+import { formatReceiptDateTime, formatReceiptMoney as money, receiptDisplayNumber } from "../utils/receipt-format";
 
 interface PublicInvoiceSheetProps {
   invoice: PublicInvoice;
@@ -31,9 +23,7 @@ export function PublicInvoiceSheet({
   id = "public-invoice-sheet",
   compact = false,
 }: PublicInvoiceSheetProps) {
-  const hasDimensions = invoice?.lines.some(
-    (l) => l.thickness != null || l.width != null || l.length != null,
-  );
+  const hasDimensions = invoice?.lines.some((l) => l.thickness != null || l.width != null || l.length != null);
   const hasCubic = invoice.lines.some((line) => receiptLineCubicVolume(line) !== null);
   const cellPadding = compact ? "px-0.5" : "px-1";
   const itemPadding = compact ? "px-1.5" : "px-2";
@@ -49,14 +39,10 @@ export function PublicInvoiceSheet({
       style={{ padding: compact ? "3mm" : "12mm", direction: "rtl" }}
     >
       {/* Header */}
-      <div
-        className={`${compact ? "mb-3" : "mb-5"} flex items-center justify-between gap-4`}
-      >
+      <div className={`${compact ? "mb-3" : "mb-5"} flex items-center justify-between gap-4`}>
         {/* Right: Invoice # & Date */}
         <div className="text-right">
-          <div
-            className={`${compact ? "text-base" : "text-xl"} font-bold leading-tight text-[#b85d19]`}
-          >
+          <div className={`${compact ? "text-base" : "text-xl"} font-bold leading-tight text-[#b85d19]`}>
             فاتورة #{receiptDisplayNumber(invoice.invoiceNumber)}
           </div>
           <div className={`mt-1 text-[#666] ${compact ? "text-[10px]" : "text-[11px]"}`}>
@@ -85,30 +71,20 @@ export function PublicInvoiceSheet({
               المحمدية
             </span>
           </div>
-          <span
-            dir="rtl"
-            className="mt-0.5 text-center text-[11px] text-[#777]"
-            style={{ letterSpacing: "0px" }}
-          >
+          <span dir="rtl" className="mt-0.5 text-center text-[11px] text-[#777]" style={{ letterSpacing: "0px" }}>
             لتجارة الأخشاب والألواح
           </span>
         </div>
       </div>
 
       {/* Thick rule */}
-      <hr
-        className={`${compact ? "mb-2.5" : "mb-3.5"} border-0 border-t-2 border-[#222]`}
-      />
+      <hr className={`${compact ? "mb-2.5" : "mb-3.5"} border-0 border-t-2 border-[#222]`} />
 
       {/* Customer */}
-      <div
-        className={`${compact ? "mb-2.5 text-xs" : "mb-4 text-sm"} flex items-center gap-2`}
-      >
+      <div className={`${compact ? "mb-2.5 text-xs" : "mb-4 text-sm"} flex items-center gap-2`}>
         <span className="font-bold text-[#444]">العميل:</span>
         <span className="font-bold text-[#111]">
-          {invoice.type === "cash_sale"
-            ? "نقدي"
-            : (invoice.customerName ?? "")}
+          {invoice.type === "cash_sale" ? "نقدي" : (invoice.customerName ?? "")}
         </span>
       </div>
 
@@ -127,39 +103,69 @@ export function PublicInvoiceSheet({
         <ReceiptTableColumns hasDimensions={hasDimensions} hasCubic={hasCubic} showPrices={showPrices} />
         <thead>
           <tr className="bg-receipt-header text-white">
-            <th
-              className={`${itemPadding} ${headerText} text-right align-middle font-semibold`}
-            >
-              <span className={`receipt-header-label ${headerHeight} flex items-center justify-start whitespace-nowrap leading-none`}>الصنف</span>
+            <th className={`${itemPadding} ${headerText} text-right align-middle font-semibold`}>
+              <span
+                className={`receipt-header-label ${headerHeight} flex items-center justify-start whitespace-nowrap leading-none`}
+              >
+                الصنف
+              </span>
             </th>
             <th className={`${headerPadding} ${headerText} text-center align-middle font-semibold`}>
-              <span className={`receipt-header-label ${headerHeight} flex items-center justify-center whitespace-nowrap leading-none`}>العدد</span>
+              <span
+                className={`receipt-header-label ${headerHeight} flex items-center justify-center whitespace-nowrap leading-none`}
+              >
+                العدد
+              </span>
             </th>
             {hasDimensions && (
               <>
                 <th className={`${headerPadding} ${headerText} text-center align-middle font-semibold`}>
-                  <span className={`receipt-header-label ${headerHeight} flex items-center justify-center whitespace-nowrap leading-none`}>التخانة</span>
+                  <span
+                    className={`receipt-header-label ${headerHeight} flex items-center justify-center whitespace-nowrap leading-none`}
+                  >
+                    التخانة
+                  </span>
                 </th>
                 <th className={`${headerPadding} ${headerText} text-center align-middle font-semibold`}>
-                  <span className={`receipt-header-label ${headerHeight} flex items-center justify-center whitespace-nowrap leading-none`}>العرض</span>
+                  <span
+                    className={`receipt-header-label ${headerHeight} flex items-center justify-center whitespace-nowrap leading-none`}
+                  >
+                    العرض
+                  </span>
                 </th>
                 <th className={`${headerPadding} ${headerText} text-center align-middle font-semibold`}>
-                  <span className={`receipt-header-label ${headerHeight} flex items-center justify-center whitespace-nowrap leading-none`}>الطول</span>
+                  <span
+                    className={`receipt-header-label ${headerHeight} flex items-center justify-center whitespace-nowrap leading-none`}
+                  >
+                    الطول
+                  </span>
                 </th>
               </>
             )}
             {hasCubic && (
               <th className={`${headerPadding} ${headerText} text-center align-middle font-semibold`}>
-                <span className={`receipt-header-label ${headerHeight} flex items-center justify-center whitespace-nowrap leading-none`}>المكعب</span>
+                <span
+                  className={`receipt-header-label ${headerHeight} flex items-center justify-center whitespace-nowrap leading-none`}
+                >
+                  المكعب
+                </span>
               </th>
             )}
             {showPrices && (
               <>
                 <th className={`${headerPadding} ${headerText} text-center align-middle font-semibold`}>
-                  <span className={`receipt-header-label ${headerHeight} flex items-center justify-center whitespace-nowrap leading-none`}>سعر الوحدة</span>
+                  <span
+                    className={`receipt-header-label ${headerHeight} flex items-center justify-center whitespace-nowrap leading-none`}
+                  >
+                    سعر الوحدة
+                  </span>
                 </th>
                 <th className={`${headerPadding} ${headerText} text-center align-middle font-semibold`}>
-                  <span className={`receipt-header-label ${headerHeight} flex items-center justify-center whitespace-nowrap leading-none`}>الإجمالي</span>
+                  <span
+                    className={`receipt-header-label ${headerHeight} flex items-center justify-center whitespace-nowrap leading-none`}
+                  >
+                    الإجمالي
+                  </span>
                 </th>
               </>
             )}
@@ -169,13 +175,8 @@ export function PublicInvoiceSheet({
           {invoice.lines.map((line, idx) => {
             const cubicVolume = receiptLineCubicVolume(line);
             return (
-              <tr
-                key={idx}
-                className={`border-b border-[#e0e0e0] ${compact ? "text-[10px]" : "text-[12px]"}`}
-              >
-                <td
-                  className={`${compact ? "py-1.5" : "py-2.5"} ${itemPadding} text-right align-top`}
-                >
+              <tr key={idx} className={`border-b border-[#e0e0e0] ${compact ? "text-[10px]" : "text-[12px]"}`}>
+                <td className={`${compact ? "py-1.5" : "py-2.5"} ${itemPadding} text-right align-top`}>
                   <ReceiptItemLabel
                     label={line.itemLabel}
                     className={`${compact ? "text-[11px]" : "text-[13px]"} font-bold text-[#111]`}
@@ -187,7 +188,9 @@ export function PublicInvoiceSheet({
                     />
                   )}
                 </td>
-                <td className={`${compact ? "py-1.5" : "py-2.5"} ${cellPadding} text-center align-top font-bold text-[#1a1a1a]`}>
+                <td
+                  className={`${compact ? "py-1.5" : "py-2.5"} ${cellPadding} text-center align-top font-bold text-[#1a1a1a]`}
+                >
                   {line.pricingModeSnapshot === "free_amount" ? "" : line.quantity}
                 </td>
                 {hasDimensions && (
@@ -195,22 +198,24 @@ export function PublicInvoiceSheet({
                     <td
                       className={`${compact ? "py-1.5" : "py-2.5"} ${cellPadding} text-center align-top text-[#1a1a1a]`}
                     >
-                      {line.pricingModeSnapshot === "free_amount" ? "" : line.thickness ?? ""}
+                      {line.pricingModeSnapshot === "free_amount" ? "" : (line.thickness ?? "")}
                     </td>
                     <td
                       className={`${compact ? "py-1.5" : "py-2.5"} ${cellPadding} text-center align-top text-[#1a1a1a]`}
                     >
-                      {line.pricingModeSnapshot === "free_amount" ? "" : line.width ?? ""}
+                      {line.pricingModeSnapshot === "free_amount" ? "" : (line.width ?? "")}
                     </td>
                     <td
                       className={`${compact ? "py-1.5" : "py-2.5"} ${cellPadding} text-center align-top text-[#1a1a1a]`}
                     >
-                      {line.pricingModeSnapshot === "free_amount" ? "" : line.length ?? ""}
+                      {line.pricingModeSnapshot === "free_amount" ? "" : (line.length ?? "")}
                     </td>
                   </>
                 )}
                 {hasCubic && (
-                  <td className={`${compact ? "py-1.5" : "py-2.5"} ${cellPadding} receipt-volume-cell text-center align-top text-[#1a1a1a]`}>
+                  <td
+                    className={`${compact ? "py-1.5" : "py-2.5"} ${cellPadding} receipt-volume-cell text-center align-top text-[#1a1a1a]`}
+                  >
                     {cubicVolume === null ? "" : formatReceiptCubicVolume(cubicVolume)}
                   </td>
                 )}
@@ -234,13 +239,12 @@ export function PublicInvoiceSheet({
         </tbody>
         <tfoot>
           <tr className="border-t-2 border-[#222] font-bold text-[#111]">
-            <td
-              className={`${itemPadding} py-2 text-right`}
-            >
-              الإجمالي
-            </td>
+            <td className={`${itemPadding} py-2 text-right`}>الإجمالي</td>
             <td className={`${cellPadding} py-2 text-center`}>
-              {invoice.lines.reduce((sum, line) => sum + (line.pricingModeSnapshot === "free_amount" ? 0 : line.quantity), 0)}
+              {invoice.lines.reduce(
+                (sum, line) => sum + (line.pricingModeSnapshot === "free_amount" ? 0 : line.quantity),
+                0,
+              )}
             </td>
             {hasDimensions && <td colSpan={3} />}
             {hasCubic && (

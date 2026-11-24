@@ -1,10 +1,7 @@
 import { receiptDisplayNumber } from "./receipt-format";
 import { prepareReceiptCanvasClone } from "./receipt-canvas";
 
-export async function downloadInvoicePdf(
-  elementId: string,
-  invoiceNumber: string,
-): Promise<void> {
+export async function downloadInvoicePdf(elementId: string, invoiceNumber: string): Promise<void> {
   const html2pdf = (await import("html2pdf.js")).default;
   const element = document.getElementById(elementId);
   if (!element) return;

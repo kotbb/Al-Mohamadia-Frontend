@@ -4,10 +4,7 @@ import type { Status } from "../types/use-invoice-detail.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
-import {
-  cancelSalesInvoice,
-  getSalesInvoice,
-} from "@/app/modules/invoices/services/invoices.service";
+import { cancelSalesInvoice, getSalesInvoice } from "@/app/modules/invoices/services/invoices.service";
 import type { SalesInvoiceDetail } from "@/app/modules/invoices/types/invoices.types";
 import type { Item } from "@/app/modules/items/types/items.types";
 
@@ -23,9 +20,7 @@ export function useInvoiceDetail(invoiceId: string) {
   const [isCancelOpen, setIsCancelOpen] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
-  const [toastKind, setToastKind] = useState<"cancelled" | "updated" | null>(
-    null,
-  );
+  const [toastKind, setToastKind] = useState<"cancelled" | "updated" | null>(null);
 
   const refresh = useCallback(() => {
     setStatus("loading");
@@ -49,7 +44,7 @@ export function useInvoiceDetail(invoiceId: string) {
         const map: Record<string, Item> = {};
         for (const item of doc.items) map[item.id] = item;
         setItemsById(map);
-        setCustomerName(doc.type === "customer_sale" ? doc.customer?.name ?? "-" : null);
+        setCustomerName(doc.type === "customer_sale" ? (doc.customer?.name ?? "-") : null);
         setStatus("success");
         setError(null);
       })
@@ -79,7 +74,7 @@ export function useInvoiceDetail(invoiceId: string) {
     setCancelError(null);
     try {
       const updated = await cancelSalesInvoice(invoice.id);
-      setInvoice((previous) => previous?.id === updated.id ? { ...previous, ...updated } : previous);
+      setInvoice((previous) => (previous?.id === updated.id ? { ...previous, ...updated } : previous));
       setIsCancelOpen(false);
       setToastKind("cancelled");
     } catch (err: unknown) {

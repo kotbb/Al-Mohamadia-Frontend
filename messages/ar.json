@@ -534,6 +534,7 @@
     "pasteImageHint": "تم نسخ الصورة. الصقها في محادثة واتساب.",
     "shareSheetOpened": "فُتحت نافذة مشاركة النظام. اختر جهة الإرسال.",
     "openWhatsApp": "فتح واتساب",
+    "browse": "التصفح حسب",
     "invoiceNavigation": "التنقل بين الفواتير",
     "byInvoiceNumber": "حسب رقم الفاتورة",
     "sameCustomer": "لنفس العميل",
@@ -575,9 +576,9 @@
     "fieldFreeAmount": "المبلغ",
     "fieldNote": "ملاحظة",
     "fieldNotePlaceholder": "اختياري",
-    "fieldThickness": "السماكة (م)",
-    "fieldWidth": "العرض (م)",
-    "fieldLength": "الطول (م)",
+    "fieldThickness": "التخانة",
+    "fieldWidth": "العرض",
+    "fieldLength": "الطول",
     "fieldLineTotal": "الإجمالي",
     "totalsTitle": "الملخص",
     "total": "الإجمالي",
@@ -608,7 +609,7 @@
     "validationCustomer": "اختر عميلاً لبيع على الحساب",
     "validationLines": "أضف صنفاً واحداً على الأقل",
     "validationItem": "اختر صنفاً لكل سطر",
-    "validationDims": "أدخل السماكة والعرض والطول للأصناف بالمتر المكعب",
+    "validationDims": "أدخل التخانة والعرض والطول للأصناف بالمتر المكعب",
     "validationDiscount": "الخصم يجب أن يكون بين 0 والإجمالي",
     "validationPaidCash": "البيع النقدي يتطلب دفع المبلغ كاملاً",
     "validationPaidCustomer": "المدفوع يجب أن يكون بين 0 والصافي",
@@ -630,7 +631,10 @@
     "navigationNext": "التالي",
     "validationAccountPayment": "أدخل مبلغًا غير سالب بحد أقصى منزلتين عشريتين.",
     "customerCurrentDebt": "المديونية الحالية",
-    "customerChange": "تغيير العميل"
+    "customerChange": "تغيير العميل",
+    "cashSales": "الفواتير النقدية",
+    "previousCashInvoice": "الفاتورة النقدية السابقة",
+    "nextCashInvoice": "الفاتورة النقدية التالية"
   },
   "suppliers": {
     "title": "الموردون",
@@ -876,7 +880,7 @@
     "newTitle": "فاتورة شراء",
     "newSubtitle": "تسجيل مشتريات من مورد",
     "editTitle": "تعديل فاتورة الشراء {number}",
-    "edit": "تعديل",
+    "edit": "تعديل الفاتورة",
     "saveChanges": "حفظ التعديلات",
     "detailTitle": "فاتورة رقم {number}",
     "invoiceTitlePrefix": "فاتورة",
@@ -900,10 +904,10 @@
     "fieldItemPlaceholder": "اختر صنفاً…",
     "fieldQty": "الكمية",
     "fieldPrice": "السعر",
-    "fieldUnitCost": "السعر",
-    "fieldThickness": "السمك (م)",
-    "fieldWidth": "العرض (م)",
-    "fieldLength": "الطول (م)",
+    "fieldUnitCost": "تكلفة الواحدة",
+    "fieldThickness": "التخانة",
+    "fieldWidth": "العرض",
+    "fieldLength": "الطول",
     "fieldDimensions": "الأبعاد",
     "fieldLineTotal": "الإجمالي",
     "fieldNote": "ملاحظة",
@@ -964,7 +968,7 @@
     "validationItem": "يرجى اختيار الصنف وتحديد السعر والكمية",
     "validationQuantity": "يجب أن تكون الكمية أكبر من صفر",
     "validationUnitCost": "يجب أن يكون السعر أكبر من صفر",
-    "validationDims": "السمك والعرض والطول مطلوبة للأصناف المحتسبة بالمتر المكعب",
+    "validationDims": "التخانة والعرض والطول مطلوبة للأصناف المحتسبة بالمتر المكعب",
     "validationPaidNegative": "المبلغ المدفوع لا يمكن أن يكون سالباً",
     "validationPaidExceedsTotal": "المدفوع للفاتورة لا يتجاوز إجماليها. استخدم الدفعة الإضافية للحساب للمبالغ الأخرى.",
     "listError": "تعذر تحميل فواتير الشراء",
@@ -1241,7 +1245,9 @@
     "actions": "إجراءات الحساب",
     "invalidPaymentAmount": "أدخل مبلغًا موجبًا بحد أقصى منزلتين عشريتين.",
     "nameRequired": "الاسم مطلوب",
-    "invalidBalance": "أدخل رصيدًا صحيحًا بحد أقصى منزلتين عشريتين. القيم السالبة تعني رصيدًا دائنًا."
+    "invalidBalance": "أدخل رصيدًا صحيحًا بحد أقصى منزلتين عشريتين. القيم السالبة تعني رصيدًا دائنًا.",
+    "customerOwes": "المتبقي عليه",
+    "owedToSupplier": "المستحق له علينا"
   },
   "invoicePayments": {
     "customerCredit": "رصيد دائن للعميل بعد الحفظ",
@@ -1262,5 +1268,17 @@
     "discardDescription": "ستفقد التغييرات التي لم تحفظها.",
     "keepEditing": "متابعة التعديل",
     "discardChanges": "تجاهل التغييرات"
+  },
+  "invoiceDetails": {
+    "item": "الصنف",
+    "quantity": "العدد",
+    "thickness": "التخانة",
+    "width": "العرض",
+    "length": "الطول",
+    "volume": "المكعب",
+    "unitPrice": "سعر القطعة",
+    "lineTotal": "الإجمالي",
+    "total": "الإجمالي",
+    "ratePerCubicMeter": "{amount} / م³"
   }
 }

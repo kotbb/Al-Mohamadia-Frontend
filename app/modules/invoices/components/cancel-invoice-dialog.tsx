@@ -36,9 +36,7 @@ export function CancelInvoiceDialog({
           ) : null}
         </div>
       }
-      confirmLabel={
-        confirming ? t("cancelling") : t("confirmCancelAction")
-      }
+      confirmLabel={confirming ? t("cancelling") : t("confirmCancelAction")}
       cancelLabel={t("modalCancel")}
       confirming={confirming}
       tone="danger"

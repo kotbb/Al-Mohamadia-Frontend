@@ -12,11 +12,17 @@ export function ReceiptPaidAmount({ paid, accountPaymentAmount }: ReceiptPaidAmo
   const breakdown = invoicePaymentBreakdown(paid, accountPaymentAmount);
   return (
     <>
-      <span className="col-start-3 row-start-1 text-end font-bold text-[#111]"><bdi>{formatReceiptMoney(breakdown.totalPaid)}</bdi></span>
+      <span className="col-start-3 row-start-1 text-end font-bold text-[#111]">
+        <bdi>{formatReceiptMoney(breakdown.totalPaid)}</bdi>
+      </span>
       {breakdown.accountPaymentAmount > 0 ? (
         <span className="col-start-2 row-start-1 text-end text-[11px] font-normal">
-          <PaymentBreakdown invoicePaid={breakdown.invoicePaid} accountPaymentAmount={breakdown.accountPaymentAmount}
-            accountLabel="مديونية سابقة" formatAmount={formatReceiptMoney} />
+          <PaymentBreakdown
+            invoicePaid={breakdown.invoicePaid}
+            accountPaymentAmount={breakdown.accountPaymentAmount}
+            accountLabel="مديونية سابقة"
+            formatAmount={formatReceiptMoney}
+          />
         </span>
       ) : null}
     </>

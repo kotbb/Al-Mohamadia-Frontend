@@ -534,6 +534,7 @@
     "pasteImageHint": "Image copied. Paste it into the WhatsApp chat.",
     "shareSheetOpened": "The system share sheet opened. Choose the destination to send the file.",
     "openWhatsApp": "Open WhatsApp",
+    "browse": "Browse",
     "invoiceNavigation": "Invoice navigation",
     "byInvoiceNumber": "By invoice number",
     "sameCustomer": "Same customer",
@@ -575,9 +576,9 @@
     "fieldFreeAmount": "Amount (EGP)",
     "fieldNote": "Note",
     "fieldNotePlaceholder": "Optional line note…",
-    "fieldThickness": "Thickness (m)",
-    "fieldWidth": "Width (m)",
-    "fieldLength": "Length (m)",
+    "fieldThickness": "Thickness",
+    "fieldWidth": "Width",
+    "fieldLength": "Length",
     "fieldLineTotal": "Line total",
     "totalsTitle": "Summary",
     "total": "Total",
@@ -630,7 +631,10 @@
     "navigationNext": "Next",
     "validationAccountPayment": "Enter a nonnegative amount with at most two decimal places.",
     "customerCurrentDebt": "Current debt",
-    "customerChange": "Change customer"
+    "customerChange": "Change customer",
+    "cashSales": "Cash sales",
+    "previousCashInvoice": "Previous cash-sale invoice",
+    "nextCashInvoice": "Next cash-sale invoice"
   },
   "suppliers": {
     "title": "Suppliers",
@@ -876,7 +880,7 @@
     "newTitle": "Purchase Invoice",
     "newSubtitle": "Record purchases from a supplier",
     "editTitle": "Edit purchase invoice {number}",
-    "edit": "Edit",
+    "edit": "Edit Invoice",
     "saveChanges": "Save Changes",
     "detailTitle": "Invoice {number}",
     "invoiceTitlePrefix": "Invoice",
@@ -901,9 +905,9 @@
     "fieldQty": "Qty",
     "fieldPrice": "Price",
     "fieldUnitCost": "Unit Cost",
-    "fieldThickness": "Thickness (m)",
-    "fieldWidth": "Width (m)",
-    "fieldLength": "Length (m)",
+    "fieldThickness": "Thickness",
+    "fieldWidth": "Width",
+    "fieldLength": "Length",
     "fieldDimensions": "Dimensions",
     "fieldLineTotal": "Line total",
     "fieldNote": "Note",
@@ -1241,7 +1245,9 @@
     "actions": "Account actions",
     "invalidPaymentAmount": "Enter a positive amount with at most two decimal places.",
     "nameRequired": "Name is required",
-    "invalidBalance": "Enter a finite balance with at most two decimal places. Negative values represent credit."
+    "invalidBalance": "Enter a finite balance with at most two decimal places. Negative values represent credit.",
+    "customerOwes": "Customer owes",
+    "owedToSupplier": "Owed to supplier"
   },
   "invoicePayments": {
     "customerCredit": "Customer credit after saving",
@@ -1262,5 +1268,17 @@
     "discardDescription": "Your unsaved changes will be lost.",
     "keepEditing": "Keep editing",
     "discardChanges": "Discard changes"
+  },
+  "invoiceDetails": {
+    "item": "Item",
+    "quantity": "Quantity",
+    "thickness": "Thickness",
+    "width": "Width",
+    "length": "Length",
+    "volume": "Volume",
+    "unitPrice": "Unit price",
+    "lineTotal": "Line total",
+    "total": "Total",
+    "ratePerCubicMeter": "{amount} / m³"
   }
 }

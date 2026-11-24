@@ -20,8 +20,7 @@ export function useInvoiceNeighbors(invoiceId: string) {
         if (!controller.signal.aborted) setResult({ key, data, failed: false });
       })
       .catch(() => {
-        if (!controller.signal.aborted)
-          setResult({ key, data: null, failed: true });
+        if (!controller.signal.aborted) setResult({ key, data: null, failed: true });
       });
     return () => controller.abort();
   }, [invoiceId, key]);

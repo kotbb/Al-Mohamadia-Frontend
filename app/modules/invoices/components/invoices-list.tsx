@@ -10,11 +10,7 @@ import { Badge } from "@/app/modules/shared/components/badge";
 import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
-import {
-  historyRowAction,
-  RowActionsMenu,
-  type RowActionItem,
-} from "@/app/modules/shared/components/row-actions-menu";
+import { historyRowAction, RowActionsMenu, type RowActionItem } from "@/app/modules/shared/components/row-actions-menu";
 
 interface InvoicesListProps {
   invoices: SalesInvoiceListItem[];
@@ -32,12 +28,7 @@ interface InvoicesListProps {
 
 function InvoiceDocIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
         stroke="currentColor"
@@ -72,50 +63,29 @@ export function InvoicesList({
   }
 
   if (status === "error") {
-    return (
-      <ErrorState
-        title={t("listError")}
-        message={error ?? undefined}
-        retryLabel={t("retry")}
-        onRetry={onRetry}
-      />
-    );
+    return <ErrorState title={t("listError")} message={error ?? undefined} retryLabel={t("retry")} onRetry={onRetry} />;
   }
 
   if (invoices.length === 0) {
-    return (
-      <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />
-    );
+    return <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />;
   }
 
   return (
     <div className="overflow-x-auto rounded-shell border border-border bg-surface">
-      <table className={`w-full ${showCustomer ? "min-w-[52rem]" : "min-w-[44rem]"} border-collapse text-sm lg:text-base`}>
+      <table
+        className={`w-full ${showCustomer ? "min-w-[52rem]" : "min-w-[44rem]"} border-collapse text-sm lg:text-base`}
+      >
         <thead className="bg-surface-muted">
           <tr className="border-b border-border">
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colNumber")}
-            </th>
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colDate")}
-            </th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colNumber")}</th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colDate")}</th>
             {showCustomer ? (
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colCustomer")}
-            </th>
+              <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colCustomer")}</th>
             ) : null}
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colTotal")}
-            </th>
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colRemaining")}
-            </th>
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colStatus")}
-            </th>
-            <th className="w-28 px-4 py-3 text-center font-medium text-text-secondary">
-              {t("colActions")}
-            </th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colTotal")}</th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colRemaining")}</th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colStatus")}</th>
+            <th className="w-28 px-4 py-3 text-center font-medium text-text-secondary">{t("colActions")}</th>
           </tr>
         </thead>
         <tbody>
@@ -173,7 +143,7 @@ export function InvoicesList({
                     }}
                     className="ds-focus-ring group inline-flex items-center gap-3 rounded-xl transition-colors aria-disabled:cursor-wait aria-disabled:opacity-50"
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-all duration-150 group-hover/record:bg-primary group-hover/record:text-primary-foreground group-hover/record:shadow-sm">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors duration-150 group-hover/record:bg-primary group-hover/record:text-primary-foreground">
                       <InvoiceDocIcon className="h-4 w-4" />
                     </div>
                     <span className="font-semibold whitespace-nowrap text-text-primary transition-colors group-hover/record:text-primary group-hover/record:underline">
@@ -185,31 +155,35 @@ export function InvoicesList({
                   {formatInvoiceDate(invoice.createdAt, locale)}
                 </td>
                 {showCustomer ? (
-                <td className="px-4 py-3 whitespace-nowrap font-medium text-text-primary">
-                  {customerLabel}
-                </td>
+                  <td className="px-4 py-3 whitespace-nowrap font-medium text-text-primary">
+                    {invoice.type === "customer_sale" && invoice.customerId && invoice.customerName ? (
+                      <Link
+                        href={`/customers/${invoice.customerId}`}
+                        aria-disabled={actionsDisabled}
+                        tabIndex={actionsDisabled ? -1 : undefined}
+                        onClick={(event) => {
+                          if (actionsDisabled) event.preventDefault();
+                        }}
+                        className="ds-focus-ring rounded text-primary underline-offset-2 hover:underline aria-disabled:cursor-wait aria-disabled:opacity-50"
+                      >
+                        {customerLabel}
+                      </Link>
+                    ) : (
+                      customerLabel
+                    )}
+                  </td>
                 ) : null}
                 <td className="px-4 py-3 whitespace-nowrap font-medium text-text-primary">
                   {formatMoney(invoice.total, locale)}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
-                  <span
-                    className={
-                      invoice.remaining > 0
-                        ? "font-bold text-danger"
-                        : "text-text-secondary"
-                    }
-                  >
+                  <span className={invoice.remaining > 0 ? "font-bold text-danger" : "text-text-secondary"}>
                     {formatMoney(invoice.remaining, locale)}
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <Badge
-                    variant={invoice.status === "saved" ? "success" : "danger"}
-                  >
-                    {invoice.status === "saved"
-                      ? t("statusSaved")
-                      : t("statusCancelled")}
+                  <Badge variant={invoice.status === "saved" ? "success" : "danger"}>
+                    {invoice.status === "saved" ? t("statusSaved") : t("statusCancelled")}
                   </Badge>
                 </td>
                 <td className="px-4 py-3">

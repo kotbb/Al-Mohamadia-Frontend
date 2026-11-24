@@ -4,16 +4,12 @@ interface ReceiptTableColumnsProps {
   showPrices?: boolean;
 }
 
-export function ReceiptTableColumns({
-  hasDimensions,
-  hasCubic,
-  showPrices = true,
-}: ReceiptTableColumnsProps) {
+export function ReceiptTableColumns({ hasDimensions, hasCubic, showPrices = true }: ReceiptTableColumnsProps) {
   const numericWidths = [
     10,
-    ...(hasDimensions ? [10, 10, 10] : []),
-    ...(hasCubic ? [11] : []),
-    ...(showPrices ? [11, 13] : []),
+    ...(hasDimensions ? [9, 10, 10] : []),
+    ...(hasCubic ? [14] : []),
+    ...(showPrices ? [12, 13] : []),
   ];
   const itemWidth = 100 - numericWidths.reduce((sum, width) => sum + width, 0);
 

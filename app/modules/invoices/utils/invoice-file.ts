@@ -11,18 +11,20 @@ export async function createInvoiceFile(
   await Promise.all(Array.from(element.querySelectorAll("img")).map((image) => image.decode().catch(() => undefined)));
   const html2pdf = (await import("html2pdf.js")).default;
   const filename = `فاتورة-${receiptDisplayNumber(invoiceNumber)}.${format}`;
-  const worker = html2pdf().set({
-    margin: 0,
-    filename,
-    image: { type: "jpeg", quality: 0.98 },
-    html2canvas: {
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      onclone: (document: Document) => prepareReceiptCanvasClone(document, element.id),
-    },
-    jsPDF: { unit: "mm", format: format === "pdf" ? "a4" : "a5", orientation: "portrait" },
-  }).from(element);
+  const worker = html2pdf()
+    .set({
+      margin: 0,
+      filename,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        onclone: (document: Document) => prepareReceiptCanvasClone(document, element.id),
+      },
+      jsPDF: { unit: "mm", format: format === "pdf" ? "a4" : "a5", orientation: "portrait" },
+    })
+    .from(element);
 
   if (format === "pdf") {
     const blob = (await worker.outputPdf("blob")) as Blob;
@@ -31,7 +33,7 @@ export async function createInvoiceFile(
 
   const canvas = (await worker.toCanvas().get("canvas")) as HTMLCanvasElement;
   const blob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((value) => value ? resolve(value) : reject(new Error("Image export failed")), "image/png");
+    canvas.toBlob((value) => (value ? resolve(value) : reject(new Error("Image export failed"))), "image/png");
   });
   return new File([blob], filename, { type: "image/png" });
 }

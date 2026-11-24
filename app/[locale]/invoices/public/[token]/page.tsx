@@ -6,11 +6,7 @@ interface PublicInvoicePageProps {
   searchParams: Promise<{ prices?: string }>;
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string; token: string }>;
-}) {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string; token: string }> }) {
   await params;
   return {
     title: "فاتورة المحمدية | Al-Mohamadia Invoice",
@@ -19,14 +15,18 @@ export async function generateMetadata({
   };
 }
 
-export default async function PublicInvoicePage({
-  params,
-  searchParams,
-}: PublicInvoicePageProps) {
+export default async function PublicInvoicePage({ params, searchParams }: PublicInvoicePageProps) {
   const { locale, token } = await params;
   const { prices } = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations({ locale: "ar", namespace: "invoices" });
 
-  return <PublicInvoicePageClient token={token} showPrices={prices !== "off"} printGuidanceTitle={t("printGuidanceTitle")} printGuidanceMessage={t("printGuidancePdf")} />;
+  return (
+    <PublicInvoicePageClient
+      token={token}
+      showPrices={prices !== "off"}
+      printGuidanceTitle={t("printGuidanceTitle")}
+      printGuidanceMessage={t("printGuidancePdf")}
+    />
+  );
 }

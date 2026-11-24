@@ -20,8 +20,7 @@ export function PublicInvoicePageClient({
   printGuidanceTitle,
   printGuidanceMessage,
 }: PublicInvoicePageClientProps) {
-  const { invoice, isLoading, error, isDownloading, handleDownload } =
-    usePublicInvoice(token);
+  const { invoice, isLoading, error, isDownloading, handleDownload } = usePublicInvoice(token);
   const printAreaRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -29,8 +28,7 @@ export function PublicInvoicePageClient({
       className="min-h-screen bg-[#f4f4f4] print:bg-white"
       dir="rtl"
       style={{
-        fontFamily:
-          "'Noto Sans Arabic', 'Noto Sans', 'Cairo', Arial, sans-serif",
+        fontFamily: "'Noto Sans Arabic', 'Noto Sans', 'Cairo', Arial, sans-serif",
       }}
     >
       {/* Action Bar — hidden on print */}
@@ -46,9 +44,7 @@ export function PublicInvoicePageClient({
               priority
             />
           </div>
-          <span className="text-sm font-bold text-[#1a1a1a]">
-            المحمدية لتجارة الأخشاب والألواح
-          </span>
+          <span className="text-sm font-bold text-[#1a1a1a]">المحمدية لتجارة الأخشاب والألواح</span>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -121,24 +117,14 @@ export function PublicInvoicePageClient({
 
 function PrinterIcon() {
   return (
-    <svg
-      className="h-4 w-4 shrink-0"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden
-    >
+    <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
         d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"
         stroke="currentColor"
         strokeWidth="1.75"
         strokeLinejoin="round"
       />
-      <path
-        d="M6 14h12v7H6v-7Z"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinejoin="round"
-      />
+      <path d="M6 14h12v7H6v-7Z" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
       <circle cx="18" cy="13" r="1" fill="currentColor" />
     </svg>
   );
@@ -146,12 +132,7 @@ function PrinterIcon() {
 
 function DownloadIcon() {
   return (
-    <svg
-      className="h-4 w-4 shrink-0"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden
-    >
+    <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
         d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"
         stroke="currentColor"

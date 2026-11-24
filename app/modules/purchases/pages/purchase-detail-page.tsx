@@ -1,9 +1,12 @@
 "use client";
 
+import { InvoicePartySection } from "@/app/modules/shared/components/invoice-party-section";
+import { InvoiceDetailTable } from "@/app/modules/shared/components/invoice-detail-table";
 import { InvoicePaidAmount } from "@/app/modules/shared/components/invoice-paid-amount";
 
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { BackButton } from "@/app/modules/shared/components/back-button";
 import { AppShell } from "@/app/layout/app-shell";
 import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
 import { formatMoney } from "@/app/modules/shared/utils/format-money";
@@ -43,39 +46,42 @@ export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
     clearToast,
   } = usePurchaseDetail(purchaseId);
 
-  const title = purchase
-    ? t("detailTitle", { number: purchase.invoiceNumber })
-    : t("title");
+  const isCurrentRecord = purchase?.id === purchaseId;
+  const title = purchase && isCurrentRecord ? t("detailTitle", { number: purchase.invoiceNumber }) : t("title");
 
-  const subtitleParts: string[] = [];
-  if (purchase) {
-    if (supplier) {
-      subtitleParts.push(supplier.name);
-    }
-    subtitleParts.push(formatInvoiceDate(purchase.createdAt, locale));
-  }
+  const subtitle = purchase && isCurrentRecord ? formatInvoiceDate(purchase.createdAt, locale) : undefined;
 
   return (
     <AppShell
       title={title}
-      subtitle={subtitleParts.join(" · ") || undefined}
+      subtitle={subtitle}
+      navigation={<BackButton fallback="/purchases" />}
+      metadata={
+        purchase && isCurrentRecord && status === "success" ? (
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Badge variant={purchase.status === "saved" ? "success" : "danger"}>
+              {purchase.status === "saved" ? t("statusSaved") : t("statusCancelled")}
+            </Badge>
+            {purchase.remaining <= 0 ? (
+              <Badge variant="success">{t("paidInFull")}</Badge>
+            ) : (
+              <Badge variant="warning">{t("unpaidRemaining")}</Badge>
+            )}
+          </div>
+        ) : null
+      }
       actions={
-        <div className="flex flex-wrap items-center gap-2">
+        purchase && isCurrentRecord && status === "success" && purchase.status === "saved" ? (
           <Link
-            href="/purchases"
-            className="ds-focus-ring inline-flex min-h-10 items-center rounded-lg border border-border bg-surface px-3.5 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-muted"
+            href={`/purchases/${purchase.id}/edit`}
+            className="ds-focus-ring inline-flex min-h-11 items-center rounded-lg border border-border bg-surface px-4 text-sm font-medium text-primary hover:bg-surface-muted"
           >
-            {t("backToList")}
+            {t("edit")}
           </Link>
-        </div>
+        ) : null
       }
     >
-      <Toast
-        open={toast !== null}
-        message={t("cancelSuccess")}
-        variant="success"
-        onClose={clearToast}
-      />
+      <Toast open={toast !== null} message={t("cancelSuccess")} variant="success" onClose={clearToast} />
 
       <ConfirmDialog
         open={isCancelConfirmOpen}
@@ -94,9 +100,7 @@ export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
             ) : null}
           </div>
         }
-        confirmLabel={
-          isCancelling ? tShared("loading") : t("confirmCancelAction")
-        }
+        confirmLabel={isCancelling ? tShared("loading") : t("confirmCancelAction")}
         cancelLabel={t("modalCancel")}
         confirming={isCancelling}
         tone="danger"
@@ -105,187 +109,76 @@ export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
       />
 
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-        {status === "loading" || status === "idle" ? (
+        {status === "loading" || status === "idle" || (status === "success" && !isCurrentRecord) ? (
           <LoadingState message={tShared("loading")} />
         ) : status === "error" || !purchase ? (
-          <ErrorState
-            title={t("detailError")}
-            message={error ?? undefined}
-            retryLabel={t("retry")}
-            onRetry={refresh}
-          />
+          <ErrorState title={t("detailError")} message={error ?? undefined} retryLabel={t("retry")} onRetry={refresh} />
         ) : (
           <>
-            {/* Badges Row */}
-            <div className="flex flex-wrap items-center gap-2.5">
-              <Badge
-                variant={purchase.status === "saved" ? "success" : "danger"}
-              >
-                {purchase.status === "saved"
-                  ? t("statusSaved")
-                  : t("statusCancelled")}
-              </Badge>
-              {supplier ? (
-                <Link href={`/suppliers/${supplier.id}`}>
-                  <Badge variant="info">{supplier.name}</Badge>
-                </Link>
-              ) : (
-                <Badge variant="info">{t("supplierPurchase")}</Badge>
-              )}
-              {purchase.remaining <= 0 ? (
-                <Badge variant="success">{t("paidInFull")}</Badge>
-              ) : (
-                <Badge variant="warning">{t("unpaidRemaining")}</Badge>
-              )}
-            </div>
-
             {/* Status Alert if Cancelled */}
             {purchase.status === "cancelled" ? (
               <div className="flex items-center gap-3 rounded-xl border border-danger/30 bg-danger/10 p-4 text-danger">
                 <WarningIcon />
-                <span className="text-sm font-medium">
-                  {t("cancelledNotice")}
-                </span>
+                <span className="text-sm font-medium">{t("cancelledNotice")}</span>
               </div>
             ) : null}
 
             {/* Line items Card */}
+            <InvoicePartySection
+              label={t("colSupplier")}
+              name={supplier?.name ?? "-"}
+              href={supplier ? `/suppliers/${supplier.id}` : undefined}
+            />
             <SurfaceCard>
-              <h2 className="mb-4 text-lg font-semibold text-text-primary">
-                {t("linesDetailTitle")}
-              </h2>
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[40rem] border-collapse text-sm lg:text-base">
-                  <thead className="bg-surface-muted">
-                    <tr className="border-b border-border">
-                      <th className="px-4 py-3 text-start font-medium text-text-secondary">
-                        {t("fieldItem")}
-                      </th>
-                      <th className="px-4 py-3 text-center font-medium text-text-secondary">
-                        {t("fieldQty")}
-                      </th>
-                      <th className="px-4 py-3 text-end font-medium text-text-secondary">
-                        {t("fieldPrice")}
-                      </th>
-                      <th className="px-4 py-3 text-end font-medium text-text-secondary">
-                        {t("fieldLineTotal")}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {purchase.lines.map((line, index) => {
-                      const item = itemsMap[line.itemId];
-                      const label = item ? item.name : null;
-                      const isFreeAmount = (line.pricingModeSnapshot ?? item?.pricingMode) === "free_amount";
-                      const dims =
-                        !isFreeAmount && line.thickness != null &&
-                        line.width != null &&
-                        line.length != null
-                          ? `${line.thickness} × ${line.width} × ${line.length} ${locale === "ar" ? "م" : "m"}`
-                          : null;
-                      return (
-                        <tr
-                          key={`${line.itemId}-${index}`}
-                          className="border-b border-border last:border-b-0"
-                        >
-                          <td className="px-4 py-3 text-text-primary">
-                            <div className="font-semibold text-text-primary">
-                              {label ?? (
-                                <span className="italic text-text-secondary">
-                                  {t("validationItem")}
-                                </span>
-                              )}
-                            </div>
-                            {dims ? (
-                              <div className="mt-0.5 text-xs text-text-secondary">
-                                {dims}
-                              </div>
-                            ) : null}
-                            {line.note ? (
-                              <div className="mt-0.5 text-xs text-text-secondary/90 italic">
-                                {line.note}
-                              </div>
-                            ) : null}
-                          </td>
-                          <td className="px-4 py-3 text-center font-medium text-text-primary">
-                            {isFreeAmount ? "—" : line.quantity}
-                          </td>
-                          <td className="px-4 py-3 text-end whitespace-nowrap text-text-primary">
-                            {isFreeAmount ? "—" : formatMoney(line.unitCost, locale)}
-                          </td>
-                          <td className="px-4 py-3 text-end whitespace-nowrap font-medium text-text-primary">
-                            {formatMoney(line.lineTotal, locale)}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              <h2 className="mb-4 text-lg font-semibold text-text-primary">{t("linesDetailTitle")}</h2>
+              <InvoiceDetailTable
+                total={purchase.total}
+                unavailableLabel={t("validationItem")}
+                lines={purchase.lines.map((line) => ({
+                  ...line,
+                  unitRate: line.unitCost,
+                  name: itemsMap[line.itemId]?.name ?? null,
+                }))}
+              />
             </SurfaceCard>
 
             {/* Financial Summary Card */}
-            <SurfaceCard>
-              <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="rounded-xl border border-border bg-surface-muted px-4 py-3">
-                    <p className="text-xs font-medium text-text-secondary">
-                      {t("total")}
-                    </p>
-                    <p className="mt-1 text-lg font-bold text-danger">
-                      {formatMoney(purchase.total, locale)} {currency}
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-border bg-surface-muted px-4 py-3">
-                    <p className="text-xs font-medium text-text-secondary">
-                      {t("paid")}
-                    </p>
-                    <p className="mt-1 text-lg font-bold text-success">
-                      <InvoicePaidAmount paid={purchase.paid} accountPaymentAmount={purchase.accountPaymentAmount} currency={currency} />
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-col justify-center rounded-xl border border-border bg-surface-muted px-6 py-4 text-start lg:min-w-[15rem] lg:text-end">
-                  <p className="text-xs font-medium text-text-secondary">
-                    {t("remaining")}
-                  </p>
-                  <p
-                    className={`mt-1 text-2xl font-bold ${
-                      purchase.remaining > 0 ? "text-danger" : "text-success"
-                    }`}
-                  >
-                    {formatMoney(purchase.remaining, locale)} {currency}
-                  </p>
-                </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="rounded-xl border border-border bg-surface-muted px-4 py-3">
+                <p className="text-xs font-medium text-text-secondary">{t("total")}</p>
+                <p className="mt-1 text-lg font-bold text-text-primary">
+                  {formatMoney(purchase.total, locale)} {currency}
+                </p>
               </div>
-            </SurfaceCard>
+              <div className="rounded-xl border border-border bg-surface-muted px-4 py-3">
+                <p className="text-xs font-medium text-text-secondary">{t("paid")}</p>
+                <p className="mt-1 text-lg font-bold text-success">
+                  <InvoicePaidAmount
+                    paid={purchase.paid}
+                    accountPaymentAmount={purchase.accountPaymentAmount}
+                    currency={currency}
+                  />
+                </p>
+              </div>
+              <div className="rounded-xl border border-border bg-surface-muted px-4 py-3">
+                <p className="text-xs font-medium text-text-secondary">{t("remaining")}</p>
+                <p className={`mt-1 text-lg font-bold ${purchase.remaining > 0 ? "text-danger" : "text-success"}`}>
+                  {formatMoney(purchase.remaining, locale)} {currency}
+                </p>
+              </div>
+            </div>
 
             {/* Notes Card if any */}
             {purchase.notes ? (
               <SurfaceCard>
-                <h3 className="text-xs font-semibold text-text-secondary">
-                  {t("fieldNotes")}
-                </h3>
-                <p className="mt-1 text-sm text-text-primary whitespace-pre-wrap">
-                  {purchase.notes}
-                </p>
+                <h3 className="text-xs font-semibold text-text-secondary">{t("fieldNotes")}</h3>
+                <p className="mt-1 text-sm text-text-primary whitespace-pre-wrap">{purchase.notes}</p>
               </SurfaceCard>
             ) : null}
 
             {purchase.status === "saved" ? (
               <div className="flex flex-wrap items-center gap-3 border-t border-border pt-6">
-                <Link
-                  href={`/purchases/${purchase.id}/edit`}
-                  className="ds-focus-ring inline-flex min-h-10 items-center rounded-lg border border-border bg-surface px-4 text-sm font-medium text-primary hover:bg-surface-muted"
-                >
-                  {t("edit")}
-                </Link>
-                <Button
-                  type="button"
-                  variant="danger"
-                  onClick={openCancelConfirm}
-                >
+                <Button type="button" variant="danger" onClick={openCancelConfirm}>
                   <CancelIcon />
                   <span>{t("cancelPurchase")}</span>
                 </Button>
@@ -300,19 +193,9 @@ export function PurchaseDetailPage({ purchaseId }: PurchaseDetailPageProps) {
 
 function CancelIcon() {
   return (
-    <svg
-      className="h-4 w-4 shrink-0"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden
-    >
+    <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden>
       <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.75" />
-      <path
-        d="m9 9 6 6m0-6-6 6"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-      />
+      <path d="m9 9 6 6m0-6-6 6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
     </svg>
   );
 }

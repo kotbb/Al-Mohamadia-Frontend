@@ -17,11 +17,17 @@ export function InvoicePaidAmount({ paid, accountPaymentAmount, currency }: Invo
   const breakdown = invoicePaymentBreakdown(paid, accountPaymentAmount);
   return (
     <>
-      <bdi>{formatMoney(breakdown.totalPaid, locale)} {currency}</bdi>
+      <bdi>
+        {formatMoney(breakdown.totalPaid, locale)} {currency}
+      </bdi>
       {breakdown.accountPaymentAmount > 0 ? (
         <span className="mt-1 block text-xs font-medium leading-relaxed text-text-secondary">
-          <PaymentBreakdown invoicePaid={breakdown.invoicePaid} accountPaymentAmount={breakdown.accountPaymentAmount}
-            accountLabel={t("previousDebtPayment")} formatAmount={(amount) => formatMoney(amount, locale)} />
+          <PaymentBreakdown
+            invoicePaid={breakdown.invoicePaid}
+            accountPaymentAmount={breakdown.accountPaymentAmount}
+            accountLabel={t("previousDebtPayment")}
+            formatAmount={(amount) => formatMoney(amount, locale)}
+          />
         </span>
       ) : null}
     </>

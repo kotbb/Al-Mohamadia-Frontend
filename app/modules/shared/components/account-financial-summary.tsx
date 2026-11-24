@@ -12,23 +12,46 @@ interface AccountFinancialSummaryProps {
   currency: string;
 }
 
-export function AccountFinancialSummary({ totalInvoiced, totalPaid, currentBalance, party, currency }: AccountFinancialSummaryProps) {
+export function AccountFinancialSummary({
+  totalInvoiced,
+  totalPaid,
+  currentBalance,
+  party,
+  currency,
+}: AccountFinancialSummaryProps) {
   const t = useTranslations("accountDetails");
   const locale = useLocale();
   const metrics = [
     { label: t("totalInvoiced"), value: totalInvoiced },
     { label: t("totalPaid"), value: totalPaid, positive: true },
-    { label: t(currentBalance < 0 ? party === "customer" ? "customerCredit" : "supplierCredit" : "currentBalance"), value: currentBalance, positive: currentBalance < 0 },
+    {
+      label: t(
+        currentBalance < 0
+          ? party === "customer"
+            ? "customerCredit"
+            : "supplierCredit"
+          : party === "customer"
+            ? "customerOwes"
+            : "owedToSupplier",
+      ),
+      value: currentBalance,
+      positive: currentBalance < 0,
+      danger: party === "customer" && currentBalance > 0,
+    },
   ];
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {metrics.map(({ label, value, positive }) => (
+      {metrics.map(({ label, value, positive, danger }) => (
         <SurfaceCard key={label} className="min-w-0" padding="sm">
           <dl>
             <dt className="text-sm text-text-secondary">{label}</dt>
-            <dd className={`mt-3 break-words text-2xl font-semibold tabular-nums ${positive ? "text-success" : "text-text-primary"}`}>
-              <bdi>{formatMoney(value, locale)} {currency}</bdi>
+            <dd
+              className={`mt-3 break-words text-2xl font-semibold tabular-nums ${positive ? "text-success" : danger ? "text-danger" : "text-text-primary"}`}
+            >
+              <bdi>
+                {formatMoney(value, locale)} {currency}
+              </bdi>
             </dd>
           </dl>
         </SurfaceCard>

@@ -95,7 +95,11 @@ export interface SalesInvoiceSharePayload {
   message: string;
 }
 
+export type InvoiceNavigationMode = "number" | "customer" | "cash";
+
 export interface InvoiceNeighbors {
+  previousCashId: string | null;
+  nextCashId: string | null;
   previousId: string | null;
   nextId: string | null;
   previousByNumberId: string | null;

@@ -5,5 +5,9 @@ import { InvoiceExportPage } from "@/app/modules/invoices/pages/invoice-export-p
 export default async function Page({ params }: { params: Promise<{ locale: string; id: string }> }) {
   const { locale, id } = await params;
   setRequestLocale(locale);
-  return <AuthGuard roles={["admin", "super_admin"]}><InvoiceExportPage invoiceId={id} /></AuthGuard>;
+  return (
+    <AuthGuard roles={["admin", "super_admin"]}>
+      <InvoiceExportPage invoiceId={id} />
+    </AuthGuard>
+  );
 }
