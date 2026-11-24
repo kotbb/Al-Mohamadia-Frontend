@@ -1071,7 +1071,7 @@
     "colBefore": "قبل",
     "colAfter": "بعد",
     "title": "سجل المراجعة",
-    "subtitle": "سجل للقراءة فقط — كل العمليات الحساسة",
+    "subtitle": "متابعة كل الإجراءات في النظام",
     "viewHistory": "السجل",
     "historyTitle": "السجل · {entity}",
     "historyTitleRecord": "السجل · {name}",
@@ -1263,25 +1263,6 @@
     "invoicePortion": "لهذه الفاتورة",
     "additionalAccountPaymentNote": "(مديونية سابقة) إضافية"
   },
-  "navigation": {
-    "back": "رجوع",
-    "discardTitle": "تجاهل التغييرات؟",
-    "discardDescription": "ستفقد التغييرات التي لم تحفظها.",
-    "keepEditing": "متابعة التعديل",
-    "discardChanges": "تجاهل التغييرات"
-  },
-  "invoiceDetails": {
-    "item": "الصنف",
-    "quantity": "العدد",
-    "thickness": "التخانة",
-    "width": "العرض",
-    "length": "الطول",
-    "volume": "المكعب",
-    "unitPrice": "سعر القطعة",
-    "lineTotal": "الإجمالي",
-    "total": "الإجمالي",
-    "ratePerCubicMeter": "{amount} / م³"
-  },
   "exports": {
     "title": "تصدير Excel",
     "subtitle": "اختر البيانات والأعمدة لتنزيلها في ملف Excel واحد.",
@@ -1385,5 +1366,24 @@
     "searchSalesInvoices": "كل فواتير المبيعات - ابحث برقم الفاتورة",
     "searchPurchaseInvoices": "كل فواتير المشتريات - ابحث برقم الفاتورة",
     "noRecords": "لا توجد سجلات مطابقة"
+  },
+  "navigation": {
+    "back": "رجوع",
+    "discardTitle": "تجاهل التغييرات؟",
+    "discardDescription": "ستفقد التغييرات التي لم تحفظها.",
+    "keepEditing": "متابعة التعديل",
+    "discardChanges": "تجاهل التغييرات"
+  },
+  "invoiceDetails": {
+    "item": "الصنف",
+    "quantity": "العدد",
+    "thickness": "التخانة",
+    "width": "العرض",
+    "length": "الطول",
+    "volume": "المكعب",
+    "unitPrice": "سعر القطعة",
+    "lineTotal": "الإجمالي",
+    "total": "الإجمالي",
+    "ratePerCubicMeter": "{amount} / م³"
   }
 }

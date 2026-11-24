@@ -1,9 +1,4 @@
-export type PaymentMethod =
-  | "cash"
-  | "instapay"
-  | "vodafone_cash"
-  | "bank_transfer"
-  | "check";
+export type PaymentMethod = "cash" | "instapay" | "vodafone_cash" | "bank_transfer" | "check";
 
 export type PaymentPeriod = "day" | "week" | "month" | "year";
 

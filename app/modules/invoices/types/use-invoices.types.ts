@@ -1,7 +1,4 @@
-import type {
-  SalesInvoicePeriod,
-  SalesInvoiceStatus,
-} from "@/app/modules/invoices/types/invoices.types";
+import type { SalesInvoicePeriod, SalesInvoiceStatus } from "@/app/modules/invoices/types/invoices.types";
 
 export type ListStatus = "idle" | "loading" | "success" | "error";
 

@@ -879,6 +879,125 @@ test("receipt notes share Arabic spacing and isolated numbers across compact and
   }
 });
 
+test("invoice item search matches names and categories, supports keyboard choice and preserves selection", () => {
+  const states = [];
+  let cursor = 0;
+  overrides.set("react", {
+    useMemo: (fn) => fn(),
+    useId: () => "item-picker",
+    useRef(initial) {
+      const index = cursor++;
+      if (!(index in states)) states[index] = { current: initial };
+      return states[index];
+    },
+    useState(initial) {
+      const index = cursor++;
+      if (!(index in states)) states[index] = initial;
+      return [
+        states[index],
+        (value) => {
+          states[index] = value;
+        },
+      ];
+    },
+  });
+  overrides.set("next-intl", { useLocale: () => "en", useTranslations: () => (key) => key });
+  const file = resolve(root, "app/modules/shared/components/item-combobox.tsx");
+  cache.delete(file);
+  const chosen = [];
+  const props = {
+    labels: { label: "Item", placeholder: "Search", empty: "No items" },
+    name: "item-one",
+    value: "",
+    items: [
+      { id: "pine", name: "Pine 12", category: { id: "wood", name: "Wood", createdAt: "2020-01-01" }, isActive: true },
+      { id: "oak", name: "Oak 18", category: { id: "wood", name: "Wood", createdAt: "2020-01-01" }, isActive: true },
+      { id: "arabic", name: "صنف", category: { id: "boards", name: "ألواح", createdAt: "2019-01-01" }, isActive: true },
+      {
+        id: "inactive",
+        name: "Hidden item",
+        category: { id: "wood", name: "Wood", createdAt: "2020-01-01" },
+        isActive: false,
+      },
+    ],
+    onSelect(id) {
+      props.value = id;
+      chosen.push(id);
+    },
+  };
+  try {
+    const { ItemCombobox } = load("@/app/modules/shared/components/item-combobox");
+    const render = () => {
+      cursor = 0;
+      return ItemCombobox(props);
+    };
+    const nodes = (element) =>
+      !element || typeof element !== "object"
+        ? []
+        : [element, ...[element.props?.children].flat(Infinity).flatMap(nodes)];
+    const input = () => nodes(render()).find((node) => node.props?.role === "combobox");
+    const options = () => nodes(render()).filter((node) => node.props?.role === "option");
+    const groups = () => nodes(render()).filter((node) => node.props?.role === "group");
+    const key = (value) => input().props.onKeyDown({ key: value, preventDefault() {}, stopPropagation() {} });
+    input().props.onFocus({ currentTarget: { select() {} } });
+    assert.equal(options().length, 3);
+    assert.equal(groups().length, 2);
+    assert.deepEqual(
+      options().map((node) => node.props.children.props.children),
+      ["صنف", "Oak 18", "Pine 12"],
+    );
+    const woodGroup = groups().find((group) => nodes(group).some((node) => node.props?.children === "Wood"));
+    assert.equal(nodes(woodGroup).filter((node) => node.props?.role === "option").length, 2);
+    input().props.onChange({ target: { value: "  WOOD " } });
+    assert.equal(options().length, 2);
+    assert.equal(groups().length, 1);
+    key("ArrowDown");
+    key("ArrowDown");
+    key("Enter");
+    assert.equal(props.value, "pine");
+    assert.equal(input().props.value, "Pine 12");
+    input().props.onFocus({ currentTarget: { select() {} } });
+    key("Enter");
+    assert.equal(chosen.length, 1, "reopening must not reset an existing line");
+    input().props.onChange({ target: { value: "oak" } });
+    assert.equal(options().length, 1);
+    key("Enter");
+    assert.equal(props.value, "oak");
+    input().props.onChange({ target: { value: "ألواح" } });
+    assert.equal(options().length, 1);
+    key("ArrowUp");
+    key("Enter");
+    assert.equal(props.value, "arabic");
+    input().props.onChange({ target: { value: "no matches" } });
+    assert.equal(options().length, 0);
+    key("Enter");
+    assert.equal(groups().length, 0);
+    assert.equal(chosen.length, 3);
+    key("Escape");
+    assert.equal(input().props.value, "صنف");
+    assert.equal(input().props["aria-expanded"], false);
+    input().props.onChange({ target: { value: "" } });
+    input().props.onFocus({ currentTarget: { select() {} } });
+    const itemOption = options()[0];
+    itemOption.props.onPointerDown({ pointerType: "touch", preventDefault() {} });
+    render().props.onBlur({ currentTarget: { contains: () => false }, relatedTarget: null });
+    assert.equal(options().length > 0, true, "touch blur must not remove an item option before click");
+    itemOption.props.onClick();
+    assert.equal(chosen.at(-1), "arabic");
+    props.eligibleInactiveItemIds = ["inactive"];
+    input().props.onFocus({ currentTarget: { select() {} } });
+    assert.equal(options().length, 4, "original inactive items remain available after switching away");
+    props.eligibleInactiveItemIds = [];
+    props.value = "inactive";
+    input().props.onFocus({ currentTarget: { select() {} } });
+    assert.equal(options().length, 4, "the existing inactive item remains selectable during editing");
+  } finally {
+    overrides.delete("react");
+    overrides.delete("next-intl");
+    cache.delete(file);
+  }
+});
+
 test("purchase free rows show one amount and note while physical rows retain quantity and dimensions", () => {
   const React = nativeRequire("react");
   const { renderToStaticMarkup } = nativeRequire("react-dom/server");

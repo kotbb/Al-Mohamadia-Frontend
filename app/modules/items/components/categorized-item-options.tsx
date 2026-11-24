@@ -5,10 +5,7 @@ interface CategorizedItemOptionsProps {
   locale: string;
 }
 
-export function CategorizedItemOptions({
-  items,
-  locale,
-}: CategorizedItemOptionsProps) {
+export function CategorizedItemOptions({ items, locale }: CategorizedItemOptionsProps) {
   const collator = new Intl.Collator(locale, {
     sensitivity: "base",
     numeric: true,

@@ -15,15 +15,13 @@ const variantClasses: Record<ButtonVariant, string> = {
     "border border-border bg-transparent text-text-primary hover:bg-surface-muted disabled:bg-transparent disabled:text-text-muted",
   success:
     "bg-success-action text-success-action-foreground hover:opacity-90 disabled:bg-surface-muted disabled:text-text-muted",
-  danger:
-    "bg-danger text-white hover:opacity-90 disabled:bg-surface-muted disabled:text-text-muted",
-  ghost:
-    "bg-transparent text-text-secondary hover:bg-surface-muted hover:text-text-primary disabled:text-text-muted",
+  danger: "bg-danger text-white hover:opacity-90 disabled:bg-surface-muted disabled:text-text-muted",
+  ghost: "bg-transparent text-text-secondary hover:bg-surface-muted hover:text-text-primary disabled:text-text-muted",
 };
 
 const sizeClasses: Record<NonNullable<ButtonProps["size"]>, string> = {
   default: "min-h-11 px-4 py-2 text-base",
-  sm: "min-h-9 px-3 py-1.5 text-sm",
+  sm: "min-h-11 sm:min-h-9 px-3 py-1.5 text-sm",
 };
 
 export function Button({
@@ -39,7 +37,7 @@ export function Button({
     <button
       type={type}
       disabled={disabled}
-      className={`ds-focus-ring inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl font-medium transition-[color,background-color,transform,opacity] duration-[var(--duration-fast)] ease-[var(--ease-standard)] active:scale-[0.98] disabled:cursor-not-allowed disabled:active:scale-100 ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
+      className={`ds-focus-ring inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg font-medium transition-[color,background-color,transform,opacity] duration-[var(--duration-fast)] ease-[var(--ease-standard)] active:scale-[0.98] disabled:cursor-not-allowed disabled:active:scale-100 ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
       {...props}
     >
       {children}

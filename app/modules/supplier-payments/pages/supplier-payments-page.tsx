@@ -66,12 +66,7 @@ export function SupplierPaymentsPage() {
       actions={
         <div className="flex flex-wrap items-center gap-2">
           {history.button}
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            onClick={() => recordPaymentHook.open()}
-          >
+          <Button type="button" variant="primary" size="sm" onClick={() => recordPaymentHook.open()}>
             {t("recordTitle")}
           </Button>
         </div>
@@ -88,6 +83,7 @@ export function SupplierPaymentsPage() {
       <RecordSupplierPaymentModal
         open={recordPaymentHook.isOpen}
         onClose={recordPaymentHook.close}
+        onRestore={recordPaymentHook.restore}
         supplier={recordPaymentHook.supplier}
         onSelectSupplier={recordPaymentHook.selectSupplier}
         onClearSupplier={recordPaymentHook.clearSupplier}
@@ -144,14 +140,10 @@ export function SupplierPaymentsPage() {
         {/* Total Paid Stat Card */}
         <SurfaceCard className="p-4 sm:p-5">
           <div className="flex flex-col gap-1">
-            <p className="text-xs font-medium text-text-secondary sm:text-sm">
-              {t("totalPaid")}
-            </p>
-            <p className="text-2xl font-bold text-text-primary sm:text-3xl">
+            <p className="text-xs font-medium text-text-secondary sm:text-sm">{t("totalPaid")}</p>
+            <p className="text-2xl font-semibold tabular-nums text-text-primary sm:text-3xl">
               {formatMoney(summaryTotal, locale)}{" "}
-              <span className="text-sm font-normal text-text-secondary">
-                {currency}
-              </span>
+              <span className="text-sm font-normal text-text-secondary">{currency}</span>
             </p>
           </div>
         </SurfaceCard>
@@ -192,18 +184,10 @@ export function SupplierPaymentsPage() {
         {/* Pagination */}
         {listStatus === "success" && totalPages > 1 ? (
           <div className="flex items-center justify-center gap-3">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage(page - 1)}
-            >
+            <Button type="button" variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
               {t("prevPage")}
             </Button>
-            <span className="text-sm text-text-secondary">
-              {t("pageOf", { page, totalPages })}
-            </span>
+            <span className="text-sm text-text-secondary">{t("pageOf", { page, totalPages })}</span>
             <Button
               type="button"
               variant="secondary"

@@ -1,11 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import {
-  formatMobileInput,
-  isOptionalMobile,
-  mobileInputValue,
-} from "../utils/egyptian-mobile";
+import { formatMobileInput, isOptionalMobile, mobileInputValue } from "../utils/egyptian-mobile";
 
 interface EgyptianPhoneInputProps {
   name: string;
@@ -61,9 +57,7 @@ export function EgyptianPhoneInput({
             value={formattedValue}
             disabled={disabled}
             aria-invalid={invalid || undefined}
-            aria-describedby={
-              invalid ? `${name}-error` : hint ? `${name}-hint` : undefined
-            }
+            aria-describedby={invalid ? `${name}-error` : hint ? `${name}-hint` : undefined}
             className="relative min-h-11 w-full min-w-0 bg-transparent px-3 font-mono text-base text-text-primary outline-none disabled:text-text-muted"
             onKeyDown={(event) => {
               const input = event.currentTarget;
@@ -71,18 +65,12 @@ export function EgyptianPhoneInput({
               if (caret === null || caret !== input.selectionEnd) return;
               if (event.key === "Backspace" && input.value[caret - 1] === " ")
                 input.setSelectionRange(caret - 1, caret - 1);
-              if (event.key === "Delete" && input.value[caret] === " ")
-                input.setSelectionRange(caret + 1, caret + 1);
+              if (event.key === "Delete" && input.value[caret] === " ") input.setSelectionRange(caret + 1, caret + 1);
             }}
             onChange={(event) => {
               const input = event.currentTarget;
-              const before = input.value.slice(
-                0,
-                input.selectionStart ?? input.value.length,
-              );
-              const digitCount =
-                before.replace(/[^0-9٠-٩۰-۹]/g, "").length -
-                (before.startsWith("0") ? 1 : 0);
+              const before = input.value.slice(0, input.selectionStart ?? input.value.length);
+              const digitCount = before.replace(/[^0-9٠-٩۰-۹]/g, "").length - (before.startsWith("0") ? 1 : 0);
               const next = mobileInputValue(input.value);
               if (next !== null) {
                 onValueChange(next);

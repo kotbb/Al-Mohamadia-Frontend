@@ -7,7 +7,7 @@
   --border: #e1dacd;
   --text-primary: #231e18;
   --text-secondary: #5a5145;
-  --text-muted: #8a8072;
+  --text-muted: #726757;
   --primary: #6f4428;
   --primary-hover: #5a3620;
   --primary-foreground: #ffffff;
@@ -17,9 +17,9 @@
   --success: #2e8f52;
   --success-action: #267344;
   --success-action-foreground: #ffffff;
-  --warning: #b8862b;
+  --warning: #7d571b;
   --danger: #c13b2e;
-  --info: #2e6fa6;
+  --info: #275f8f;
   --sidebar: #332822;
   --sidebar-foreground: #f5f0ea;
   --sidebar-muted: #c9bdb0;
@@ -200,34 +200,6 @@ select:disabled {
 
 .ds-scrim {
   background: var(--scrim);
-}
-
-@keyframes login-rise {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes login-fade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.login-brand-enter {
-  animation: login-fade 480ms ease-out both;
-}
-
-.login-form-enter {
-  animation: login-rise 420ms ease-out 80ms both;
 }
 
 @keyframes toast-in {

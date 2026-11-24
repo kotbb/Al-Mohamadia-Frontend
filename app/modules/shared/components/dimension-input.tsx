@@ -33,6 +33,7 @@ export function DimensionInput({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const alive = useRef(true);
+  const touchSelecting = useRef(false);
   const t = useTranslations("items");
   const describeError = useApiErrorMessage();
   const parsed = parsePositive(draft);
@@ -58,8 +59,7 @@ export function DimensionInput({
       setDraft("");
       setOpen(false);
     } catch (cause: unknown) {
-      if (alive.current)
-        setError(describeError(cause, t("dimensionDefaultSaveFailed")));
+      if (alive.current) setError(describeError(cause, t("dimensionDefaultSaveFailed")));
     } finally {
       if (alive.current) setSaving(false);
     }
@@ -69,7 +69,7 @@ export function DimensionInput({
     <div
       className="relative min-w-0"
       onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+        if (!touchSelecting.current && !event.currentTarget.contains(event.relatedTarget)) setOpen(false);
       }}
       onKeyDown={(event) => {
         if (event.key === "Escape") {
@@ -123,7 +123,20 @@ export function DimensionInput({
                 type="button"
                 disabled={saving}
                 className="ds-focus-ring min-h-11 w-full rounded-lg px-3 text-start text-sm text-text-primary hover:bg-surface-muted disabled:opacity-50"
+                onPointerDown={(event) => {
+                  if (event.pointerType === "touch") touchSelecting.current = true;
+                }}
+                onPointerCancel={() => {
+                  touchSelecting.current = false;
+                }}
+                onPointerUp={() => {
+                  if (touchSelecting.current)
+                    window.setTimeout(() => {
+                      touchSelecting.current = false;
+                    }, 350);
+                }}
                 onClick={() => {
+                  touchSelecting.current = false;
                   onChange(String(entry));
                   setOpen(false);
                 }}
@@ -146,12 +159,7 @@ export function DimensionInput({
                   value={draft}
                   disabled={saving}
                   autoFocus
-                  error={
-                    error ??
-                    (draft.trim() && parsed === null
-                      ? t("validationDimensionValue")
-                      : null)
-                  }
+                  error={error ?? (draft.trim() && parsed === null ? t("validationDimensionValue") : null)}
                   onChange={(event) => {
                     setDraft(event.target.value);
                     setError(null);
@@ -190,11 +198,7 @@ export function DimensionInput({
                 </div>
               </div>
             ) : (
-              <DashedAddButton
-                className="w-full"
-                label={t("addDimensionDefault")}
-                onClick={() => setAdding(true)}
-              />
+              <DashedAddButton className="w-full" label={t("addDimensionDefault")} onClick={() => setAdding(true)} />
             )}
           </li>
         </ul>

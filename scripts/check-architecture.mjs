@@ -16,12 +16,7 @@ function files(directory) {
         : [];
   });
 }
-const errors = files(base).flatMap((file) =>
-  checkSource(relative(root, file), readFileSync(file, "utf8"), mode),
-);
-for (const error of errors)
-  console.error(
-    `${error.file}:${error.line} [${error.rule}] Move to ${error.destination}`,
-  );
+const errors = files(base).flatMap((file) => checkSource(relative(root, file), readFileSync(file, "utf8"), mode));
+for (const error of errors) console.error(`${error.file}:${error.line} [${error.rule}] Move to ${error.destination}`);
 if (errors.length) process.exitCode = 1;
 else console.log(`Architecture check passed (${mode}).`);

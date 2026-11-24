@@ -1,7 +1,4 @@
-import type {
-  PaymentMethod,
-  PaymentPeriod,
-} from "@/app/modules/payments/types/payments.types";
+import type { PaymentMethod, PaymentPeriod } from "@/app/modules/payments/types/payments.types";
 
 export type ListStatus = "idle" | "loading" | "success" | "error";
 

@@ -78,13 +78,16 @@ export function PurchaseFilters({
             ]}
           />
         </div>
-        {periodFilter === "custom" ? <CustomDateRangePicker {...customRange} onChange={onCustomRangeChange} fromLabel={t("filterFrom")} toLabel={t("filterTo")} /> : periodFilter !== "off" ? (
+        {periodFilter === "custom" ? (
+          <CustomDateRangePicker
+            {...customRange}
+            onChange={onCustomRangeChange}
+            fromLabel={t("filterFrom")}
+            toLabel={t("filterTo")}
+          />
+        ) : periodFilter !== "off" ? (
           <div className="w-full flex-1 sm:max-w-md md:max-w-lg">
-            <PeriodDatePicker
-              period={periodFilter}
-              value={periodDate}
-              onChange={onPeriodDateChange}
-            />
+            <PeriodDatePicker period={periodFilter} value={periodDate} onChange={onPeriodDateChange} />
           </div>
         ) : null}
       </div>

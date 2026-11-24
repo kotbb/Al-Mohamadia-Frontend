@@ -25,26 +25,22 @@ export function ItemsToolbar({
     <div className="rounded-xl border border-border bg-white p-3 dark:bg-surface sm:p-3.5">
       <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-end sm:gap-3">
         <label className="flex min-w-0 flex-1 flex-col gap-1">
-          <span className="text-xs font-medium text-text-secondary">
-            {t("searchLabel")}
-          </span>
+          <span className="text-xs font-medium text-text-secondary">{t("searchLabel")}</span>
           <input
             name="search"
             value={filters.search}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder={t("searchPlaceholder")}
-            className="ds-focus-input min-h-9 w-full rounded-lg border border-border bg-surface px-3 text-sm text-text-primary placeholder:text-text-muted"
+            className="ds-focus-input min-h-11 sm:min-h-9 w-full rounded-lg border border-border bg-surface px-3 text-base sm:text-sm text-text-primary placeholder:text-text-muted"
           />
         </label>
 
         <label className="flex w-full flex-col gap-1 sm:w-40">
-          <span className="text-xs font-medium text-text-secondary">
-            {t("filterCategory")}
-          </span>
+          <span className="text-xs font-medium text-text-secondary">{t("filterCategory")}</span>
           <select
             value={filters.categoryId}
             onChange={(event) => onCategoryChange(event.target.value)}
-            className="ds-focus-input min-h-9 cursor-pointer rounded-lg border border-border bg-surface px-3 text-sm text-text-primary"
+            className="ds-focus-input min-h-11 sm:min-h-9 cursor-pointer rounded-lg border border-border bg-surface px-3 text-base sm:text-sm text-text-primary"
           >
             <option value="">{t("filterAllCategories")}</option>
             {categories.map((category) => (
@@ -56,15 +52,11 @@ export function ItemsToolbar({
         </label>
 
         <label className="flex w-full flex-col gap-1 sm:w-32">
-          <span className="text-xs font-medium text-text-secondary">
-            {t("filterStatus")}
-          </span>
+          <span className="text-xs font-medium text-text-secondary">{t("filterStatus")}</span>
           <select
             value={filters.isActive}
-            onChange={(event) =>
-              onActiveChange(event.target.value as ItemsPageFilters["isActive"])
-            }
-            className="ds-focus-input min-h-9 cursor-pointer rounded-lg border border-border bg-surface px-3 text-sm text-text-primary"
+            onChange={(event) => onActiveChange(event.target.value as ItemsPageFilters["isActive"])}
+            className="ds-focus-input min-h-11 sm:min-h-9 cursor-pointer rounded-lg border border-border bg-surface px-3 text-base sm:text-sm text-text-primary"
           >
             <option value="all">{t("filterAllStatus")}</option>
             <option value="active">{t("filterActive")}</option>

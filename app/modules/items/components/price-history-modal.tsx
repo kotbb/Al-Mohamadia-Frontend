@@ -15,23 +15,16 @@ interface PriceHistoryModalProps {
   onClose: () => void;
 }
 
-export function PriceHistoryModal({
-  open,
-  itemId,
-  onClose,
-}: PriceHistoryModalProps) {
+export function PriceHistoryModal({ open, itemId, onClose }: PriceHistoryModalProps) {
   const t = useTranslations("items");
   const tShared = useTranslations("shared");
-  const { item, history, status, error } = usePriceHistory(
-    open ? itemId : null,
-  );
+  const { item, history, status, error } = usePriceHistory(open ? itemId : null);
 
-  const title = item
-    ? t("historyTitle", { name: item.name })
-    : t("historyTitleFallback");
+  const title = item ? t("historyTitle", { name: item.name }) : t("historyTitleFallback");
 
   return (
     <Modal
+      layerKey="items:price-history-modal"
       open={open}
       onClose={onClose}
       title={title}
@@ -51,10 +44,7 @@ export function PriceHistoryModal({
       ) : status === "error" ? (
         <ErrorState title={t("historyLoadError")} message={error ?? undefined} />
       ) : history.length === 0 ? (
-        <EmptyState
-          title={t("historyEmptyTitle")}
-          description={t("historyEmptyDescription")}
-        />
+        <EmptyState title={t("historyEmptyTitle")} description={t("historyEmptyDescription")} />
       ) : (
         <PriceHistoryTable history={history} compact />
       )}

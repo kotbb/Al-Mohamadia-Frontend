@@ -32,22 +32,14 @@ export async function listPurchases(
   filters?: ListPurchasesFilters,
   signal?: AbortSignal,
 ): Promise<PurchaseInvoiceListResponse> {
-  return apiClient.get<PurchaseInvoiceListResponse>(
-    buildPurchasesQuery(filters),
-    { signal },
-  );
+  return apiClient.get<PurchaseInvoiceListResponse>(buildPurchasesQuery(filters), { signal });
 }
 
-export async function getPurchase(
-  id: string,
-  signal?: AbortSignal,
-): Promise<PurchaseInvoiceDetail> {
+export async function getPurchase(id: string, signal?: AbortSignal): Promise<PurchaseInvoiceDetail> {
   return apiClient.get<PurchaseInvoiceDetail>(`/purchases/${id}`, { signal });
 }
 
-export async function createPurchase(
-  input: CreatePurchaseInvoiceInput,
-): Promise<PurchaseInvoice> {
+export async function createPurchase(input: CreatePurchaseInvoiceInput): Promise<PurchaseInvoice> {
   return apiClient.post<PurchaseInvoice>("/purchases", input);
 }
 

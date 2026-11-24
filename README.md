@@ -23,7 +23,9 @@ app/
     supplier-payments/
     inventory/
     items/
+    personal-ledger/
     audit/
+    exports/               # Excel configuration, preview, and download
     shared/                # buttons, modals, tables, form controls
 i18n/                      # locale routing (ar default, en)
 messages/                  # en.json and ar.json
@@ -76,7 +78,7 @@ lib/
 - PNG file sharing where supported, with copy/download fallbacks; PDF sharing sends a public receipt link
 - Public receipts show Arabic PDF print guidance and the standard brown/outline action buttons; notices stay outside printed/downloaded receipts
 - Cancel an invoice
-- Invoice detail uses an Invoice number / Same customer selector with one labeled Previous/Next pair; neighbor links preserve the selected mode
+- Invoice detail has a two-option Browse control for By invoice number and Cash sales or Same customer. Previous/Next preserve the selected mode and Back returns to the source.
 - Existing results stay visible while filters refresh; stale row actions are disabled
 - Click customer, supplier, sales-invoice or purchase-invoice rows to open details; nested links/actions remain independent
 - Cubic receipt unit prices show volume × saved m³ rate across preview, print, PNG, PDF and sharing; piece rates and stored totals stay unchanged
@@ -130,7 +132,6 @@ lib/
 - Edit and soft-delete items
 - Dedicated Add/Edit pages with multiple dimension defaults per axis
 
-Items use database IDs for references and names/categories for display. Item codes are no longer generated, accepted by item create/update requests, or returned by item, inventory or dashboard top-selling responses. Items and Inventory search by name; invoice selectors also match category names. Duplicate item names remain allowed. Use the matching backend version and follow [manual database cleanup](../Al-Mohamadia-Backend/docs/REMOVE-ITEM-CODES.md) for existing code fields/indexes.
 
 ### Personal ledger (`/personal-ledger`)
 
@@ -150,6 +151,12 @@ Items use database IDs for references and names/categories for display. Item cod
 - Create, edit, activate, deactivate, and soft-delete admins
 - Change another user's role (`admin` or `super_admin`)
 
+### Excel exports (`/exports`)
+
+- **Super admin only.** Open Excel export from the sidebar.
+- Choose operational datasets, filters, columns, optional invoice-line sheets, and Arabic or English workbook output.
+- Preview row counts and download one XLSX. Date filters apply to transactions, while balances, prices, and stock reflect current values.
+
 ## Stack
 
 - Next.js 16 (App Router), React 19, TypeScript
@@ -160,7 +167,7 @@ Items use database IDs for references and names/categories for display. Item cod
 
 ## Bundled fonts and Vercel builds
 
-Noto Sans Arabic and Noto Sans are bundled in `app/font-files/` and loaded through `next/font/local` in `app/fonts.ts`. This preserves the existing font variables and weights without downloading Google Fonts during a production build. Include the WOFF2 assets and their SIL OFL license files in source control and deployment uploads. See [font sources and licenses](app/font-files/README.md).
+Noto Sans Arabic and Noto Sans are bundled in `app/font-files/` and loaded through `next/font/local` in `app/fonts.ts`. This preserves the existing font variables and weights without downloading Google Fonts during a production build. Include the WOFF2 assets and their license files in source control and deployment uploads. [Noto Sans Arabic license](app/font-files/noto-sans-arabic-OFL.txt) · [Noto Sans license](app/font-files/noto-sans-OFL.txt)
 
 ## Prerequisites
 
@@ -209,7 +216,6 @@ npm run start:dev
 
 Default URL: [http://localhost:3001](http://localhost:3001)
 
-`start:dev` already uses port `3001` so it does not clash with the API on `3000`.
 
 ### Production
 
@@ -230,7 +236,7 @@ Locales are prefixed: `/ar/...` and `/en/...`. Unprefixed visits select Arabic
 with RTL layout; browser language and locale cookies do not override that default.
 Explicit `/en` routes stay English/LTR. Paths below omit the prefix.
 
-Unauthenticated users are sent to `/login`. The **Users** and **Personal ledger** screens are `super_admin` only. Other protected screens below are available to `admin` and `super_admin`. The shared receipt is public and does not require sign-in.
+Unauthenticated users are sent to `/login`. **Users**, **Personal ledger**, and **Excel export** are `super_admin` only. Other protected screens below are available to `admin` and `super_admin`. The shared receipt is public and does not require sign-in.
 
 | Path                       | Who         | Screen              |
 | -------------------------- | ----------- | ------------------- |
@@ -261,6 +267,7 @@ Unauthenticated users are sent to `/login`. The **Users** and **Personal ledger*
 | `/personal-ledger`         | Super admin | Shared personal ledger |
 | `/audit`                   | Both        | Audit log           |
 | `/users`                   | Super admin | User management     |
+| `/exports`                 | Super admin | Excel export        |
 
 The sidebar groups those screens into three hubs:
 
@@ -268,14 +275,14 @@ The sidebar groups those screens into three hubs:
 2. **Purchases & Suppliers** - purchase invoices, suppliers, supplier payments
 3. **Inventory** - stock, items, categories
 
-Dashboard, personal ledger, audit, and users sit outside those hubs.
+Dashboard, personal ledger, audit, users, and Excel export sit outside those hubs.
 
 ## Roles
 
 | Role        | Value         | Notes                                                                                              |
 | ----------- | ------------- | -------------------------------------------------------------------------------------------------- |
-| Admin       | `admin`       | Shop screens: dashboard, sales, purchases, inventory, audit. Users and Personal ledger are hidden. |
-| Super admin | `super_admin` | Everything an admin sees, plus Users and the shared Personal ledger.                                                              |
+| Admin       | `admin`       | Shop screens including dashboard, sales, purchases, inventory, and audit. |
+| Super admin | `super_admin` | Shop screens, Users, shared Personal ledger, and Excel export. |
 
 The API is the authority. Hiding a nav item does not grant access.
 
@@ -286,6 +293,8 @@ npm run lint
 npm run check:architecture
 npm run test:architecture
 npm run test:forms
+npm run test:navigation
+npm run test:invoice-details
 npx tsc --noEmit
 npm run build
 ```

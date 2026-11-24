@@ -9,8 +9,7 @@ export function useApiErrorMessage() {
   const rateLimitMessage = t("rateLimit");
 
   return useCallback(
-    (error: unknown, fallback: string) =>
-      userFacingErrorMessage(error, rateLimitMessage, fallback),
+    (error: unknown, fallback: string) => userFacingErrorMessage(error, rateLimitMessage, fallback),
     [rateLimitMessage],
   );
 }

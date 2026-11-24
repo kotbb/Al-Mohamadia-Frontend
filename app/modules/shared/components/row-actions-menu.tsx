@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Modal } from "@/app/modules/shared/components/modal";
 import { Button } from "@/app/modules/shared/components/button";
@@ -22,10 +14,7 @@ export interface RowActionItem {
   title?: string;
 }
 
-export function historyRowAction(
-  label: string,
-  onSelect: () => void,
-): RowActionItem {
+export function historyRowAction(label: string, onSelect: () => void): RowActionItem {
   return { id: "audit-history", label, onSelect };
 }
 
@@ -71,16 +60,10 @@ export function RowActionsMenu({
     const padding = 8;
 
     let left = rect.right - menuWidth;
-    left = Math.max(
-      padding,
-      Math.min(left, window.innerWidth - menuWidth - padding),
-    );
+    left = Math.max(padding, Math.min(left, window.innerWidth - menuWidth - padding));
 
     let top = rect.bottom + gap;
-    if (
-      top + menuHeight > window.innerHeight - padding &&
-      rect.top > menuHeight + gap
-    ) {
+    if (top + menuHeight > window.innerHeight - padding && rect.top > menuHeight + gap) {
       top = rect.top - menuHeight - gap;
     }
 
@@ -97,10 +80,7 @@ export function RowActionsMenu({
 
     function onPointerDown(event: MouseEvent) {
       const target = event.target as Node;
-      if (
-        triggerRef.current?.contains(target) ||
-        menuRef.current?.contains(target)
-      ) {
+      if (triggerRef.current?.contains(target) || menuRef.current?.contains(target)) {
         return;
       }
       close();
@@ -132,7 +112,7 @@ export function RowActionsMenu({
         ref={triggerRef}
         type="button"
         disabled={disabled}
-        className={`ds-focus-ring inline-flex ${showLabel ? "min-h-11 gap-2 border border-border px-3 text-sm font-medium" : size === "default" ? "h-11 w-11" : "h-8 w-8"} cursor-pointer items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary ${
+        className={`ds-focus-ring inline-flex ${showLabel ? "min-h-11 gap-2 border border-border px-3 text-sm font-medium" : size === "default" ? "h-11 w-11" : "h-11 w-11 sm:h-8 sm:w-8"} cursor-pointer items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary ${
           open ? "bg-surface-muted text-text-primary" : ""
         }`}
         aria-label={label}
@@ -151,11 +131,7 @@ export function RowActionsMenu({
               ref={menuRef}
               id={menuId}
               role="menu"
-              style={
-                position
-                  ? { top: position.top, left: position.left }
-                  : { top: 0, left: 0, visibility: "hidden" }
-              }
+              style={position ? { top: position.top, left: position.left } : { top: 0, left: 0, visibility: "hidden" }}
               className="fixed z-[80] min-w-[9.5rem] overflow-hidden rounded-xl border border-border bg-surface py-1.5 shadow-[var(--shadow-2)]"
             >
               {items.map((item) => (
@@ -191,12 +167,7 @@ export function RowActionsMenu({
 
 function KebabIcon() {
   return (
-    <svg
-      className="h-5 w-5"
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      aria-hidden
-    >
+    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
       <circle cx="10" cy="4" r="1.5" />
       <circle cx="10" cy="10" r="1.5" />
       <circle cx="10" cy="16" r="1.5" />
@@ -232,33 +203,22 @@ export function ConfirmDialog({
   return (
     <Modal
       open={open}
+      busy={confirming}
       onClose={confirming ? () => undefined : onCancel}
       title={title}
       size="md"
       footer={
         <div className="flex justify-end gap-3">
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={confirming}
-            onClick={onCancel}
-          >
+          <Button type="button" variant="secondary" disabled={confirming} onClick={onCancel}>
             {cancelLabel}
           </Button>
-          <Button
-            type="button"
-            variant={tone}
-            disabled={confirming}
-            onClick={onConfirm}
-          >
+          <Button type="button" variant={tone} disabled={confirming} onClick={onConfirm}>
             {confirming ? (confirmingLabel ?? confirmLabel) : confirmLabel}
           </Button>
         </div>
       }
     >
-      <div className="text-sm leading-relaxed text-text-secondary">
-        {description}
-      </div>
+      <div className="text-sm leading-relaxed text-text-secondary">{description}</div>
     </Modal>
   );
 }

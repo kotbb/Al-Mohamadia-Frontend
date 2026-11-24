@@ -79,7 +79,9 @@ export interface CreatePurchaseInvoiceInput {
   notes?: string;
 }
 
-export type UpdatePurchaseInvoiceInput = Omit<CreatePurchaseInvoiceInput, "existingDebtPayment" | "paid"> & { paid: number };
+export type UpdatePurchaseInvoiceInput = Omit<CreatePurchaseInvoiceInput, "existingDebtPayment" | "paid"> & {
+  paid: number;
+};
 
 export interface PurchaseLineFormState {
   key: string;

@@ -10,11 +10,7 @@ import { Badge } from "@/app/modules/shared/components/badge";
 import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
-import {
-  historyRowAction,
-  RowActionsMenu,
-  type RowActionItem,
-} from "@/app/modules/shared/components/row-actions-menu";
+import { historyRowAction, RowActionsMenu, type RowActionItem } from "@/app/modules/shared/components/row-actions-menu";
 
 interface PurchasesTableProps {
   purchases: PurchaseInvoiceListItem[];
@@ -29,12 +25,7 @@ interface PurchasesTableProps {
 
 function PurchaseBagIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
         d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4H6Z"
         stroke="currentColor"
@@ -42,12 +33,7 @@ function PurchaseBagIcon({ className = "h-4 w-4" }: { className?: string }) {
         strokeLinejoin="round"
       />
       <path d="M3 6h18" stroke="currentColor" strokeWidth="1.75" />
-      <path
-        d="M16 10a4 4 0 0 1-8 0"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-      />
+      <path d="M16 10a4 4 0 0 1-8 0" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
     </svg>
   );
 }
@@ -72,20 +58,11 @@ export function PurchasesTable({
   }
 
   if (status === "error") {
-    return (
-      <ErrorState
-        title={t("listError")}
-        message={error ?? undefined}
-        retryLabel={t("retry")}
-        onRetry={onRetry}
-      />
-    );
+    return <ErrorState title={t("listError")} message={error ?? undefined} retryLabel={t("retry")} onRetry={onRetry} />;
   }
 
   if (purchases.length === 0) {
-    return (
-      <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />
-    );
+    return <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />;
   }
 
   return (
@@ -93,42 +70,22 @@ export function PurchasesTable({
       <table className="w-full min-w-[48rem] border-collapse text-sm lg:text-base">
         <thead className="bg-surface-muted">
           <tr className="border-b border-border">
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colInvoiceNumber")}
-            </th>
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colDate")}
-            </th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colInvoiceNumber")}</th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colDate")}</th>
             {showSupplier ? (
-              <th className="px-4 py-3 text-start font-medium text-text-secondary">
-                {t("colSupplier")}
-              </th>
+              <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colSupplier")}</th>
             ) : null}
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colTotal")}
-            </th>
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colRemaining")}
-            </th>
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colStatus")}
-            </th>
-            <th className="w-28 px-4 py-3 text-center font-medium text-text-secondary">
-              {t("colActions")}
-            </th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colTotal")}</th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colRemaining")}</th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colStatus")}</th>
+            <th className="w-28 px-4 py-3 text-center font-medium text-text-secondary">{t("colActions")}</th>
           </tr>
         </thead>
         <tbody>
           {purchases.map((purchase) => {
-            const supplierName = purchase.supplierId
-              ? (purchase.supplierName ?? "-")
-              : "-";
+            const supplierName = purchase.supplierId ? (purchase.supplierName ?? "-") : "-";
 
-            const actions: RowActionItem[] = [
-              historyRowAction(tAudit("viewHistory"), () =>
-                onHistory(purchase),
-              ),
-            ];
+            const actions: RowActionItem[] = [historyRowAction(tAudit("viewHistory"), () => onHistory(purchase))];
 
             if (purchase.status === "saved" && onEdit) {
               actions.push({ id: "edit", label: t("edit"), onSelect: () => onEdit(purchase) });
@@ -154,7 +111,7 @@ export function PurchasesTable({
                     href={`/purchases/${purchase.id}`}
                     className="ds-focus-ring group inline-flex items-center gap-3 rounded-xl transition-colors"
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-all duration-150 group-hover/record:bg-primary group-hover/record:text-primary-foreground group-hover/record:shadow-sm">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors duration-150 group-hover/record:bg-primary group-hover/record:text-primary-foreground">
                       <PurchaseBagIcon className="h-4 w-4" />
                     </div>
                     <span className="font-semibold whitespace-nowrap text-text-primary transition-colors group-hover/record:text-primary group-hover/record:underline">
@@ -193,9 +150,7 @@ export function PurchasesTable({
                 <td className="px-4 py-3 whitespace-nowrap">
                   <span
                     className={`font-semibold ${
-                      purchase.remaining > 0
-                        ? "text-danger font-bold"
-                        : "text-text-secondary"
+                      purchase.remaining > 0 ? "text-danger font-bold" : "text-text-secondary"
                     }`}
                   >
                     {formatMoney(purchase.remaining, locale)}
@@ -218,9 +173,7 @@ export function PurchasesTable({
                 {/* Actions */}
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-center gap-2">
-                    {actions.length > 0 ? (
-                      <RowActionsMenu label={t("colActions")} items={actions} />
-                    ) : null}
+                    {actions.length > 0 ? <RowActionsMenu label={t("colActions")} items={actions} /> : null}
                   </div>
                 </td>
               </NavigableTableRow>

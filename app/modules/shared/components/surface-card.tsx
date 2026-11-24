@@ -13,15 +13,9 @@ const paddingClasses: Record<NonNullable<SurfaceCardProps["padding"]>, string> =
   lg: "p-6",
 };
 
-export function SurfaceCard({
-  children,
-  className = "",
-  padding = "md",
-}: SurfaceCardProps) {
+export function SurfaceCard({ children, className = "", padding = "md" }: SurfaceCardProps) {
   return (
-    <div
-      className={`rounded-xl border border-border bg-surface ${paddingClasses[padding]} ${className}`}
-    >
+    <div className={`min-w-0 rounded-xl border border-border bg-surface ${paddingClasses[padding]} ${className}`}>
       {children}
     </div>
   );

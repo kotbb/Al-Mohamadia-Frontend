@@ -5,8 +5,7 @@ export function mergeDimensionDefaults(
   current: DimensionDefaults | undefined,
   incoming: DimensionDefaults,
 ): DimensionDefaults {
-  const merge = (old: number[] = [], next: number[] = []) =>
-    [...new Set([...old, ...next])].sort((a, b) => a - b);
+  const merge = (old: number[] = [], next: number[] = []) => [...new Set([...old, ...next])].sort((a, b) => a - b);
   return {
     thickness: merge(current?.thickness, incoming.thickness),
     width: merge(current?.width, incoming.width),
@@ -14,11 +13,8 @@ export function mergeDimensionDefaults(
   };
 }
 
-export function dimensionDefaultsForForm(
-  defaults?: DimensionDefaults,
-): DimensionDefaultsForm {
-  const values = (entries?: number[]) =>
-    entries?.length ? entries.map(String) : [""];
+export function dimensionDefaultsForForm(defaults?: DimensionDefaults): DimensionDefaultsForm {
+  const values = (entries?: number[]) => (entries?.length ? entries.map(String) : [""]);
   return {
     thickness: values(defaults?.thickness),
     width: values(defaults?.width),
@@ -26,11 +22,8 @@ export function dimensionDefaultsForForm(
   };
 }
 
-export function initialDimensions(
-  defaults?: DimensionDefaults,
-): Record<keyof DimensionDefaults, string> {
-  const value = (entries?: number[]) =>
-    entries?.length === 1 ? String(entries[0]) : "";
+export function initialDimensions(defaults?: DimensionDefaults): Record<keyof DimensionDefaults, string> {
+  const value = (entries?: number[]) => (entries?.length === 1 ? String(entries[0]) : "");
   return {
     thickness: value(defaults?.thickness),
     width: value(defaults?.width),
@@ -38,16 +31,11 @@ export function initialDimensions(
   };
 }
 
-export function parseDimensionDefaults(
-  form: DimensionDefaultsForm,
-): DimensionDefaults | null {
+export function parseDimensionDefaults(form: DimensionDefaultsForm): DimensionDefaults | null {
   const result: DimensionDefaults = { thickness: [], width: [], length: [] };
   for (const dimension of ["thickness", "width", "length"] as const) {
-    const values = form[dimension]
-      .filter((value) => value.trim() !== "")
-      .map(Number);
-    if (values.some((value) => !Number.isFinite(value) || value <= 0))
-      return null;
+    const values = form[dimension].filter((value) => value.trim() !== "").map(Number);
+    if (values.some((value) => !Number.isFinite(value) || value <= 0)) return null;
     result[dimension] = [...new Set(values)].sort((a, b) => a - b);
   }
   return result;

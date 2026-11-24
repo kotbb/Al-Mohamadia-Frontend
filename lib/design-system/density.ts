@@ -28,14 +28,7 @@ export const DENSITY = {
 } as const;
 
 /** Tables that may offer a per-user Compact density toggle (desktop only). */
-export const COMPACT_ELIGIBLE_TABLES = [
-  "invoices",
-  "inventory",
-  "audit",
-] as const;
+export const COMPACT_ELIGIBLE_TABLES = ["invoices", "inventory", "audit"] as const;
 
 /** Workflows that must always use Comfortable density. */
-export const COMFORTABLE_REQUIRED = [
-  "new-invoice",
-  "payment-entry",
-] as const;
+export const COMFORTABLE_REQUIRED = ["new-invoice", "payment-entry"] as const;

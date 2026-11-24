@@ -1,10 +1,6 @@
 import { ApiError } from "./types";
 
-export function userFacingErrorMessage(
-  error: unknown,
-  rateLimitMessage: string,
-  fallback: string,
-): string {
+export function userFacingErrorMessage(error: unknown, rateLimitMessage: string, fallback: string): string {
   if (error instanceof ApiError && error.statusCode === 429) {
     return rateLimitMessage;
   }

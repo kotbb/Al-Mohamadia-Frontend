@@ -1,8 +1,12 @@
 # Quiet Ledger — Design System
 
+Brand presentation: use the existing transparent gold tree at 48px in the sidebar, 40px in the mobile header, 64px on login, and 96px while loading. Show it without a card, ring, shadow, or clipped crop. When the localized store name is beside the mark, treat the image as decorative for screen readers. Mobile action targets are at least 44px; compact catalog filters retain their desktop density.
+
+The browser tab icon uses the same gold tree on a transparent background.
+
 ### Al-Mohamadia Wood Store Operations System
 
-**Version 2.3 (current shell, Noto typography, compact workflows)**
+**Version 2.4 (restrained operational UI, accessible status colors)**
 
 ---
 
@@ -38,7 +42,7 @@ Practically, this means: a neutral canvas, one confident brand color, four disci
 | `border`                    | `#E1DACD`                | dividers, input borders                           |
 | `text-primary`              | `#231E18`                | headings, body, table data                        |
 | `text-secondary`            | `#5A5145`                | field labels, table headers, secondary text       |
-| `text-muted`                | `#8A8072`                | placeholders, help text, timestamps               |
+| `text-muted`                | `#726757`                | placeholders, help text, timestamps               |
 | `primary`                   | `#6F4428` (warm walnut)  | primary buttons, links, avatar fill               |
 | `primary-hover`             | `#5A3620`                | hover / pressed                                   |
 | `primary-foreground`        | `#FFFFFF`                | text/icons on `primary`                           |
@@ -50,7 +54,7 @@ Practically, this means: a neutral canvas, one confident brand color, four disci
 | `sidebar-hover`             | `rgba(255,255,255,0.06)` | nav item hover fill                               |
 | `sidebar-active`            | `#6F4428`                | active nav item background                        |
 | `sidebar-active-foreground` | `#FFFFFF`                | active nav label                                  |
-| `radius-shell`              | `1.5rem` (24px)          | sidebar, main panel, primary cards                |
+| `radius-shell`              | `1.5rem` (24px)          | sidebar shell only; cards 12px, controls 8px                |
 
 ### Dark theme (derived — designed after light mode is finalized)
 
@@ -88,9 +92,9 @@ Practically, this means: a neutral canvas, one confident brand color, four disci
 | Token     | Light     | Dark      | Use                                                                                |
 | --------- | --------- | --------- | ---------------------------------------------------------------------------------- |
 | `success` | `#2E8F52` | `#5FBB80` | paid, saved, in-stock                                                              |
-| `warning` | `#B8862B` | `#D9A854` | low stock, pending, balances requiring attention                                   |
+| `warning` | `#7D571B` | `#D9A854` | low stock, pending, balances requiring attention                                   |
 | `danger`  | `#C13B2E` | `#E27567` | out-of-stock items, cancelled invoices, critical/blocked balances, destructive actions |
-| `info`    | `#2E6FA6` | `#79ADD9` | neutral system information                                                         |
+| `info`    | `#275F8F` | `#79ADD9` | neutral system information                                                         |
 
 Activation actions use `success-action` (`#267344` light, `#5FBB80` dark) with
 `success-action-foreground` (white light, dark ink dark). This stronger green
@@ -198,8 +202,10 @@ Focus is never indicated by `primary` alone or by a border-color change alone �
 | `text-sm`   | 14px | table body (compact density), secondary labels              |
 | `text-base` | 16px | default body, form inputs, table body (comfortable density) |
 | `text-lg`   | 18px | card titles, section headings                               |
-| `text-xl`   | 22px | page titles                                                 |
-| `text-2xl`  | 28px | dashboard KPI numbers only                                  |
+| `text-xl`   | 22px | larger section headings                                                 |
+| `text-2xl`  | 28px | dashboard and account-summary numbers                                  |
+
+Page titles use an explicit 24px size with weight 600; supporting financial values use tabular numerals.
 
 **Line-height:** Arabic — 1.7 at body sizes, 1.4 at heading sizes. English/Latin — 1.5 at body sizes, 1.3 at heading sizes; English pages use LTR layout.
 
@@ -330,11 +336,11 @@ TypeScript/tests/builds or access a browser unless explicitly requested.
 
 Show monetary values in table cells as formatted numbers without a repeated `ج.م`/`EGP` suffix. Amounts outside tables retain their currency labels.
 
-**Cards:** `surface` + `border`, Elevation 0 (no shadow), 12px radius, used only for dashboard KPIs and entity-summary panels — one big `text-2xl` number, one `text-muted` label, nothing more per card.
+**Cards:** `surface` + `border`, Elevation 0 (no shadow), 12px radius, used only for dashboard KPIs and entity-summary panels — one prominent tabular number, a `text-secondary` label, and a short helper only when it clarifies the figure.
 
 **Navigation / Sidebar:** same neutral surface system as the rest of the app — active item indicated by a `primary` leading-edge bar + `primary`-colored label/icon, inactive items in `text-secondary`. No filled pill for active state.
 
-**Status badges:** small pill with 4–6px radius (not fully round), semantic-color text on a 10–15%-opacity tint of that color, always icon + short Arabic word. Never solid-filled.
+**Status badges:** small pill with 4–6px radius (not fully round), semantic-color text on a 10–15%-opacity tint of that color, always a localized status label; add an icon only when it helps recognition. Never solid-filled.
 
 **Modals:** Elevation 2, reserved for short confirmations and quick-add forms only; `surface` background, `border`, 12px radius, warm-tinted scrim, one primary + one secondary button.
 
@@ -388,7 +394,27 @@ Inventory pages show five complete matching categories in backend creation-date 
 
 Inventory KPI cards keep four desktop columns, 12px padding and 20px figures. Desktop cards have a 144px minimum height and grow naturally for wrapped alert labels; mobile cards have no minimum height. Alert filter badges share a horizontal wrapping row with 44px targets. Preserve the existing values, semantic colors and filter actions.
 
-### Current export and loading surfaces
+### Excel export surfaces
+
+The XLSX page uses shared period controls, dataset checkboxes, expandable column
+selectors and one primary download action. The review area shows counts only after
+Preview, alongside actions and validation/status feedback. Current-state sheets
+explain that the period applies only to transactions. Preparation shows an
+indeterminate busy state and Cancel. [Export workflow](OVERVIEW.md#configurable-excel-export)
+
+Configurable XLSX exports use the Quiet Ledger light document palette in both
+application themes: walnut `#6F4428` headers/worksheet tabs, white header text,
+`#FFFFFF` / `#F0ECE5` alternating rows, `#E1DACD` dividers and `#231E18` body text.
+Use Noto Sans Arabic / Noto Sans, with Excel's local fallback when unavailable.
+Workbook headings use 14 pt bold text and data uses 12 pt. Header/data/details
+row heights are 48/30/40 pt respectively, providing room for Arabic glyphs.
+Keep RTL sheet views for Arabic, aligned numeric columns, wrapped/frozen headers
+and filters. The compact Export details sheet uses walnut labels and the same
+row treatment; retain only language, period and per-sheet row counts. Avoid
+decorative title rows, merged cells and additional totals in the exported tables.
+Data sheets print one landscape page wide with the header repeated on each page.
+
+### Invoice export and loading surfaces
 
 The dedicated invoice export page initially selects PNG A5; PDF A4 remains an
 option. Keep format and price visibility controls together, with Print, Download
@@ -404,7 +430,7 @@ use an 8 mm internal inset; the A4 PDF and A5 PNG download sizes remain fixed.
 User print settings can override page CSS. In RTL order, show item, quantity,
 thickness, width, length, cubic volume when applicable, unit price and line
 total; omit meter suffixes in the dimension headers. Cubic volume uses the
-saved pricing mode and six-decimal calculation, displayed to five decimals.
+saved pricing mode and six-decimal calculation, displayed to at most five decimals without trailing decimal zeros.
 The volume sum sits in the `الإجمالي` table-footer row under the cubic column,
 including when prices are hidden. Free-amount (مبلغ حر) lines show only item,
 optional note, and total; quantity, dimensions, and unit price cells stay blank.
@@ -441,6 +467,27 @@ required EGP amount and an optional note, with no quantity or unit-price input.
   outside the captured invoice and hidden on print. Public receipts use Arabic
   PDF guidance. Download is primary brown; Print is the standard outline action.
 
+### Operational screen styling
+
+- Dashboard: five cards in a responsive 1/2/3-column grid, 16px labels, bold
+  28px tabular values and footer dividers. Use green for nonnegative profit,
+  red for losses and customer debt, and a red debtor badge linking to
+  `/customers?hasDebt=1`. Skip decorative KPI icons. Initial loading uses
+  section-shaped skeletons with an accessible announcement. Real zeros remain visible.
+- Account and stock views: show outstanding customer balances, supplier-list
+  balances and purchase remainders in red. Keep signed credit labels, stock
+  alerts and the green inventory margin badge. Use brown record-identity hover
+  fills and warm item-row hover. Inventory and ledger summaries are text-led.
+- Controls: use 8px corners and 16px text by default, with 14px supporting labels.
+  Panels use 12px corners and 16–24px padding. Status labels use 6px corners.
+  Shared inputs generate a stable ID when unnamed and compose validation with
+  supplied descriptions. Keep mobile tap targets and visible focus.
+- Sign-in retains the existing photograph and two decorative circles. Use
+  the shared theme and language controls and omit arrival animation.
+
+Contrast regression checks cover helper, warning and info colors. The approved
+light-theme green and red shades may fall below 4.5:1 on some tinted backgrounds.
+See [manual UI checks](PHASES.md#navigation-and-ui-verification).
 
 ## Account details and automatic excess payments
 
@@ -473,7 +520,7 @@ The Categories toolbar matches Items: a bordered surface with a growing name-sea
 
 Item forms and catalog surfaces display names and categories without item-code fields, badges, or generated-code hints. Invoice references remain database IDs internally; do not expose these as replacement item codes.
 
-### Personal ledger — دفترك
+### Personal ledger
 
 - Reuse the app shell, Noto fonts and existing light/dark tokens in both locales.
   Keep one primary New movement action and a secondary Manage contacts action.
@@ -496,3 +543,15 @@ Item forms and catalog surfaces display names and categories without item-code f
   with muted column headings, row separators and bidi-isolated values. Missing
   Before values render blank; zero/false remain visible and sensitive values stay
   hidden. Keep horizontal scrolling on narrow screens. No new tokens or fonts are needed.
+
+Return controls use the shared secondary outline button before the page/dialog title, with a 44px minimum target and RTL-mirrored Back arrow. Root dialogs label this control Close. Nested dialogs label it Back. [Navigation behavior](OVERVIEW.md#navigation-and-browsing-context)
+
+## Focused invoice detail presentation
+
+Invoice detail headers group Back, invoice number, date and status metadata, with existing non-destructive actions at the opposite end (wrapping below on narrow screens). Sales actions are Print, WhatsApp, Edit; purchases retain Edit only. Cancellation remains below the content. A slim identity-only party section promotes linked customer/supplier names above line items. Tables show conditional dimension/whole-line-volume columns with explicit metre units, per-piece cubic price plus the stored per-m³ rate, and quantity/volume/saved-total footer. Free-amount rows retain blank/not-applicable physical fields. Receipt/export layouts and money calculations remain unchanged.
+
+Sales and purchase details show saved/cancelled and payment-state badges beneath the date within the header, without a sale-type badge. Sales navigation has its own compact surface above the customer card. The labelled Browse control presents two native radio segments with 44px targets, a muted group surface, and a plain surface with walnut text for the selected segment. Previous/Next stack below Browse on mobile. Preserve RTL order, cash/customer modes and replacement navigation. Financial summaries have no outer surface: equal-height cards in one column on mobile, two from sm, and four sales/three purchase columns from lg; consistent amount typography, neutral Total/Discount, green Paid and semantic Remaining colours. Retain combined-payment breakdowns.
+
+Modal headers remain dismissible with footer Cancel. Root X has a 16px glyph in a 28px visible outline within a 44px target; nested/page Back has a mirrored arrow and 44px target. Keep localized accessible names/tooltips and focus rings; Cancel/destructive/abort labels stay. Read-only footer Close duplicates are removed.
+
+The three profile metrics remain. Nonnegative balance labels are Customer owes / المتبقي عليه and Owed to supplier / المستحق له علينا; negative-credit labels remain unchanged.

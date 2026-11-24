@@ -95,7 +95,11 @@ export function describeAuditSummary(
     if (match) return { key: "summaryMerged", values: { action: actionLabel, sources: match[1], target: match[2] } };
   }
 
-  if (["payment_recorded", "payment_cancelled", "supplier_payment_recorded", "supplier_payment_cancelled"].includes(log.action)) {
+  if (
+    ["payment_recorded", "payment_cancelled", "supplier_payment_recorded", "supplier_payment_cancelled"].includes(
+      log.action,
+    )
+  ) {
     const match = summary.match(/^Payment of (.+?) EGP (recorded|cancelled) for (customer|supplier): (.+)$/);
     const expectedParty = log.action.startsWith("supplier_") ? "supplier" : "customer";
     const expectedVerb = log.action.endsWith("_recorded") ? "recorded" : "cancelled";
@@ -114,7 +118,8 @@ export function describeAuditSummary(
 
   if (log.action === "price_changed") {
     const match = summary.match(/^([A-Za-z][A-Za-z\d]*): (.+) → (.+)$/);
-    if (match) return { key: "summaryPriceChanged", values: { field: fieldLabel(match[1]), old: match[2], new: match[3] } };
+    if (match)
+      return { key: "summaryPriceChanged", values: { field: fieldLabel(match[1]), old: match[2], new: match[3] } };
   }
 
   if (log.action === "item_edited" && summary.startsWith("Item dimension defaults updated: ")) {
@@ -212,7 +217,7 @@ function presentString(value: string, emptyLabel: string): string | null {
     .replace(/\s+/g, " ")
     .trim();
 
-  if (!withoutIds || withoutIds === trimmed && looksLikeDump(trimmed)) return null;
+  if (!withoutIds || (withoutIds === trimmed && looksLikeDump(trimmed))) return null;
   if (withoutIds !== trimmed) {
     return withoutIds.length > 0 ? withoutIds : null;
   }
@@ -220,12 +225,7 @@ function presentString(value: string, emptyLabel: string): string | null {
   return trimmed;
 }
 
-function presentObject(
-  value: object,
-  locale: string,
-  emptyLabel: string,
-  labels?: AuditValueLabels,
-): string | null {
+function presentObject(value: object, locale: string, emptyLabel: string, labels?: AuditValueLabels): string | null {
   if ("name" in value && typeof value.name === "string" && value.name.trim()) {
     return value.name.trim();
   }

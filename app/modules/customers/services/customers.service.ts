@@ -31,23 +31,15 @@ export async function listCustomers(
   });
 }
 
-export async function getCustomer(
-  id: string,
-  signal?: AbortSignal,
-): Promise<Customer> {
+export async function getCustomer(id: string, signal?: AbortSignal): Promise<Customer> {
   return apiClient.get<Customer>(`/customers/${id}`, { signal });
 }
 
-export async function createCustomer(
-  input: CreateCustomerInput,
-): Promise<Customer> {
+export async function createCustomer(input: CreateCustomerInput): Promise<Customer> {
   return apiClient.post<Customer>("/customers", input);
 }
 
-export async function updateCustomer(
-  id: string,
-  input: UpdateCustomerInput,
-): Promise<Customer> {
+export async function updateCustomer(id: string, input: UpdateCustomerInput): Promise<Customer> {
   return apiClient.patch<Customer>(`/customers/${id}`, input);
 }
 
@@ -55,8 +47,6 @@ export async function deleteCustomer(id: string): Promise<Customer> {
   return apiClient.delete<Customer>(`/customers/${id}`);
 }
 
-export async function mergeCustomers(
-  input: MergeCustomersInput,
-): Promise<Customer> {
+export async function mergeCustomers(input: MergeCustomersInput): Promise<Customer> {
   return apiClient.post<Customer>("/customers/merge", input);
 }

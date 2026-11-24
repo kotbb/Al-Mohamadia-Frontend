@@ -9,11 +9,7 @@ import { Badge } from "@/app/modules/shared/components/badge";
 import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
-import {
-  historyRowAction,
-  RowActionsMenu,
-  type RowActionItem,
-} from "@/app/modules/shared/components/row-actions-menu";
+import { historyRowAction, RowActionsMenu, type RowActionItem } from "@/app/modules/shared/components/row-actions-menu";
 
 interface SuppliersListProps {
   suppliers: Supplier[];
@@ -46,12 +42,7 @@ function StatusIcon({ active }: { active: boolean }) {
   return (
     <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden>
       <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M5.5 5.5 10.5 10.5M10.5 5.5 5.5 10.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
+      <path d="M5.5 5.5 10.5 10.5M10.5 5.5 5.5 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
@@ -78,20 +69,11 @@ export function SuppliersList({
   }
 
   if (status === "error") {
-    return (
-      <ErrorState
-        title={t("listError")}
-        message={error ?? undefined}
-        retryLabel={t("retry")}
-        onRetry={onRetry}
-      />
-    );
+    return <ErrorState title={t("listError")} message={error ?? undefined} retryLabel={t("retry")} onRetry={onRetry} />;
   }
 
   if (suppliers.length === 0) {
-    return (
-      <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />
-    );
+    return <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />;
   }
 
   return (
@@ -99,29 +81,17 @@ export function SuppliersList({
       <table className="w-full min-w-[48rem] border-collapse text-sm lg:text-base">
         <thead className="bg-surface-muted">
           <tr className="border-b border-border">
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colName")}
-            </th>
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colPhone")}
-            </th>
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colAmountOwed")}
-            </th>
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colStatus")}
-            </th>
-            <th className="w-28 px-4 py-3 text-center font-medium text-text-secondary">
-              {t("colActions")}
-            </th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colName")}</th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colPhone")}</th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colAmountOwed")}</th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colStatus")}</th>
+            <th className="w-28 px-4 py-3 text-center font-medium text-text-secondary">{t("colActions")}</th>
           </tr>
         </thead>
         <tbody>
           {suppliers.map((supplier) => {
             const actions: RowActionItem[] = [
-              historyRowAction(tAudit("viewHistory"), () =>
-                onHistory(supplier),
-              ),
+              historyRowAction(tAudit("viewHistory"), () => onHistory(supplier)),
               {
                 id: "edit",
                 label: t("edit"),
@@ -142,8 +112,7 @@ export function SuppliersList({
                   },
               {
                 id: "delete",
-                label:
-                  supplier.amountOwed !== 0 ? t("deleteBlocked") : t("delete"),
+                label: supplier.amountOwed !== 0 ? t("deleteBlocked") : t("delete"),
                 onSelect: () => onDelete(supplier),
                 tone: "danger",
                 disabled: supplier.amountOwed !== 0,
@@ -161,7 +130,7 @@ export function SuppliersList({
                     href={`/suppliers/${supplier.id}`}
                     className="ds-focus-ring group inline-flex items-center gap-3 rounded-xl transition-colors"
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xs font-bold text-primary transition-all duration-150 group-hover/record:bg-primary group-hover/record:text-primary-foreground group-hover/record:shadow-sm">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xs font-bold text-primary transition-colors duration-150 group-hover/record:bg-primary group-hover/record:text-primary-foreground">
                       {supplier.name.trim().charAt(0).toUpperCase()}
                     </div>
                     <span className="font-semibold text-text-primary transition-colors group-hover/record:text-primary group-hover/record:underline">
@@ -169,19 +138,13 @@ export function SuppliersList({
                     </span>
                   </Link>
                 </td>
-                <td className="px-4 py-3 text-text-secondary">
-                  {supplier.phone ?? "-"}
-                </td>
+                <td className="px-4 py-3 text-text-secondary">{supplier.phone ?? "-"}</td>
                 <td className="px-4 py-3 whitespace-nowrap">
-                  <span
-                    className={
-                      supplier.amountOwed > 0
-                        ? "font-bold text-danger"
-                        : "text-text-secondary"
-                    }
-                  >
+                  <span className={supplier.amountOwed > 0 ? "font-bold text-danger" : "text-text-secondary"}>
                     {formatMoney(supplier.amountOwed, locale)}
-                    {supplier.amountOwed < 0 ? <span className="ms-2 text-xs font-normal">{account("supplierCredit")}</span> : null}
+                    {supplier.amountOwed < 0 ? (
+                      <span className="ms-2 text-xs font-normal">{account("supplierCredit")}</span>
+                    ) : null}
                   </span>
                 </td>
                 <td className="px-4 py-3">

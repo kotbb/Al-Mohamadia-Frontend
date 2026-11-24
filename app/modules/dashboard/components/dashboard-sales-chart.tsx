@@ -2,19 +2,8 @@
 
 import { useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import type {
-  DashboardSalesSeriesPoint,
-  SalesInvoicePeriod,
-} from "@/app/modules/dashboard/types/dashboard.types";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import type { DashboardSalesSeriesPoint, SalesInvoicePeriod } from "@/app/modules/dashboard/types/dashboard.types";
 import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
 
@@ -23,10 +12,7 @@ interface DashboardSalesChartProps {
   period: SalesInvoicePeriod | "custom";
 }
 
-export function DashboardSalesChart({
-  series,
-  period,
-}: DashboardSalesChartProps) {
+export function DashboardSalesChart({ series, period }: DashboardSalesChartProps) {
   const t = useTranslations("dashboard");
   const locale = useLocale();
 
@@ -42,30 +28,21 @@ export function DashboardSalesChart({
 
   return (
     <SurfaceCard padding="md" className="flex min-h-[280px] flex-col">
-      <h3 className="text-base font-semibold text-text-primary">
-        {t("chartTitle")}
-      </h3>
+      <h3 className="text-base font-semibold text-text-primary">{t("chartTitle")}</h3>
       <p className="mt-0.5 text-sm text-text-muted">{t("chartSubtitle")}</p>
       <div className="mt-4 h-56 w-full min-h-[14rem]">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={chartData}
-            margin={{ top: 8, right: 8, left: 8, bottom: 0 }}
-          >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              vertical={false}
-              stroke="var(--border)"
-            />
+          <BarChart data={chartData} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
             <XAxis
               dataKey="label"
-              tick={{ fill: "var(--text-muted)", fontSize: 11 }}
+              tick={{ fill: "var(--text-muted)", fontSize: 12 }}
               tickLine={false}
               axisLine={{ stroke: "var(--border)" }}
               interval={chartData.length > 14 ? 4 : 0}
             />
             <YAxis
-              tick={{ fill: "var(--text-muted)", fontSize: 11 }}
+              tick={{ fill: "var(--text-muted)", fontSize: 12 }}
               tickLine={false}
               axisLine={false}
               width={64}
@@ -99,20 +76,17 @@ export function DashboardSalesChart({
   );
 }
 
-function formatBucketLabel(
-  bucketStart: string,
-  period: SalesInvoicePeriod | "custom",
-  locale: string,
-): string {
+function formatBucketLabel(bucketStart: string, period: SalesInvoicePeriod | "custom", locale: string): string {
   const resolvedLocale = locale === "ar" ? "ar-EG-u-nu-latn" : locale;
   const isYearBucket = period === "year" || /^\d{4}-\d{2}$/.test(bucketStart);
 
   if (isYearBucket) {
     const [year, month] = bucketStart.split("-").map(Number);
     if (!year || !month) return bucketStart;
-    return new Intl.DateTimeFormat(resolvedLocale, { month: "short", ...(period === "custom" ? { year: "2-digit" } : {}) }).format(
-      new Date(year, month - 1, 1),
-    );
+    return new Intl.DateTimeFormat(resolvedLocale, {
+      month: "short",
+      ...(period === "custom" ? { year: "2-digit" } : {}),
+    }).format(new Date(year, month - 1, 1));
   }
 
   const date = new Date(`${bucketStart}T12:00:00`);

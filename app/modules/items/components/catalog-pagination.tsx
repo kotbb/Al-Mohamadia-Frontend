@@ -22,7 +22,13 @@ export function CatalogPagination({ page, totalPages, onPageChange }: CatalogPag
       <span className="text-sm text-text-secondary" aria-live="polite">
         {t("pageOf", { page, totalPages })}
       </span>
-      <Button type="button" variant="secondary" size="sm" disabled={page >= totalPages} onClick={() => onPageChange(page + 1)}>
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        disabled={page >= totalPages}
+        onClick={() => onPageChange(page + 1)}
+      >
         {t("nextPage")}
       </Button>
     </nav>

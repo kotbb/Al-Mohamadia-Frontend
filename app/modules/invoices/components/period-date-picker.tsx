@@ -3,10 +3,7 @@
 import { useRef } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { SalesInvoicePeriod } from "@/app/modules/invoices/types/invoices.types";
-import {
-  getPeriodRangeInfo,
-  shiftPeriodDate,
-} from "@/app/modules/invoices/utils/period-range.util";
+import { getPeriodRangeInfo, shiftPeriodDate } from "@/app/modules/invoices/utils/period-range.util";
 import { todayIsoDate } from "@/app/modules/invoices/utils/format-invoice-date";
 
 interface PeriodDatePickerProps {
@@ -15,11 +12,7 @@ interface PeriodDatePickerProps {
   onChange: (value: string) => void;
 }
 
-export function PeriodDatePicker({
-  period,
-  value,
-  onChange,
-}: PeriodDatePickerProps) {
+export function PeriodDatePicker({ period, value, onChange }: PeriodDatePickerProps) {
   const t = useTranslations("invoices");
   const locale = useLocale();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -88,7 +81,7 @@ export function PeriodDatePicker({
       </div>
 
       {/* Main control container */}
-      <div className="relative flex min-h-11 items-center justify-between rounded-xl border border-border bg-surface px-1.5 py-1 shadow-sm transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+      <div className="relative flex min-h-11 items-center justify-between rounded-lg border border-border bg-surface px-1.5 py-1 transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
         {/* Hidden native input with showPicker() */}
         <input
           ref={inputRef}
@@ -122,9 +115,7 @@ export function PeriodDatePicker({
           onClick={handleOpenPicker}
           className="flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 px-2 py-1 text-center font-medium tabular-nums text-text-primary transition-colors hover:text-primary"
         >
-          <span className="truncate text-xs sm:text-sm md:text-base">
-            {rangeInfo.displayRange}
-          </span>
+          <span className="truncate text-xs sm:text-sm md:text-base">{rangeInfo.displayRange}</span>
         </button>
 
         <div className="flex items-center gap-0.5">
@@ -157,50 +148,23 @@ export function PeriodDatePicker({
 
 function ChevronLeftIcon({ className }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M10 12L6 8L10 4"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg className={className} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
 function ChevronRightIcon({ className }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M6 12L10 8L6 4"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg className={className} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
 function CalendarIcon({ className }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-    >
+    <svg className={className} viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <path
         d="M12.6667 2.66663H3.33333C2.59695 2.66663 2 3.26358 2 3.99996V13.3333C2 14.0697 2.59695 14.6666 3.33333 14.6666H12.6667C13.403 14.6666 14 14.0697 14 13.3333V3.99996C14 3.26358 13.403 2.66663 12.6667 2.66663Z"
         stroke="currentColor"

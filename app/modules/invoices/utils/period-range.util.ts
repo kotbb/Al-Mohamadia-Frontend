@@ -45,11 +45,7 @@ function daysSinceSaturday(utcDay: number): number {
   return (utcDay + 1) % 7;
 }
 
-export function getPeriodRangeInfo(
-  period: SalesInvoicePeriod,
-  isoDate: string,
-  locale: string,
-): PeriodRangeInfo {
+export function getPeriodRangeInfo(period: SalesInvoicePeriod, isoDate: string, locale: string): PeriodRangeInfo {
   const { year, month, day } = parseIsoDate(isoDate);
 
   if (period === "day") {
@@ -141,11 +137,7 @@ export function getPeriodRangeInfo(
  * Shifts the date by delta units based on the period.
  * delta: -1 (previous) or +1 (next)
  */
-export function shiftPeriodDate(
-  period: SalesInvoicePeriod,
-  isoDate: string,
-  delta: number,
-): string {
+export function shiftPeriodDate(period: SalesInvoicePeriod, isoDate: string, delta: number): string {
   const { year, month, day } = parseIsoDate(isoDate);
 
   if (period === "day") {

@@ -1,9 +1,5 @@
 /** Formats an ISO date/datetime in Cairo time and the given locale (Day Month Year, Hour:Minute). */
-export function formatInvoiceDate(
-  value: string | undefined,
-  locale: string,
-  options?: { dateOnly?: boolean },
-): string {
+export function formatInvoiceDate(value: string | undefined, locale: string, options?: { dateOnly?: boolean }): string {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";

@@ -9,15 +9,11 @@ export function PageToolbar({ children, actions }: PageToolbarProps) {
   return (
     <div className="mb-0 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       {children ? (
-        <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-end">
-          {children}
-        </div>
+        <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-end">{children}</div>
       ) : (
         <div className="flex-1" />
       )}
-      {actions ? (
-        <div className="flex shrink-0 items-end gap-2">{actions}</div>
-      ) : null}
+      {actions ? <div className="flex shrink-0 flex-wrap items-end gap-2">{actions}</div> : null}
     </div>
   );
 }

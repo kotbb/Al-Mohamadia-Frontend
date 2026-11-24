@@ -11,11 +11,7 @@ import { Badge } from "@/app/modules/shared/components/badge";
 import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
-import {
-  historyRowAction,
-  RowActionsMenu,
-  type RowActionItem,
-} from "@/app/modules/shared/components/row-actions-menu";
+import { historyRowAction, RowActionsMenu, type RowActionItem } from "@/app/modules/shared/components/row-actions-menu";
 
 interface PaymentsTableProps {
   payments: PaymentListItem[];
@@ -46,20 +42,11 @@ export function PaymentsTable({
   }
 
   if (status === "error") {
-    return (
-      <ErrorState
-        title={t("listError")}
-        message={error ?? undefined}
-        retryLabel={t("retry")}
-        onRetry={onRetry}
-      />
-    );
+    return <ErrorState title={t("listError")} message={error ?? undefined} retryLabel={t("retry")} onRetry={onRetry} />;
   }
 
   if (payments.length === 0) {
-    return (
-      <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />
-    );
+    return <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />;
   }
 
   return (
@@ -67,41 +54,25 @@ export function PaymentsTable({
       <table className="w-full min-w-[48rem] border-collapse text-sm lg:text-base">
         <thead className="bg-surface-muted">
           <tr className="border-b border-border">
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colDate")}
-            </th>
+            <th className="px-3 py-3 text-start font-medium text-text-secondary">{t("colDate")}</th>
             {showCustomer ? (
-              <th className="px-4 py-3 text-start font-medium text-text-secondary">
+              <th className="min-w-40 whitespace-nowrap px-3 py-3 text-start font-medium text-text-secondary">
                 {t("colCustomer")}
               </th>
             ) : null}
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colAmount")}
-            </th>
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colMethod")}
-            </th>
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colNotes")}
-            </th>
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colStatus")}
-            </th>
-            <th className="w-24 px-4 py-3 text-center font-medium text-text-secondary">
-              {t("colActions")}
-            </th>
+            <th className="px-3 py-3 text-start font-medium text-text-secondary">{t("colAmount")}</th>
+            <th className="px-3 py-3 text-start font-medium text-text-secondary">{t("colMethod")}</th>
+            <th className="px-3 py-3 text-start font-medium text-text-secondary">{t("colNotes")}</th>
+            <th className="px-3 py-3 text-start font-medium text-text-secondary">{t("colStatus")}</th>
+            <th className="w-20 px-3 py-3 text-center font-medium text-text-secondary">{t("colActions")}</th>
           </tr>
         </thead>
         <tbody>
           {payments.map((payment) => {
-            const customerName = payment.customerId
-              ? (payment.customerName ?? "-")
-              : t("cashCustomer");
+            const customerName = payment.customerId ? (payment.customerName ?? "-") : t("cashCustomer");
 
             const actions: RowActionItem[] = [
-              historyRowAction(tAudit("viewHistory"), () =>
-                onHistory(payment, customerName),
-              ),
+              historyRowAction(tAudit("viewHistory"), () => onHistory(payment, customerName)),
             ];
 
             if (!payment.isReversed && !payment.invoiceId) {
@@ -119,11 +90,11 @@ export function PaymentsTable({
                 key={payment.id}
                 className="border-b border-border last:border-b-0 transition-colors hover:bg-surface-muted/50"
               >
-                <td className="px-4 py-3 whitespace-nowrap text-text-secondary">
+                <td className="px-3 py-3 whitespace-nowrap text-text-secondary">
                   {formatInvoiceDate(payment.createdAt, locale)}
                 </td>
                 {showCustomer ? (
-                  <td className="px-4 py-3 text-text-primary">
+                  <td className="min-w-40 whitespace-nowrap px-3 py-3 text-text-primary">
                     {payment.customerId && payment.customerName !== null ? (
                       <Link
                         href={`/customers/${payment.customerId}?from=/payments`}
@@ -132,38 +103,35 @@ export function PaymentsTable({
                         {customerName}
                       </Link>
                     ) : (
-                      <span className="text-text-secondary">
-                        {customerName}
-                      </span>
+                      <span className="text-text-secondary">{customerName}</span>
                     )}
                   </td>
                 ) : null}
                 <td
-                  className={`px-4 py-3 whitespace-nowrap font-semibold ${
-                    payment.isReversed
-                      ? "text-text-secondary"
-                      : "text-text-primary"
+                  className={`px-3 py-3 whitespace-nowrap font-semibold ${
+                    payment.isReversed ? "text-text-secondary" : "text-text-primary"
                   }`}
                 >
                   {formatMoney(payment.amount, locale)}
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap">
+                <td className="px-3 py-3 whitespace-nowrap">
                   <PaymentMethodBadge method={payment.method} />
                 </td>
                 <td
-                  className="max-w-[14rem] truncate px-4 py-3 text-text-secondary"
+                  className="max-w-[14rem] whitespace-normal break-words px-3 py-3 text-text-secondary"
                   title={payment.notes ?? ""}
                 >
-                  <PaymentNotes notes={payment.notes} isAdditional={!payment.invoiceId && (Boolean(payment.sourceInvoiceId) || !payment.notes?.trim())} />
+                  <PaymentNotes
+                    notes={payment.notes}
+                    isAdditional={!payment.invoiceId && (Boolean(payment.sourceInvoiceId) || !payment.notes?.trim())}
+                  />
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap">
+                <td className="px-3 py-3 whitespace-nowrap">
                   <Badge variant={payment.isReversed ? "danger" : "success"}>
-                    {payment.isReversed
-                      ? t("statusCancelled")
-                      : t("statusActive")}
+                    {payment.isReversed ? t("statusCancelled") : t("statusActive")}
                   </Badge>
                 </td>
-                <td className="px-4 py-3 text-center">
+                <td className="px-3 py-3 text-center">
                   {actions.length > 0 ? (
                     <div className="flex items-center justify-center">
                       <RowActionsMenu label={t("colActions")} items={actions} />

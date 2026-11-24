@@ -1,5 +1,4 @@
 "use client";
-
 import { useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { AppShell } from "@/app/layout/app-shell";
@@ -21,8 +20,7 @@ export function CustomersPage() {
   const locale = useLocale();
   const searchParams = useSearchParams();
   const hasDebtParam = searchParams.get("hasDebt");
-  const initialDebtFilter =
-    hasDebtParam === "1" || hasDebtParam === "true" ? "hasDebt" : "all";
+  const initialDebtFilter = hasDebtParam === "1" || hasDebtParam === "true" ? "hasDebt" : "all";
   const {
     customers,
     totalDebt,
@@ -42,6 +40,7 @@ export function CustomersPage() {
     openCreate,
     openEdit,
     closeForm,
+    restoreForm,
     formName,
     setFormName,
     formPhone,
@@ -57,6 +56,7 @@ export function CustomersPage() {
     isMergeOpen,
     openMerge,
     closeMerge,
+    restoreMerge,
     mergeTargetId,
     setMergeTargetId,
     mergeSourceIds,
@@ -111,11 +111,7 @@ export function CustomersPage() {
           ? t("confirmActivateBody", { name: confirmName })
           : "";
   const confirmLabel =
-    confirmKind === "delete"
-      ? t("delete")
-      : confirmKind === "deactivate"
-        ? t("deactivate")
-        : t("activate");
+    confirmKind === "delete" ? t("delete") : confirmKind === "deactivate" ? t("deactivate") : t("activate");
   const history = useAuditHistory({ entityType: "Customer" });
 
   return (
@@ -148,17 +144,13 @@ export function CustomersPage() {
       }
     >
       {history.modal}
-      <Toast
-        open={toast !== null}
-        message={toastMessage}
-        variant={toast?.variant ?? "success"}
-        onClose={clearToast}
-      />
+      <Toast open={toast !== null} message={toastMessage} variant={toast?.variant ?? "success"} onClose={clearToast} />
 
       <CustomerFormModal
         open={isFormOpen}
         mode={formMode}
         onClose={closeForm}
+        onRestore={restoreForm}
         name={formName}
         onNameChange={setFormName}
         phone={formPhone}
@@ -176,6 +168,7 @@ export function CustomersPage() {
       <CustomerMergeModal
         open={isMergeOpen}
         onClose={closeMerge}
+        onRestore={restoreMerge}
         options={mergeOptions}
         targetId={mergeTargetId}
         onTargetChange={setMergeTargetId}
@@ -211,20 +204,14 @@ export function CustomersPage() {
         <SurfaceCard padding="md">
           <div className="grid gap-4 sm:grid-cols-2 sm:divide-x sm:divide-border rtl:sm:divide-x-reverse">
             <div className="sm:px-4">
-              <p className="text-sm text-text-secondary">
-                {t("statTotalDebt")}
-              </p>
-              <p className="mt-1 text-2xl font-bold text-text-primary">
+              <p className="text-sm text-text-secondary">{t("statTotalDebt")}</p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums text-text-primary">
                 {formatMoney(totalDebt, locale)} {t("currency")}
               </p>
             </div>
             <div className="sm:px-4">
-              <p className="text-sm text-text-secondary">
-                {t("statDebtorCount")}
-              </p>
-              <p className="mt-1 text-2xl font-bold text-text-primary">
-                {debtorCount}
-              </p>
+              <p className="text-sm text-text-secondary">{t("statDebtorCount")}</p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums text-text-primary">{debtorCount}</p>
             </div>
           </div>
         </SurfaceCard>
@@ -261,25 +248,15 @@ export function CustomersPage() {
           onDeactivate={openDeactivateConfirm}
           onActivate={openActivateConfirm}
           onDelete={openDeleteConfirm}
-          onHistory={(customer) =>
-            history.openRecord(customer.id, customer.name)
-          }
+          onHistory={(customer) => history.openRecord(customer.id, customer.name)}
         />
 
         {listStatus === "success" && totalPages > 1 ? (
           <div className="flex items-center justify-center gap-3">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage(page - 1)}
-            >
+            <Button type="button" variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
               {t("prevPage")}
             </Button>
-            <span className="text-sm text-text-secondary">
-              {t("pageOf", { page, totalPages })}
-            </span>
+            <span className="text-sm text-text-secondary">{t("pageOf", { page, totalPages })}</span>
             <Button
               type="button"
               variant="secondary"
@@ -299,12 +276,7 @@ export function CustomersPage() {
 function PlusIcon() {
   return (
     <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path
-        d="M8 3v10M3 8h10"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-      />
+      <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
     </svg>
   );
 }

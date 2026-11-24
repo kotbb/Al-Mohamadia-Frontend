@@ -4,17 +4,11 @@ import { isOptionalMobile, normalizeMobile } from "@/app/modules/shared/utils/eg
 import { isSignedMoneyAmount } from "@/app/modules/shared/utils/money-validation";
 import { useTranslations } from "next-intl";
 
-import type {
-  DetailStatus,
-  CustomerDetailToastKind,
-} from "../types/use-customer-detail.types";
+import type { DetailStatus, CustomerDetailToastKind } from "../types/use-customer-detail.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
-import {
-  getCustomer,
-  updateCustomer,
-} from "@/app/modules/customers/services/customers.service";
+import { getCustomer, updateCustomer } from "@/app/modules/customers/services/customers.service";
 import type { Customer } from "@/app/modules/customers/types/customers.types";
 
 export function useCustomerDetail(id: string) {
@@ -120,7 +114,18 @@ export function useCustomerDetail(id: string) {
     } finally {
       setIsSaving(false);
     }
-  }, [customer, formName, formPhone, originalPhone, shared, formAddress, formBalance, originalBalance, account, refresh]);
+  }, [
+    customer,
+    formName,
+    formPhone,
+    originalPhone,
+    shared,
+    formAddress,
+    formBalance,
+    originalBalance,
+    account,
+    refresh,
+  ]);
 
   return {
     customer,

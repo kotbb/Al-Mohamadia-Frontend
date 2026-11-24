@@ -1,10 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import type {
-  StockListSummary,
-  StockStatusFilter,
-} from "@/app/modules/inventory/types/inventory.types";
+import type { StockListSummary, StockStatusFilter } from "@/app/modules/inventory/types/inventory.types";
 import type { Category } from "@/app/modules/items/types/items.types";
 import { SegmentedControl } from "@/app/modules/shared/components/segmented-control";
 
@@ -43,26 +40,22 @@ export function StockFilters({
       {/* Search and Category */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <label className="flex min-w-0 flex-1 flex-col gap-1">
-          <span className="text-xs font-medium text-text-secondary">
-            {t("searchPlaceholder")}
-          </span>
+          <span className="text-xs font-medium text-text-secondary">{t("searchPlaceholder")}</span>
           <input
             name="stockSearch"
             value={searchInput}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder={t("searchPlaceholder")}
-            className="ds-focus-input min-h-9 w-full rounded-lg border border-border bg-surface px-3 text-sm text-text-primary placeholder:text-text-muted"
+            className="ds-focus-input min-h-11 sm:min-h-9 w-full rounded-lg border border-border bg-surface px-3 text-base sm:text-sm text-text-primary placeholder:text-text-muted"
           />
         </label>
 
         <label className="flex w-full flex-col gap-1 sm:w-56">
-          <span className="text-xs font-medium text-text-secondary">
-            {t("colCategory")}
-          </span>
+          <span className="text-xs font-medium text-text-secondary">{t("colCategory")}</span>
           <select
             value={categoryId}
             onChange={(e) => onCategoryChange(e.target.value)}
-            className="ds-focus-input min-h-9 cursor-pointer rounded-lg border border-border bg-surface px-3 text-sm text-text-primary"
+            className="ds-focus-input min-h-11 sm:min-h-9 cursor-pointer rounded-lg border border-border bg-surface px-3 text-base sm:text-sm text-text-primary"
           >
             <option value="">{t("categoryAll")}</option>
             {categories.map((cat) => (

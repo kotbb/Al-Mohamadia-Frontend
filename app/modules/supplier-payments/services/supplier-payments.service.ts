@@ -37,16 +37,11 @@ export async function listSupplierPayments(
   });
 }
 
-export async function getSupplierPayment(
-  id: string,
-  signal?: AbortSignal,
-): Promise<SupplierPayment> {
+export async function getSupplierPayment(id: string, signal?: AbortSignal): Promise<SupplierPayment> {
   return apiClient.get<SupplierPayment>(`/supplier-payments/${id}`, { signal });
 }
 
-export async function recordSupplierPayment(
-  input: RecordSupplierPaymentInput,
-): Promise<SupplierPayment> {
+export async function recordSupplierPayment(input: RecordSupplierPaymentInput): Promise<SupplierPayment> {
   return apiClient.post<SupplierPayment>("/supplier-payments", input);
 }
 

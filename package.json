@@ -4,14 +4,16 @@
   "private": true,
   "scripts": {
     "prebuild": "npm run check:architecture",
-    "start:dev": "next dev -p 3001",
+    "start:dev": "next dev --webpack -p 3001",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "test:dimensions": "node scripts/test-form-utils.mjs",
     "test:forms": "node scripts/test-form-utils.mjs",
     "check:architecture": "node scripts/check-architecture.mjs",
-    "test:architecture": "node scripts/architecture/check.test.mjs"
+    "test:architecture": "node scripts/architecture/check.test.mjs",
+    "test:navigation": "node --test scripts/test-navigation.mjs scripts/test-form-navigation.mjs scripts/test-url-state.mjs scripts/navigation/ledger-dialog-flow.test.mjs scripts/navigation/ledger-dialog-restoration.test.mjs",
+    "test:invoice-details": "node --test scripts/test-invoice-detail-info.mjs"
   },
   "dependencies": {
     "@types/html2pdf.js": "^0.10.0",

@@ -14,22 +14,14 @@ interface ToastProps {
   variant?: "success" | "danger";
 }
 
-export function Toast({
-  message,
-  open,
-  onClose,
-  durationMs = 3200,
-  variant = "success",
-}: ToastProps) {
+export function Toast({ message, open, onClose, durationMs = 3200, variant = "success" }: ToastProps) {
   const [phase, setPhase] = useState<Phase>("closed");
   const [displayMessage, setDisplayMessage] = useState(message);
   const [displayVariant, setDisplayVariant] = useState(variant);
 
   useEffect(() => {
     if (!open) {
-      setPhase((current) =>
-        current === "closed" || current === "leaving" ? current : "leaving",
-      );
+      setPhase((current) => (current === "closed" || current === "leaving" ? current : "leaving"));
       return;
     }
 
@@ -70,14 +62,10 @@ export function Toast({
       data-allow-motion=""
       style={{
         opacity: isShown ? 1 : 0,
-        transform: isShown
-          ? "translate3d(0, 0, 0) scale(1)"
-          : "translate3d(0, -18px, 0) scale(0.94)",
+        transform: isShown ? "translate3d(0, 0, 0) scale(1)" : "translate3d(0, -18px, 0) scale(0.94)",
         transitionProperty: "opacity, transform",
         transitionDuration: `${MOTION_MS}ms`,
-        transitionTimingFunction: isShown
-          ? "cubic-bezier(0.22, 1, 0.36, 1)"
-          : "cubic-bezier(0.4, 0, 1, 1)",
+        transitionTimingFunction: isShown ? "cubic-bezier(0.22, 1, 0.36, 1)" : "cubic-bezier(0.4, 0, 1, 1)",
         willChange: "opacity, transform",
       }}
       role="status"

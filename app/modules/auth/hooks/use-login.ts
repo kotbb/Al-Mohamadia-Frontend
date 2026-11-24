@@ -1,19 +1,9 @@
 "use client";
 
 import type { UseLoginResult } from "../types/use-login.types";
-import {
-  readStoredRetryAt,
-  storeRetryAt,
-  clearStoredRetryAt,
-} from "../utils/login-retry-storage";
+import { readStoredRetryAt, storeRetryAt, clearStoredRetryAt } from "../utils/login-retry-storage";
 
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth/auth-provider";
 import { useRouter } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api/types";
@@ -81,8 +71,7 @@ export function useLogin(): UseLoginResult {
     }
   }, [login, username, password, router, describeError]);
 
-  const rateLimitSecondsLeft =
-    retryAt === null ? 0 : Math.max(0, Math.ceil((retryAt - now) / 1000));
+  const rateLimitSecondsLeft = retryAt === null ? 0 : Math.max(0, Math.ceil((retryAt - now) / 1000));
 
   return {
     username,

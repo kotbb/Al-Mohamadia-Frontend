@@ -28,7 +28,11 @@ export function PurchaseSupplierSection({
   allSuppliersLoading,
   selectedSupplier,
   originalSupplier,
-  supplierQuery, onSupplierQueryChange, supplierResults, suppliersLoading, onSelectSupplier,
+  supplierQuery,
+  onSupplierQueryChange,
+  supplierResults,
+  suppliersLoading,
+  onSelectSupplier,
   onClearSupplier,
   notes,
   onNotesChange,
@@ -43,21 +47,14 @@ export function PurchaseSupplierSection({
         {selectedSupplier ? (
           <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-surface-muted px-4 py-3.5">
             <div>
-              <p className="text-xs font-medium text-text-secondary">
-                {t("supplierSelected")}
-              </p>
-              <p className="text-base font-bold text-text-primary">
-                {selectedSupplier.name}
-              </p>
+              <p className="text-xs font-medium text-text-secondary">{t("supplierSelected")}</p>
+              <p className="text-base font-bold text-text-primary">{selectedSupplier.name}</p>
               <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-text-secondary">
-                {selectedSupplier.phone ? (
-                  <span>{selectedSupplier.phone}</span>
-                ) : null}
+                {selectedSupplier.phone ? <span>{selectedSupplier.phone}</span> : null}
                 <span>
                   {t("supplierCurrentDebt")}:{" "}
                   <strong className="text-text-primary">
-                    {formatMoney(selectedSupplier.amountOwed, locale)}{" "}
-                    {t("currency")}
+                    {formatMoney(selectedSupplier.amountOwed, locale)} {t("currency")}
                   </strong>
                 </span>
               </div>
@@ -66,32 +63,53 @@ export function PurchaseSupplierSection({
               type="button"
               variant="secondary"
               size="sm"
-              onClick={() => { onClearSupplier(); onSupplierQueryChange(""); setFocusSearch(true); }}
+              onClick={() => {
+                onClearSupplier();
+                onSupplierQueryChange("");
+                setFocusSearch(true);
+              }}
             >
               {t("supplierChange")}
             </Button>
           </div>
         ) : (
-          <AccountCombobox name="supplierSearch" query={supplierQuery} onQueryChange={onSupplierQueryChange}
-            results={supplierResults} loading={suppliersLoading} allAccounts={allSuppliers} allAccountsLoading={allSuppliersLoading}
-            selectedAccount={selectedSupplier} originalAccount={originalSupplier} focusOnMount={focusSearch}
-            onSelect={(supplier) => { setFocusSearch(false); onSelectSupplier(supplier); }} onClear={onClearSupplier}
-            labels={{ label: t("selectSupplierLabel"), placeholder: t("supplierSearchPlaceholder"), clear: t("supplierClear"), loading: t("loadingSuppliers"), empty: t("noSuppliersFound") }} />
+          <AccountCombobox
+            name="supplierSearch"
+            query={supplierQuery}
+            onQueryChange={onSupplierQueryChange}
+            results={supplierResults}
+            loading={suppliersLoading}
+            allAccounts={allSuppliers}
+            allAccountsLoading={allSuppliersLoading}
+            selectedAccount={selectedSupplier}
+            originalAccount={originalSupplier}
+            focusOnMount={focusSearch}
+            onSelect={(supplier) => {
+              setFocusSearch(false);
+              onSelectSupplier(supplier);
+            }}
+            onClear={onClearSupplier}
+            labels={{
+              label: t("selectSupplierLabel"),
+              placeholder: t("supplierSearchPlaceholder"),
+              clear: t("supplierClear"),
+              loading: t("loadingSuppliers"),
+              empty: t("noSuppliersFound"),
+            }}
+          />
         )}
 
         {/* Invoice-level notes */}
         <div>
           <label className="flex w-full flex-col gap-1.5">
-            <span className="text-sm font-medium text-text-secondary">
-              {t("fieldNotes")}
-            </span>
+            <span className="text-sm font-medium text-text-secondary">{t("fieldNotes")}</span>
             <input
               type="text"
               value={notes}
               maxLength={500}
               onChange={(e) => onNotesChange(e.target.value)}
               placeholder={t("fieldNotesPlaceholder")}
-              className="ds-focus-input min-h-11 w-full rounded-xl border border-border bg-surface px-3.5 text-sm text-text-primary placeholder:text-text-muted"
+              className="ds-focus-input min-h-11 w-full rounded-lg border border-border bg-surface px-3.5 text-sm text-text-primary placeholder:text-text-muted"
             />
           </label>
         </div>

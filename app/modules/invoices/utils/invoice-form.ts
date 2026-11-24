@@ -1,8 +1,5 @@
 import { parsePositive } from "@/app/modules/shared/utils/form-numbers";
-import {
-  lineTotalForPricing,
-  roundMoney,
-} from "@/app/modules/shared/utils/invoice-math";
+import { lineTotalForPricing, roundMoney } from "@/app/modules/shared/utils/invoice-math";
 import type { Item } from "@/app/modules/items/types/items.types";
 
 import type { InvoiceFormLine } from "../types/use-invoice-form.types";
@@ -20,27 +17,16 @@ export function newLine(): InvoiceFormLine {
   };
 }
 
-export function lineTotalForFormLine(
-  line: InvoiceFormLine,
-  itemsById: Map<string, Item>,
-): number {
+export function lineTotalForFormLine(line: InvoiceFormLine, itemsById: Map<string, Item>): number {
   const item = itemsById.get(line.itemId);
   if (!item) return 0;
   const quantity = item.pricingMode === "free_amount" ? 1 : parsePositive(line.quantity);
   const piecePrice = parsePositive(line.piecePrice);
   if (quantity === null || piecePrice === null) return 0;
-  const thickness =
-    item.pricingMode === "per_cubic_meter"
-      ? parsePositive(line.thickness)
-      : null;
-  const width =
-    item.pricingMode === "per_cubic_meter" ? parsePositive(line.width) : null;
-  const length =
-    item.pricingMode === "per_cubic_meter" ? parsePositive(line.length) : null;
-  if (
-    item.pricingMode === "per_cubic_meter" &&
-    (thickness === null || width === null || length === null)
-  ) {
+  const thickness = item.pricingMode === "per_cubic_meter" ? parsePositive(line.thickness) : null;
+  const width = item.pricingMode === "per_cubic_meter" ? parsePositive(line.width) : null;
+  const length = item.pricingMode === "per_cubic_meter" ? parsePositive(line.length) : null;
+  if (item.pricingMode === "per_cubic_meter" && (thickness === null || width === null || length === null)) {
     return 0;
   }
   return roundMoney(

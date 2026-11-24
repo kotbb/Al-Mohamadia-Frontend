@@ -10,26 +10,16 @@ interface DimensionDefaultsEditorProps {
   disabled: boolean;
 }
 
-export function DimensionDefaultsEditor({
-  value,
-  onChange,
-  disabled,
-}: DimensionDefaultsEditorProps) {
+export function DimensionDefaultsEditor({ value, onChange, disabled }: DimensionDefaultsEditorProps) {
   const t = useTranslations("items");
   return (
     <fieldset className="rounded-xl border border-border p-4">
-      <legend className="px-1 font-semibold text-text-primary">
-        {t("dimensionDefaultsTitle")}
-      </legend>
-      <p className="mb-3 text-sm text-text-secondary">
-        {t("dimensionDefaultsHint")}
-      </p>
+      <legend className="px-1 font-semibold text-text-primary">{t("dimensionDefaultsTitle")}</legend>
+      <p className="mb-3 text-sm text-text-secondary">{t("dimensionDefaultsHint")}</p>
       <div className="grid gap-4 sm:grid-cols-3">
         {(["thickness", "width", "length"] as const).map((dimension) => (
           <div key={dimension} className="flex min-w-0 flex-col gap-2">
-            <span className="text-sm font-medium text-text-secondary">
-              {t(dimension)}
-            </span>
+            <span className="text-sm font-medium text-text-secondary">{t(dimension)}</span>
             {value[dimension].map((entry, index) => (
               <div key={index} className="flex items-center gap-2">
                 <input
@@ -39,7 +29,7 @@ export function DimensionDefaultsEditor({
                   step="any"
                   value={entry}
                   disabled={disabled}
-                  className="ds-focus-input min-h-11 min-w-0 w-full rounded-xl border border-border bg-surface px-3 text-base"
+                  className="ds-focus-input min-h-11 min-w-0 w-full rounded-lg border border-border bg-surface px-3 text-base"
                   onChange={(event) =>
                     onChange({
                       ...value,
@@ -61,9 +51,7 @@ export function DimensionDefaultsEditor({
                     onClick={() =>
                       onChange({
                         ...value,
-                        [dimension]: value[dimension].filter(
-                          (_, position) => position !== index,
-                        ),
+                        [dimension]: value[dimension].filter((_, position) => position !== index),
                       })
                     }
                   >
@@ -86,9 +74,7 @@ export function DimensionDefaultsEditor({
               label={t("addDimensionDefault")}
               className="self-end"
               disabled={disabled}
-              onClick={() =>
-                onChange({ ...value, [dimension]: [...value[dimension], ""] })
-              }
+              onClick={() => onChange({ ...value, [dimension]: [...value[dimension], ""] })}
             />
           </div>
         ))}

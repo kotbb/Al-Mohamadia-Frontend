@@ -28,25 +28,17 @@ function buildPaymentsQuery(filters?: ListPaymentsFilters): string {
   return query ? `/payments?${query}` : "/payments";
 }
 
-export async function listPayments(
-  filters?: ListPaymentsFilters,
-  signal?: AbortSignal,
-): Promise<PaymentListResponse> {
+export async function listPayments(filters?: ListPaymentsFilters, signal?: AbortSignal): Promise<PaymentListResponse> {
   return apiClient.get<PaymentListResponse>(buildPaymentsQuery(filters), {
     signal,
   });
 }
 
-export async function getPayment(
-  id: string,
-  signal?: AbortSignal,
-): Promise<Payment> {
+export async function getPayment(id: string, signal?: AbortSignal): Promise<Payment> {
   return apiClient.get<Payment>(`/payments/${id}`, { signal });
 }
 
-export async function recordPayment(
-  input: RecordPaymentInput,
-): Promise<Payment> {
+export async function recordPayment(input: RecordPaymentInput): Promise<Payment> {
   return apiClient.post<Payment>("/payments", input);
 }
 

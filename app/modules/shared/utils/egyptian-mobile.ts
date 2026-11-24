@@ -1,7 +1,5 @@
 export function englishDigits(value: string): string {
-  return value.replace(/[٠-٩۰-۹]/g, (digit) =>
-    String(digit.charCodeAt(0) - (digit <= "٩" ? 0x660 : 0x6f0)),
-  );
+  return value.replace(/[٠-٩۰-۹]/g, (digit) => String(digit.charCodeAt(0) - (digit <= "٩" ? 0x660 : 0x6f0)));
 }
 
 export function normalizeMobile(value: string): string {

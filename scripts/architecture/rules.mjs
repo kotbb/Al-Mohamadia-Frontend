@@ -19,43 +19,24 @@ export function checkSource(file, source, mode) {
       rule,
       destination,
     });
-  const exported = (node) =>
-    node.modifiers?.some(
-      (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword,
-    );
-  const isFunction = (node) =>
-    ts.isArrowFunction(node) || ts.isFunctionExpression(node);
+  const exported = (node) => node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword);
+  const isFunction = (node) => ts.isArrowFunction(node) || ts.isFunctionExpression(node);
   const bindsName = (binding, name) =>
     ts.isIdentifier(binding)
       ? binding.text === name
-      : (ts.isObjectBindingPattern(binding) ||
-          ts.isArrayBindingPattern(binding)) &&
-        binding.elements.some(
-          (element) =>
-            ts.isBindingElement(element) && bindsName(element.name, name),
-        );
+      : (ts.isObjectBindingPattern(binding) || ts.isArrayBindingPattern(binding)) &&
+        binding.elements.some((element) => ts.isBindingElement(element) && bindsName(element.name, name));
   function isLocallyBound(node) {
     for (let scope = node.parent; scope; scope = scope.parent) {
-      if (
-        ts.isFunctionLike(scope) &&
-        scope.parameters.some((parameter) =>
-          bindsName(parameter.name, node.text),
-        )
-      )
+      if (ts.isFunctionLike(scope) && scope.parameters.some((parameter) => bindsName(parameter.name, node.text)))
         return true;
-      if (
-        ts.isCatchClause(scope) &&
-        scope.variableDeclaration &&
-        bindsName(scope.variableDeclaration.name, node.text)
-      )
+      if (ts.isCatchClause(scope) && scope.variableDeclaration && bindsName(scope.variableDeclaration.name, node.text))
         return true;
       if (ts.isBlock(scope) || ts.isSourceFile(scope))
         for (const statement of scope.statements) {
           if (
             ts.isVariableStatement(statement) &&
-            statement.declarationList.declarations.some((declaration) =>
-              bindsName(declaration.name, node.text),
-            )
+            statement.declarationList.declarations.some((declaration) => bindsName(declaration.name, node.text))
           )
             return true;
           if (ts.isImportDeclaration(statement) && statement.importClause) {
@@ -70,9 +51,7 @@ export function checkSource(file, source, mode) {
             if (
               clause.namedBindings &&
               ts.isNamedImports(clause.namedBindings) &&
-              clause.namedBindings.elements.some(
-                (element) => element.name.text === node.text,
-              )
+              clause.namedBindings.elements.some((element) => element.name.text === node.text)
             )
               return true;
           }
@@ -85,13 +64,7 @@ export function checkSource(file, source, mode) {
   const route =
     /^app\/(?!modules\/|layout\/)/.test(file) &&
     !/\/(layout|loading|error|not-found|template|default)\.tsx$/.test(file);
-  const stateHookNames = new Set([
-    "useState",
-    "useEffect",
-    "useReducer",
-    "useLayoutEffect",
-    "useSyncExternalStore",
-  ]);
+  const stateHookNames = new Set(["useState", "useEffect", "useReducer", "useLayoutEffect", "useSyncExternalStore"]);
   for (const node of ast.statements)
     if (
       ts.isImportDeclaration(node) &&
@@ -100,8 +73,7 @@ export function checkSource(file, source, mode) {
       ts.isNamedImports(node.importClause.namedBindings)
     ) {
       for (const binding of node.importClause.namedBindings.elements)
-        if (stateHookNames.has(binding.propertyName?.text ?? binding.name.text))
-          stateHookNames.add(binding.name.text);
+        if (stateHookNames.has(binding.propertyName?.text ?? binding.name.text)) stateHookNames.add(binding.name.text);
     }
   for (const node of ast.statements) {
     if (mode === "backend" && service) {
@@ -111,17 +83,13 @@ export function checkSource(file, source, mode) {
         ts.isFunctionDeclaration(node) ||
         (ts.isVariableStatement(node) &&
           node.declarationList.declarations.some(
-            (declaration) =>
-              declaration.initializer && isFunction(declaration.initializer),
+            (declaration) => declaration.initializer && isFunction(declaration.initializer),
           ))
       )
         add(node, "backend-service-helper", "owning feature/utils/");
     }
     if (mode === "frontend" && hook) {
-      if (
-        exported(node) &&
-        (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node))
-      )
+      if (exported(node) && (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)))
         add(node, "hook-exported-contract", "owning feature/types/");
       if (
         ts.isExportDeclaration(node) &&
@@ -133,18 +101,13 @@ export function checkSource(file, source, mode) {
                 element.isTypeOnly ||
                 ast.statements.some(
                   (declaration) =>
-                    (ts.isTypeAliasDeclaration(declaration) ||
-                      ts.isInterfaceDeclaration(declaration)) &&
-                    declaration.name.text ===
-                      (element.propertyName?.text ?? element.name.text),
+                    (ts.isTypeAliasDeclaration(declaration) || ts.isInterfaceDeclaration(declaration)) &&
+                    declaration.name.text === (element.propertyName?.text ?? element.name.text),
                 ),
             )))
       )
         add(node, "hook-exported-contract", "owning feature/types/");
-      if (
-        ts.isFunctionDeclaration(node) &&
-        !/^use[A-Z]/.test(node.name?.text ?? "")
-      )
+      if (ts.isFunctionDeclaration(node) && !/^use[A-Z]/.test(node.name?.text ?? ""))
         add(node, "hook-free-helper", "owning feature/utils/");
       if (ts.isVariableStatement(node))
         for (const declaration of node.declarationList.declarations) {
@@ -156,11 +119,7 @@ export function checkSource(file, source, mode) {
             add(declaration, "hook-free-helper", "owning feature/utils/");
         }
     }
-    if (
-      mode === "frontend" &&
-      /^app\/modules\//.test(file) &&
-      ts.isImportDeclaration(node)
-    ) {
+    if (mode === "frontend" && /^app\/modules\//.test(file) && ts.isImportDeclaration(node)) {
       const modulePath = node.moduleSpecifier.text;
       const resolved = modulePath.startsWith("@/")
         ? modulePath.slice(2)
@@ -173,15 +132,9 @@ export function checkSource(file, source, mode) {
         (clause?.isTypeOnly ||
           (clause?.namedBindings &&
             ts.isNamedImports(clause.namedBindings) &&
-            clause.namedBindings.elements.some(
-              (element) => element.isTypeOnly,
-            )))
+            clause.namedBindings.elements.some((element) => element.isTypeOnly)))
       )
-        add(
-          node,
-          "type-import-from-hook",
-          "import the contract from feature/types/",
-        );
+        add(node, "type-import-from-hook", "import the contract from feature/types/");
     }
   }
   function visit(node) {
@@ -197,11 +150,7 @@ export function checkSource(file, source, mode) {
           node.parent.name === node
         )
       )
-        add(
-          node,
-          "http-service-browser-operation",
-          "owning feature/utils/*-pdf.ts or another browser utility",
-        );
+        add(node, "http-service-browser-operation", "owning feature/utils/*-pdf.ts or another browser utility");
       if (
         ts.isPropertyAccessExpression(node) &&
         node.expression.getText(ast) === "globalThis" &&
@@ -218,8 +167,7 @@ export function checkSource(file, source, mode) {
       if (
         ts.isStringLiteral(node) &&
         /html2pdf|html2canvas|jspdf/i.test(node.text) &&
-        (ts.isImportDeclaration(node.parent) ||
-          ts.isCallExpression(node.parent))
+        (ts.isImportDeclaration(node.parent) || ts.isCallExpression(node.parent))
       )
         add(node, "http-service-pdf-import", "owning feature/utils/*-pdf.ts");
     }
@@ -228,17 +176,11 @@ export function checkSource(file, source, mode) {
         (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) &&
         /^[a-z]/.test(node.tagName.getText(ast))
       )
-        add(
-          node,
-          "route-feature-ui",
-          "app/modules/{feature}/pages/ or components/",
-        );
+        add(node, "route-feature-ui", "app/modules/{feature}/pages/ or components/");
       if (
         ts.isCallExpression(node) &&
-        ((ts.isIdentifier(node.expression) &&
-          stateHookNames.has(node.expression.text)) ||
-          (ts.isPropertyAccessExpression(node.expression) &&
-            stateHookNames.has(node.expression.name.text)))
+        ((ts.isIdentifier(node.expression) && stateHookNames.has(node.expression.text)) ||
+          (ts.isPropertyAccessExpression(node.expression) && stateHookNames.has(node.expression.name.text)))
       )
         add(node, "route-client-state", "app/modules/{feature}/hooks/");
       if (ts.isCallExpression(node) && node.expression.getText(ast) === "fetch")

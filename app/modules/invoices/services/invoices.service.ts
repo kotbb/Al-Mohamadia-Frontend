@@ -41,23 +41,15 @@ export async function listSalesInvoices(
   });
 }
 
-export async function getSalesInvoice(
-  id: string,
-  signal?: AbortSignal,
-): Promise<SalesInvoiceDetail> {
+export async function getSalesInvoice(id: string, signal?: AbortSignal): Promise<SalesInvoiceDetail> {
   return apiClient.get<SalesInvoiceDetail>(`/sales-invoices/${id}`, { signal });
 }
 
-export async function createSalesInvoice(
-  input: CreateSalesInvoiceInput,
-): Promise<SalesInvoice> {
+export async function createSalesInvoice(input: CreateSalesInvoiceInput): Promise<SalesInvoice> {
   return apiClient.post<SalesInvoice>("/sales-invoices", input);
 }
 
-export async function updateSalesInvoice(
-  id: string,
-  input: UpdateSalesInvoiceInput,
-): Promise<SalesInvoice> {
+export async function updateSalesInvoice(id: string, input: UpdateSalesInvoiceInput): Promise<SalesInvoice> {
   return apiClient.patch<SalesInvoice>(`/sales-invoices/${id}`, input);
 }
 
@@ -65,34 +57,23 @@ export async function cancelSalesInvoice(id: string): Promise<SalesInvoice> {
   return apiClient.post<SalesInvoice>(`/sales-invoices/${id}/cancel`);
 }
 
-export async function getInvoiceReceipt(
-  id: string,
-  signal?: AbortSignal,
-): Promise<PublicInvoice> {
+export async function getInvoiceReceipt(id: string, signal?: AbortSignal): Promise<PublicInvoice> {
   return apiClient.get<PublicInvoice>(`/sales-invoices/${id}/receipt`, {
     signal,
   });
 }
 
-export async function getInvoiceNeighbors(
-  id: string,
-  signal?: AbortSignal,
-): Promise<InvoiceNeighbors> {
+export async function getInvoiceNeighbors(id: string, signal?: AbortSignal): Promise<InvoiceNeighbors> {
   return apiClient.get<InvoiceNeighbors>(`/sales-invoices/${id}/neighbors`, {
     signal,
   });
 }
 
-export async function getSalesInvoiceShare(
-  id: string,
-): Promise<SalesInvoiceSharePayload> {
+export async function getSalesInvoiceShare(id: string): Promise<SalesInvoiceSharePayload> {
   return apiClient.get<SalesInvoiceSharePayload>(`/sales-invoices/${id}/share`);
 }
 
-export async function getPublicInvoice(
-  token: string,
-  signal?: AbortSignal,
-): Promise<PublicInvoice> {
+export async function getPublicInvoice(token: string, signal?: AbortSignal): Promise<PublicInvoice> {
   const baseUrl = getApiUrl();
   const url = `${baseUrl}/public/sales-invoices/${token}`;
   const res = await fetch(url, { signal });

@@ -431,6 +431,33 @@ API contracts: [backend README](../../Al-Mohamadia-Backend/README.md#personal-le
 
 ---
 
+## Configurable Excel export
+
+**Backend**
+
+- [x] Superadmin catalog, advisory preview and XLSX download for eight datasets.
+  The API enforces row, file and preparation limits.
+
+**Frontend**
+
+- [x] Superadmin sidebar page with dataset, filter and column selection, optional
+  invoice-line sheets, and Arabic/English workbook output.
+- [ ] Add secondary Excel shortcuts on the eight operational list pages.
+  Preserve effective filters, including All, custom dates and item search.
+  Leave pagination out of the shortcut.
+
+**Done when:** Superadmins can configure and download the selected data, and
+admins are denied. Manually check dates and current values, role gating,
+preview invalidation, empty sheets, cancel and retry. In Excel, check both
+languages, RTL, frozen headers, phone zeros, numeric values, account labels,
+payment breakdown and row counts.
+
+Modules: backend `src/modules/exports`, frontend `app/modules/exports`.
+[Workflow](OVERVIEW.md#configurable-excel-export) ·
+[Workbook styling](DESIGN-SYSTEM.md#excel-export-surfaces)
+
+---
+
 ## Phase 10 — Polish & Hardening
 
 - Full i18n pass (no missed/hardcoded strings in either language)
@@ -487,6 +514,29 @@ API contracts: [backend README](../../Al-Mohamadia-Backend/README.md#personal-le
 
 Implemented optional Egyptian mobile validation, preserved unchanged legacy phones, partial phone indexes (no phone-index maintenance script is shipped), trimmed required-text/null guards, consistent account/item monetary precision, and finite positive cubic write guards across the two repositories. Invoice navigation uses a mode selector and labeled Previous/Next arrows; Arabic PDF guidance is also shown on public receipts and excluded from printed/downloaded output. Existing records are not rewritten. Manual English/Arabic/mobile checks remain user-run.
 
+### Navigation and UI verification
+
+Run architecture checks/tests, `npm run test:forms`, `npm run test:navigation`,
+`npm run test:invoice-details`, `node --test scripts/test-ui-refinement.mjs`,
+lint and the production build. If Turbopack hits a local worker failure, retry
+with `npm run build -- --webpack` and report the original failure separately.
+
+Manual browser checks are user-run with test records:
+
+- [ ] Arabic RTL and English LTR, light and dark, mobile through desktop and
+  200% zoom. Check focus, tab order, 44px targets, wrapping and table scrolling.
+- [ ] Filter, paginate and scroll a list, open an invoice and its customer,
+  then go Back and refresh. Check cash/customer/number browsing, boundaries,
+  keyboard mode selection and Back to the source after Previous/Next.
+- [ ] Check dirty and saving forms, escape/backdrop dismissal and nested ledger
+  dialogs. Verify Back/Forward/refresh after edit, save, delete and Save & Print.
+  Completed editors and deleted detail layers should stay retired.
+- [ ] Check dashboard loading, zero/loss/debt and retry. Smoke-test inventory,
+  sales/purchases, payments, ledger, audit, sign-in and role-restricted screens.
+  Compare receipt preview, print, PDF/PNG sharing and XLSX output.
+
+[Navigation behavior](OVERVIEW.md#navigation-and-browsing-context) ·
+[Screen styling](DESIGN-SYSTEM.md#operational-screen-styling)
 
 ### Current locale and phone controls
 

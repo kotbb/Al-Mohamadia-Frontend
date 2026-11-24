@@ -23,20 +23,12 @@ export function PageSection({
     <section className={`flex flex-col gap-4 ${className}`}>
       {title || description ? (
         <div className="px-1">
-          {title ? (
-            <h2 className="text-lg font-semibold text-text-primary">{title}</h2>
-          ) : null}
-          {description ? (
-            <p className="mt-1 text-base text-text-secondary">{description}</p>
-          ) : null}
+          {title ? <h2 className="text-lg font-semibold text-text-primary">{title}</h2> : null}
+          {description ? <p className="mt-1 text-base text-text-secondary">{description}</p> : null}
         </div>
       ) : null}
 
-      {bordered ? (
-        <SurfaceCard className={cardClassName}>{children}</SurfaceCard>
-      ) : (
-        children
-      )}
+      {bordered ? <SurfaceCard className={cardClassName}>{children}</SurfaceCard> : children}
     </section>
   );
 }

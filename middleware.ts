@@ -5,6 +5,9 @@ import { routing } from "./i18n/routing";
 const handleLocale = createMiddleware(routing);
 
 export default function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname === "/icon") {
+    return NextResponse.next();
+  }
   const firstSegment = request.nextUrl.pathname.split("/")[1];
   if (firstSegment && !routing.locales.some((locale) => locale === firstSegment)) {
     return NextResponse.rewrite(new URL(`/${routing.defaultLocale}/__not-found`, request.url));

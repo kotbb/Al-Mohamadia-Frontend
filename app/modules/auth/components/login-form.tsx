@@ -15,37 +15,19 @@ function formatRetryWait(totalSeconds: number): string {
 function EyeIcon({ open }: { open: boolean }) {
   if (open) {
     return (
-      <svg
-        aria-hidden
-        className="h-5 w-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={1.5}
-      >
+      <svg aria-hidden className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
           d="M2.036 12.322a1 1 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"
         />
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-        />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
       </svg>
     );
   }
 
   return (
-    <svg
-      aria-hidden
-      className="h-5 w-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={1.5}
-    >
+    <svg aria-hidden className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -59,16 +41,8 @@ export function LoginForm() {
   const t = useTranslations("auth");
   const tShared = useTranslations("shared");
   const [showPassword, setShowPassword] = useState(false);
-  const {
-    username,
-    password,
-    setUsername,
-    setPassword,
-    isSubmitting,
-    rateLimitSecondsLeft,
-    errorMessage,
-    submit,
-  } = useLogin();
+  const { username, password, setUsername, setPassword, isSubmitting, rateLimitSecondsLeft, errorMessage, submit } =
+    useLogin();
   const isRateLimited = rateLimitSecondsLeft > 0;
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -89,9 +63,7 @@ export function LoginForm() {
       />
 
       <div className="flex w-full flex-col gap-1.5">
-        <span className="text-base font-medium text-text-secondary">
-          {t("password")}
-        </span>
+        <span className="text-base font-medium text-text-secondary">{t("password")}</span>
         <div className="relative">
           <input
             id="password"
@@ -103,12 +75,12 @@ export function LoginForm() {
             required
             disabled={isSubmitting}
             placeholder={t("passwordPlaceholder")}
-            className="ds-focus-input min-h-11 w-full rounded-xl border border-border bg-surface px-4 pe-12 text-base text-text-primary placeholder:text-text-muted disabled:bg-surface-muted disabled:text-text-muted"
+            className="ds-focus-input min-h-11 w-full rounded-lg border border-border bg-surface px-4 pe-12 text-base text-text-primary placeholder:text-text-muted disabled:bg-surface-muted disabled:text-text-muted"
           />
           <button
             type="button"
             onClick={() => setShowPassword((value) => !value)}
-            className="ds-focus-ring absolute end-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-text-muted transition-colors hover:text-text-secondary"
+            className="ds-focus-ring absolute end-1 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-md text-text-muted transition-colors hover:text-text-secondary"
             aria-label={showPassword ? t("hidePassword") : t("showPassword")}
             disabled={isSubmitting}
           >
@@ -118,10 +90,7 @@ export function LoginForm() {
       </div>
 
       {isRateLimited || errorMessage ? (
-        <p
-          className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2.5 text-sm text-danger"
-          role="alert"
-        >
+        <p className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2.5 text-sm text-danger" role="alert">
           {isRateLimited ? tShared("rateLimit") : errorMessage}
         </p>
       ) : null}
@@ -129,7 +98,7 @@ export function LoginForm() {
       <Button
         type="submit"
         variant="primary"
-        className="mt-2 w-full shadow-[0_8px_24px_rgba(122,74,34,0.28)]"
+        className="mt-2 w-full"
         disabled={isSubmitting || isRateLimited || !username || !password}
       >
         {isSubmitting

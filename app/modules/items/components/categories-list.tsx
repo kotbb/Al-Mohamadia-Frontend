@@ -6,11 +6,7 @@ import { Badge } from "@/app/modules/shared/components/badge";
 import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
-import {
-  historyRowAction,
-  RowActionsMenu,
-  type RowActionItem,
-} from "@/app/modules/shared/components/row-actions-menu";
+import { historyRowAction, RowActionsMenu, type RowActionItem } from "@/app/modules/shared/components/row-actions-menu";
 import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
 
 interface CategoriesListProps {
@@ -45,24 +41,14 @@ function StatusIcon({ active }: { active: boolean }) {
   return (
     <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden>
       <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M5.5 5.5 10.5 10.5M10.5 5.5 5.5 10.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
+      <path d="M5.5 5.5 10.5 10.5M10.5 5.5 5.5 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
 
 function CategoryFolderIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
         d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2Z"
         stroke="currentColor"
@@ -95,14 +81,7 @@ export function CategoriesList({
   }
 
   if (status === "error") {
-    return (
-      <ErrorState
-        title={t("listError")}
-        message={error ?? undefined}
-        retryLabel={t("retry")}
-        onRetry={onRetry}
-      />
-    );
+    return <ErrorState title={t("listError")} message={error ?? undefined} retryLabel={t("retry")} onRetry={onRetry} />;
   }
 
   if (categories.length === 0) {
@@ -119,33 +98,19 @@ export function CategoriesList({
       <table className="w-full min-w-[48rem] border-collapse text-sm lg:text-base">
         <thead className="bg-surface-muted">
           <tr className="border-b border-border">
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colName")}
-            </th>
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colStatus")}
-            </th>
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colItems")}
-            </th>
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colCreated")}
-            </th>
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colModified")}
-            </th>
-            <th className="w-16 px-4 py-3 text-center font-medium text-text-secondary">
-              {t("colActions")}
-            </th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colName")}</th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colStatus")}</th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colItems")}</th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colCreated")}</th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colModified")}</th>
+            <th className="w-16 px-4 py-3 text-center font-medium text-text-secondary">{t("colActions")}</th>
           </tr>
         </thead>
         <tbody>
           {categories.map((category) => {
             const hasItems = category.itemCount > 0;
             const actions: RowActionItem[] = [
-              historyRowAction(tAudit("viewHistory"), () =>
-                onHistory(category),
-              ),
+              historyRowAction(tAudit("viewHistory"), () => onHistory(category)),
               {
                 id: "edit",
                 label: t("edit"),
@@ -184,7 +149,7 @@ export function CategoriesList({
                     onClick={() => onEdit(category)}
                     className="ds-focus-ring group inline-flex items-center gap-3 rounded-xl text-start transition-colors"
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-all duration-150 group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-sm">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors duration-150 group-hover:bg-primary group-hover:text-primary-foreground">
                       <CategoryFolderIcon className="h-4 w-4" />
                     </div>
                     <span className="font-semibold text-text-primary transition-colors group-hover:text-primary group-hover:underline">
@@ -207,9 +172,7 @@ export function CategoriesList({
                     )}
                   </Badge>
                 </td>
-                <td className="px-4 py-3 font-medium text-text-primary">
-                  {category.itemCount}
-                </td>
+                <td className="px-4 py-3 font-medium text-text-primary">{category.itemCount}</td>
                 <td className="px-4 py-3 whitespace-nowrap text-text-secondary">
                   {formatInvoiceDate(category.createdAt, locale)}
                 </td>

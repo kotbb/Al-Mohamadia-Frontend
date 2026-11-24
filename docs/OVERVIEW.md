@@ -121,6 +121,7 @@ flowchart LR
 | Users | Super-admin manage admins; login / logout / refresh |
 | Audit log | Read-only filtered trail of sensitive actions |
 | Personal ledger | Shared superadmin-only people, deposits/withdrawals, lifetime totals |
+| Excel exports | [Superadmin-only XLSX exports](#configurable-excel-export) of operational records |
 
 ### Cross-cutting
 
@@ -147,7 +148,7 @@ disabled; unprefixed visits select Arabic even with English browser preferences.
 `dir` on `<html>` always follows locale (`ar` → `rtl`, `en` → `ltr`).
 
 Feature domains: `auth`, `dashboard`, `invoices`, `payments`, `supplier-payments`,
-`inventory`, `items`, `customers`, `suppliers`, `purchases`, `personal-ledger`, `audit`, `shared`.
+`inventory`, `items`, `customers`, `suppliers`, `purchases`, `personal-ledger`, `audit`, `exports`, `shared`.
 
 ### 3-Hub Navigation Structure
 
@@ -157,7 +158,9 @@ The admin shell organizes primary navigation into 3 domain hubs with horizontal 
 2. **Purchases & Suppliers** (`/purchases`, `/suppliers`, `/supplier-payments`)
 3. **Inventory & Catalog** (`/inventory`, `/items`, `/categories`)
 
-Direct top-level routes: **Home / Dashboard** (`/`), **Personal ledger** (`/personal-ledger`, superadmin only), **Audit log** (`/audit`), **Users** (`/users`).
+Direct top-level routes include **Home / Dashboard** (`/`) and **Audit log** (`/audit`).
+**Personal ledger** (`/personal-ledger`), **Users** (`/users`) and
+**Excel export** (`/exports`) are superadmin-only destinations.
 Detail views (`/customers/[id]`, `/suppliers/[id]`) accept `?from=...` to contextually route the "Back to list" action back to the user's originating list.
 
 - **HTTP:** native `fetch` via a shared client under `lib/api/` — Bearer
@@ -317,6 +320,29 @@ and movements through the existing AuthGuard and backend role guard.
 
 ---
 
+### Configurable Excel export
+
+Superadmins open `/[locale]/exports` from the sidebar. A fresh export selects sales,
+the current Cairo month, saved invoices and default columns. Workbook language
+defaults to Arabic independently of the app locale. Users can select more datasets,
+columns, filters and optional sales/purchase line sheets. Use the shared searchable
+pickers for account, invoice and category filters, including inactive accounts for
+historical lookups.
+
+The period filters transaction creation dates. Accounts, prices and stock reflect
+current values. Preview is optional and shows advisory row counts. Configuration
+changes clear the result and abort obsolete work. Download rechecks the limits,
+shows indeterminate progress with Cancel, and preserves options on error.
+
+`app/modules/exports` owns the workflow. The shared client uses authenticated
+`postBlob` with token refresh, JSON errors and `AbortSignal`. A browser utility
+handles the object URL and download. The API generates the workbook.
+See the [backend API and limits](../../Al-Mohamadia-Backend/docs/OVERVIEW.md#configurable-excel-export),
+[workbook styling](DESIGN-SYSTEM.md#excel-export-surfaces), and
+[verification checklist](PHASES.md#configurable-excel-export).
+
+---
+
 ## Related repositories
 
 | Repo | Role |
@@ -396,7 +422,7 @@ Sales and purchase create/edit offer a dropdown for every dimension, including e
 
 Inventory retains eight columns and its existing actions inside compact category tables. Pagination requests five complete matching categories per page through `paginationMode=categories&limit=5`; category groups follow category creation date ascending (oldest first, ID ties), and a large category stays on one longer page. Search and stock-status filters apply before choosing categories. Counts describe the loaded page; page totals count matching categories, while KPI calculations remain unchanged. Collapse all and Expand all apply across inventory pagination during the current page visit. Individual category toggles are retained across pages as overrides; either global action clears those overrides.
 
-## Current export and loading flows
+## Current invoice export and loading flows
 
 Payment lists and purchase invoice lists provide names with rows in one response. Inactive names remain visible; missing/deleted accounts show an unlinked `-` (customer payments without an account retain the cash label). Names refresh with each list request rather than through a separate cache. Existing rows remain during refresh with actions disabled; aborted/obsolete requests cannot overwrite the current page.
 
@@ -404,7 +430,7 @@ Sales/purchase details obtain their selected account and only referenced non-del
 
 Live export/preview uses the existing complete receipt response and PublicInvoiceSheet. The unused alternate preview modal has been removed; public receipts, PNG/PDF utilities, Arabic labels, saved amounts and column layouts remain unchanged. Standalone customer-payment cancellation supports deleted accounts and keeps them deleted/inactive while restoring their retained balance and auditing the reversal; such balances remain outside ordinary customer lists.
 
-Sales editing uses `/invoices/:id/edit` with Save Changes and a back link to the invoices list; sales creation retains Save & Print to open `/invoices/:id/export`. Purchase editing uses `/purchases/:id/edit`, reconciles stock, supplier debt and its linked payment, and leaves standalone older-debt payments with their original supplier. Export starts with PNG A5, with PDF A4, price visibility, print and download controls. PNG sharing uses supported browser file sharing or copy/download fallback; PDF sharing sends the public receipt link. Format-specific yellow print guidance stays outside the exported receipt. Public URLs use the Arabic PDF guidance and standard primary/outline buttons.
+Sales editing uses `/invoices/:id/edit`, and Save & Print opens `/invoices/:id/export`. Purchase editing uses `/purchases/:id/edit`, reconciles stock, supplier debt and its linked payment, and leaves standalone older-debt payments with their original supplier. Invoice export starts with PNG A5 and offers PDF A4, price visibility, print and download controls. PNG sharing uses browser file sharing or copy/download fallback. PDF sharing sends the public receipt link. Format-specific yellow print guidance stays outside the exported receipt. Public URLs use the Arabic PDF guidance and standard primary/outline buttons.
 
 Route/auth loading uses shared loading surfaces. Localized/global fallback pages cover errors and unknown routes. Shared numeric inputs prevent mouse-wheel value changes while focused.
 
@@ -412,13 +438,46 @@ The operating-expense feature is retired. The backend retains historical expense
 
 ## Row navigation and invoice presentation
 
-Both sales/purchase sidebar hubs open invoices first. Customer, supplier and sales/purchase invoice row clicks open details, with primary-link brown hover across the row and independent nested actions. Invoice details use one labeled Previous/Next pair with an Invoice number /
-Same customer selector; selected mode is carried in neighbor URLs. Receipts calculate cubic per-piece display from saved meter volume/rate; rates and stored totals stay unchanged.
+Both sales/purchase hubs open invoices first. Customer, supplier and invoice rows
+open details while nested actions remain independently usable. Sales invoice
+customer names link to profiles when the account exists, including inactive
+customers. Cash and deleted/missing accounts use plain text.
+
+Sales invoice Browse displays By invoice number alongside Cash sales or Same
+customer. Number mode is the default. Scoped modes use creation time then ID
+and include cancelled records. Changing mode keeps the current invoice open.
+Previous/Next carry `navigation=number|cash|customer` and replace the current
+record entry so Back returns to its source. Receipts compute cubic per-piece
+display from the saved volume and rate. Stored rates and totals are authoritative.
+
+### Navigation and browsing context
+
+- `NavigationProvider` and `AppHistory` coordinate authenticated links, Back,
+  programmatic routes and dialog steps. Routes and dialog steps push history.
+  Completed editors resolve to their saved detail or export URL. Completed
+  dialogs and deleted ledger movement layers are retired. Stamp a pending route
+  after its URL commits, serialize Back until `popstate`, and skip only the
+  specific detail entry superseded by a completed edit.
+- Committed search, filters and pagination live in the URL and replace the
+  current history entry. Profile histories use independent `invoicePage`,
+  `purchasePage`, and `paymentPage` keys. Audit filters are namespaced. Keep
+  unrelated query parameters and hashes. With Next's native history adapter,
+  notify the framework when replacing filters, then reattach app history metadata.
+- Per-user, versioned tab storage supplements URLs with AppShell scroll,
+  completed-entry mappings and descriptors for supported ledger, audit and share
+  dialogs. The URL takes precedence. Store descriptors only, with an in-memory
+  fallback when storage is unavailable. Reconcile unsupported layers on reload.
+- Forms compare against hydrated defaults. Reverting changes clears dirty state.
+  Keep editing preserves input, Discard leaves once, and an in-flight save
+  blocks departure. Refresh, tab closure and cross-document exits use native
+  `beforeunload`. Completed inline saves remain committed if a parent draft is
+  discarded. The active dialog owns focus and Escape. Footer Cancel and backdrop
+  use the guarded dismissal path.
 
 
 ### Mobile validation and invoice presentation
 
-Invoice details use one Previous/Next pair with an Invoice number / Same customer selector. Export guidance follows PDF A4 / PNG A5 without appearing in outputs. Customer/supplier forms use a fixed Egypt +20 field with a ten-digit limit. Validation is submit-triggered, and generic `1XX XXX XXXX` guidance remains
+Export guidance follows PDF A4 / PNG A5 without appearing in outputs. Customer/supplier forms use a fixed Egypt +20 field with a ten-digit limit. Validation is submit-triggered, and generic `1XX XXX XXXX` guidance remains
 visible at unfilled positions.
 
 
@@ -478,7 +537,7 @@ Manual checks (English/Arabic, light/dark, desktop/mobile): search customers by 
 
 ### Bundled production fonts
 
-`app/fonts.ts` loads the bundled Noto Sans Arabic / Noto Sans variable WOFF2 files through `next/font/local`, preserving both CSS variables and weights 400–700. Builds do not fetch Google Fonts. Include `app/font-files/` and its license notices when committing or uploading for Vercel/Docker. Asset provenance is documented in [the font README](../app/font-files/README.md).
+`app/fonts.ts` loads the bundled Noto Sans Arabic / Noto Sans variable WOFF2 files through `next/font/local`, preserving both CSS variables and weights 400–700. Builds do not fetch Google Fonts. Include `app/font-files/` and its license notices when committing or uploading for Vercel/Docker. [Font setup and licenses](../README.md#bundled-fonts-and-vercel-builds)
 
 ### Receipt label width and Arabic note verification
 

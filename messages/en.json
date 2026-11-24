@@ -79,7 +79,7 @@
   },
   "app": {
     "name": "Al-Mohamadia",
-    "tagline": "Wood store management"
+    "tagline": "Wood store control"
   },
   "nav": {
     "personalLedger": "Personal ledger",
@@ -1071,7 +1071,7 @@
     "colBefore": "Before",
     "colAfter": "After",
     "title": "Audit log",
-    "subtitle": "Read-only record of sensitive actions",
+    "subtitle": "Track all actions in the system",
     "viewHistory": "History",
     "historyTitle": "History · {entity}",
     "historyTitleRecord": "History · {name}",
@@ -1263,25 +1263,6 @@
     "invoicePortion": "This invoice",
     "additionalAccountPaymentNote": "Additional (previous debt)"
   },
-  "navigation": {
-    "back": "Back",
-    "discardTitle": "Discard changes?",
-    "discardDescription": "Your unsaved changes will be lost.",
-    "keepEditing": "Keep editing",
-    "discardChanges": "Discard changes"
-  },
-  "invoiceDetails": {
-    "item": "Item",
-    "quantity": "Quantity",
-    "thickness": "Thickness",
-    "width": "Width",
-    "length": "Length",
-    "volume": "Volume",
-    "unitPrice": "Unit price",
-    "lineTotal": "Line total",
-    "total": "Total",
-    "ratePerCubicMeter": "{amount} / m³"
-  },
   "exports": {
     "title": "Excel export",
     "subtitle": "Choose the records and columns to download in one Excel workbook.",
@@ -1385,5 +1366,24 @@
     "searchSalesInvoices": "All sales invoices - search by invoice number",
     "searchPurchaseInvoices": "All purchase invoices - search by invoice number",
     "noRecords": "No matching records"
+  },
+  "navigation": {
+    "back": "Back",
+    "discardTitle": "Discard changes?",
+    "discardDescription": "Your unsaved changes will be lost.",
+    "keepEditing": "Keep editing",
+    "discardChanges": "Discard changes"
+  },
+  "invoiceDetails": {
+    "item": "Item",
+    "quantity": "Quantity",
+    "thickness": "Thickness",
+    "width": "Width",
+    "length": "Length",
+    "volume": "Volume",
+    "unitPrice": "Unit price",
+    "lineTotal": "Line total",
+    "total": "Total",
+    "ratePerCubicMeter": "{amount} / m³"
   }
 }

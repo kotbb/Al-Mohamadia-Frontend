@@ -11,13 +11,10 @@ import { useDashboard } from "@/app/modules/dashboard/hooks/use-dashboard";
 import { AppShell } from "@/app/layout/app-shell";
 import { Button } from "@/app/modules/shared/components/button";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
-import { LoadingState } from "@/app/modules/shared/components/loading-state";
+import { DashboardSkeleton } from "@/app/modules/dashboard/components/dashboard-skeleton";
 
 const DashboardSalesChart = dynamic(
-  () =>
-    import("@/app/modules/dashboard/components/dashboard-sales-chart").then(
-      (mod) => mod.DashboardSalesChart,
-    ),
+  () => import("@/app/modules/dashboard/components/dashboard-sales-chart").then((mod) => mod.DashboardSalesChart),
   {
     ssr: false,
     loading: () => (
@@ -26,10 +23,7 @@ const DashboardSalesChart = dynamic(
         role="status"
         aria-live="polite"
       >
-        <span
-          className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-primary"
-          aria-hidden
-        />
+        <span className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-primary" aria-hidden />
       </div>
     ),
   },
@@ -66,7 +60,7 @@ export function DashboardPage() {
         </Button>
       }
     >
-      {status === "loading" ? <LoadingState message={t("loading")} /> : null}
+      {status === "loading" ? <DashboardSkeleton message={t("loading")} /> : null}
 
       {status === "error" ? (
         <ErrorState
@@ -90,16 +84,11 @@ export function DashboardPage() {
           />
           <DashboardPeriodFinancials financials={data.periodFinancials} />
           <div
-            className={`grid grid-cols-1 gap-4 lg:grid-cols-5 ${
-              isRefreshing ? "pointer-events-none opacity-60" : ""
-            }`}
+            className={`grid grid-cols-1 gap-4 lg:grid-cols-5 ${isRefreshing ? "pointer-events-none opacity-60" : ""}`}
             aria-busy={isRefreshing}
           >
             <div className="lg:col-span-3">
-              <DashboardSalesChart
-                series={data.salesSeries}
-                period={data.period.period}
-              />
+              <DashboardSalesChart series={data.salesSeries} period={data.period.period} />
             </div>
             <div className="lg:col-span-2">
               <DashboardTopSellers items={data.topSellingItems} />
@@ -114,12 +103,7 @@ export function DashboardPage() {
 function PlusIcon() {
   return (
     <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path
-        d="M8 3v10M3 8h10"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-      />
+      <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
     </svg>
   );
 }

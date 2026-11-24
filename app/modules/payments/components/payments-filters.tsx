@@ -70,19 +70,14 @@ export function PaymentsFilters({
         </div>
 
         <div className="flex w-full flex-col gap-1.5 lg:w-48">
-          <label
-            htmlFor="methodFilterSelect"
-            className="text-base font-medium text-text-secondary"
-          >
+          <label htmlFor="methodFilterSelect" className="text-base font-medium text-text-secondary">
             {t("colMethod")}
           </label>
           <div className="relative">
             <select
               id="methodFilterSelect"
               value={methodFilter}
-              onChange={(e) =>
-                onMethodChange(e.target.value as PaymentMethodFilterOption)
-              }
+              onChange={(e) => onMethodChange(e.target.value as PaymentMethodFilterOption)}
               className="ds-focus-ring min-h-11 w-full cursor-pointer appearance-none rounded-xl border border-border bg-surface px-3.5 pe-9 text-sm font-medium text-text-primary transition-colors hover:border-text-secondary focus:border-primary"
             >
               <option value="all">{t("filterMethodAll")}</option>
@@ -93,19 +88,8 @@ export function PaymentsFilters({
               <option value="check">{t("methodCheck")}</option>
             </select>
             <div className="pointer-events-none absolute inset-y-0 end-0 flex items-center px-3 text-text-muted">
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M19 9l-7 7-7-7"
-                />
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
               </svg>
             </div>
           </div>
@@ -146,9 +130,7 @@ export function PaymentsFilters({
                   onClick={() => onSelectCustomer(c)}
                   className="ds-focus-ring flex w-full items-center justify-between px-4 py-2 text-start text-sm hover:bg-surface-muted"
                 >
-                  <span className="font-medium text-text-primary">
-                    {c.name}
-                  </span>
+                  <span className="font-medium text-text-primary">{c.name}</span>
                 </button>
               ))}
             </div>
@@ -172,13 +154,16 @@ export function PaymentsFilters({
             ]}
           />
         </div>
-        {periodFilter === "custom" ? <CustomDateRangePicker {...customRange} onChange={onCustomRangeChange} fromLabel={t("filterFrom")} toLabel={t("filterTo")} /> : periodFilter !== "off" ? (
+        {periodFilter === "custom" ? (
+          <CustomDateRangePicker
+            {...customRange}
+            onChange={onCustomRangeChange}
+            fromLabel={t("filterFrom")}
+            toLabel={t("filterTo")}
+          />
+        ) : periodFilter !== "off" ? (
           <div className="w-full lg:w-auto">
-            <PeriodDatePicker
-              period={periodFilter}
-              value={periodDate}
-              onChange={onPeriodDateChange}
-            />
+            <PeriodDatePicker period={periodFilter} value={periodDate} onChange={onPeriodDateChange} />
           </div>
         ) : null}
       </div>

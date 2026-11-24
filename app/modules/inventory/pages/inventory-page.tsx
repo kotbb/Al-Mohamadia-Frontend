@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { AppShell } from "@/app/layout/app-shell";
 import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
@@ -17,6 +17,8 @@ import type { StockItem } from "@/app/modules/inventory/types/inventory.types";
 
 export function InventoryPage() {
   const t = useTranslations("inventory");
+  const lastAdjust = useRef<StockItem | null>(null);
+  const lastThreshold = useRef<StockItem | null>(null);
   const history = useAuditHistory({
     entityType: "Item",
     defaultAction: "stock_adjusted",
@@ -91,11 +93,7 @@ export function InventoryPage() {
         {history.modal}
         {itemHistory.modal}
         {/* KPI Summary Cards */}
-        <InventoryKpiCards
-          valuation={valuation}
-          summary={summary}
-          onSelectStatusFilter={setStatusFilter}
-        />
+        <InventoryKpiCards valuation={valuation} summary={summary} onSelectStatusFilter={setStatusFilter} />
 
         <div className="flex flex-col gap-4">
           <StockFilters
@@ -118,9 +116,7 @@ export function InventoryPage() {
             onPageChange={setStockPage}
             onAdjustStock={(item) => setSelectedAdjustItem(item)}
             onUpdateThreshold={(item) => setSelectedThresholdItem(item)}
-            onViewAdjustmentsForItem={(item) =>
-              itemHistory.openRecord(item.id, item.name)
-            }
+            onViewAdjustmentsForItem={(item) => itemHistory.openRecord(item.id, item.name)}
           />
         </div>
 
@@ -128,30 +124,34 @@ export function InventoryPage() {
         <CategoryValuationModal
           isOpen={isCategoryValuationOpen}
           onClose={() => setIsCategoryValuationOpen(false)}
+          onRestore={() => setIsCategoryValuationOpen(true)}
           categories={valuation?.categories || []}
         />
 
         <StockAdjustmentModal
           isOpen={selectedAdjustItem !== null}
-          onClose={() => setSelectedAdjustItem(null)}
+          onClose={() => {
+            lastAdjust.current = selectedAdjustItem;
+            setSelectedAdjustItem(null);
+          }}
+          onRestore={() => setSelectedAdjustItem(lastAdjust.current)}
           item={selectedAdjustItem}
           onSuccess={handleAdjustSuccess}
         />
 
         <ReorderThresholdModal
           isOpen={selectedThresholdItem !== null}
-          onClose={() => setSelectedThresholdItem(null)}
+          onClose={() => {
+            lastThreshold.current = selectedThresholdItem;
+            setSelectedThresholdItem(null);
+          }}
+          onRestore={() => setSelectedThresholdItem(lastThreshold.current)}
           item={selectedThresholdItem}
           onSuccess={handleThresholdSuccess}
         />
 
         {/* Toast Feedback */}
-        <Toast
-          open={toastOpen}
-          message={toastMessage}
-          variant={toastVariant}
-          onClose={() => setToastOpen(false)}
-        />
+        <Toast open={toastOpen} message={toastMessage} variant={toastVariant} onClose={() => setToastOpen(false)} />
       </div>
     </AppShell>
   );

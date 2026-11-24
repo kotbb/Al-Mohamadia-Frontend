@@ -5,10 +5,7 @@ import { Input } from "@/app/modules/shared/components/input";
 import { PeriodDatePicker } from "@/app/modules/invoices/components/period-date-picker";
 import { CustomDateRangePicker } from "@/app/modules/shared/components/custom-date-range-picker";
 import { SegmentedControl } from "@/app/modules/shared/components/segmented-control";
-import type {
-  PeriodFilter,
-  StatusFilter,
-} from "@/app/modules/invoices/types/use-invoices.types";
+import type { PeriodFilter, StatusFilter } from "@/app/modules/invoices/types/use-invoices.types";
 
 interface InvoiceFiltersProps {
   searchInput: string;
@@ -78,13 +75,16 @@ export function InvoiceFilters({
             ]}
           />
         </div>
-        {periodFilter === "custom" ? <CustomDateRangePicker {...customRange} onChange={onCustomRangeChange} fromLabel={t("filterFrom")} toLabel={t("filterTo")} /> : periodFilter !== "off" ? (
+        {periodFilter === "custom" ? (
+          <CustomDateRangePicker
+            {...customRange}
+            onChange={onCustomRangeChange}
+            fromLabel={t("filterFrom")}
+            toLabel={t("filterTo")}
+          />
+        ) : periodFilter !== "off" ? (
           <div className="w-full flex-1 sm:max-w-md md:max-w-lg">
-            <PeriodDatePicker
-              period={periodFilter}
-              value={periodDate}
-              onChange={onPeriodDateChange}
-            />
+            <PeriodDatePicker period={periodFilter} value={periodDate} onChange={onPeriodDateChange} />
           </div>
         ) : null}
       </div>

@@ -59,7 +59,7 @@ Target layout as features are built (Phase 0+). Route files stay thin;
 features own UI, hooks, and services.
 
 ```text
-app/[locale]/…/page.tsx          → params, locale, metadata, thin feature-page wrapper
+app/[locale]/…/page.tsx           → params, locale, metadata, thin feature-page wrapper
 app/modules/{domain}/             → feature ownership
 app/layout/                       → app shell, sidebar, auth guard
 lib/                              → API client, auth helpers, env
@@ -432,7 +432,7 @@ the change depends on an API/schema change, flag
 
 # This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this repository root; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 

@@ -4,10 +4,7 @@ import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/lib/auth/auth-provider";
 import { Input } from "@/app/modules/shared/components/input";
-import {
-  actionsForViewer,
-  entityTypesForRole,
-} from "@/app/modules/audit/utils/audit-catalog";
+import { actionsForViewer, entityTypesForRole } from "@/app/modules/audit/utils/audit-catalog";
 
 interface AuditLogFiltersProps {
   userId: string;
@@ -45,18 +42,9 @@ export function AuditLogFilters({
 
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
-      <FilterSelect
-        id="auditUserFilter"
-        label={t("filterUser")}
-        value={userId}
-        onChange={onUserIdChange}
-      >
+      <FilterSelect id="auditUserFilter" label={t("filterUser")} value={userId} onChange={onUserIdChange}>
         <option value="">{t("filterAll")}</option>
-        {user ? (
-          <option value={user.id}>
-            {t("filterMe", { username: user.username })}
-          </option>
-        ) : null}
+        {user ? <option value={user.id}>{t("filterMe", { username: user.username })}</option> : null}
       </FilterSelect>
 
       <FilterSelect
@@ -74,12 +62,7 @@ export function AuditLogFilters({
         ))}
       </FilterSelect>
 
-      <FilterSelect
-        id="auditActionFilter"
-        label={t("filterAction")}
-        value={action}
-        onChange={onActionChange}
-      >
+      <FilterSelect id="auditActionFilter" label={t("filterAction")} value={action} onChange={onActionChange}>
         <option value="">{t("filterAll")}</option>
         {actionOptions.map((code) => (
           <option key={code} value={code}>
@@ -145,19 +128,8 @@ function FilterSelect({
           {children}
         </select>
         <div className="pointer-events-none absolute inset-y-0 end-0 flex items-center px-3 text-text-muted">
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            aria-hidden
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M19 9l-7 7-7-7"
-            />
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
           </svg>
         </div>
       </div>

@@ -13,19 +13,11 @@ test("backend services reject contracts and free helpers with useful diagnostics
 });
 test("class methods and utilities are allowed", () => {
   assert.deepEqual(
-    checkSource(
-      "src/modules/items/items.service.ts",
-      "class ItemsService { private map() { return 1; } }",
-      "backend",
-    ),
+    checkSource("src/modules/items/items.service.ts", "class ItemsService { private map() { return 1; } }", "backend"),
     [],
   );
   assert.deepEqual(
-    checkSource(
-      "src/modules/items/utils/map.util.ts",
-      "export function map() { return 1; }",
-      "backend",
-    ),
+    checkSource("src/modules/items/utils/map.util.ts", "export function map() { return 1; }", "backend"),
     [],
   );
 });
@@ -44,11 +36,7 @@ test("type imports from hooks, including mixed imports, are rejected", () => {
     "import type { Form } from '../hooks/use-items';",
     "import { useItems, type Form } from '../hooks/use-items';",
   ]) {
-    assert.equal(
-      checkSource("app/modules/items/components/form.tsx", source, "frontend")
-        .length,
-      1,
-    );
+    assert.equal(checkSource("app/modules/items/components/form.tsx", source, "frontend").length, 1);
   }
   assert.deepEqual(
     checkSource(
@@ -76,11 +64,7 @@ test("thin routes and metadata pass; route UI fails", () => {
     ).length,
   );
   assert.ok(
-    checkSource(
-      "app/[locale]/items/receipt.tsx",
-      "export function Receipt() { return <div />; }",
-      "frontend",
-    ).length,
+    checkSource("app/[locale]/items/receipt.tsx", "export function Receipt() { return <div />; }", "frontend").length,
   );
 });
 test("HTTP services reject browser operations and PDF imports", () => {
@@ -108,49 +92,24 @@ test("HTTP services reject browser operations and PDF imports", () => {
   );
 });
 test("arrow helpers cannot bypass placement rules", () => {
+  assert.ok(checkSource("src/modules/items/items.service.ts", "const map = () => 1;", "backend").length);
   assert.ok(
-    checkSource(
-      "src/modules/items/items.service.ts",
-      "const map = () => 1;",
-      "backend",
-    ).length,
-  );
-  assert.ok(
-    checkSource(
-      "app/modules/items/hooks/use-items.ts",
-      "const parse = (raw: string) => Number(raw);",
-      "frontend",
-    ).length,
+    checkSource("app/modules/items/hooks/use-items.ts", "const parse = (raw: string) => Number(raw);", "frontend")
+      .length,
   );
 });
 test("type re-exports cannot hide hook contracts", () => {
   assert.ok(
-    checkSource(
-      "app/modules/items/hooks/use-items.ts",
-      "export type { Form } from '../types/form.types';",
-      "frontend",
-    ).length,
+    checkSource("app/modules/items/hooks/use-items.ts", "export type { Form } from '../types/form.types';", "frontend")
+      .length,
   );
   assert.ok(
-    checkSource(
-      "app/modules/items/hooks/use-items.ts",
-      "interface Form {} export { Form };",
-      "frontend",
-    ).length,
+    checkSource("app/modules/items/hooks/use-items.ts", "interface Form {} export { Form };", "frontend").length,
   );
 });
 test("global browser references and aliased React state are checked", () => {
-  for (const source of [
-    'globalThis.document.getElementById("sheet");',
-    'globalThis["window"].print();',
-  ])
-    assert.ok(
-      checkSource(
-        "app/modules/items/services/items.service.ts",
-        source,
-        "frontend",
-      ).length,
-    );
+  for (const source of ['globalThis.document.getElementById("sheet");', 'globalThis["window"].print();'])
+    assert.ok(checkSource("app/modules/items/services/items.service.ts", source, "frontend").length);
   assert.ok(
     checkSource(
       "app/[locale]/items/page.tsx",
@@ -168,11 +127,7 @@ test("global browser references and aliased React state are checked", () => {
 });
 test("sibling hook type imports are resolved before checking", () => {
   assert.ok(
-    checkSource(
-      "app/modules/items/hooks/use-other.ts",
-      "import type { Form } from './use-items';",
-      "frontend",
-    ).length,
+    checkSource("app/modules/items/hooks/use-other.ts", "import type { Form } from './use-items';", "frontend").length,
   );
 });
 test("server variables named document or window are not mistaken for browser globals", () => {

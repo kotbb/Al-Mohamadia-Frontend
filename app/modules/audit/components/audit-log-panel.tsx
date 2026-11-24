@@ -12,11 +12,7 @@ interface AuditLogPanelProps {
   initialAction?: string;
 }
 
-export function AuditLogPanel({
-  lockedEntityType,
-  entityId,
-  initialAction,
-}: AuditLogPanelProps) {
+export function AuditLogPanel({ lockedEntityType, entityId, initialAction }: AuditLogPanelProps) {
   const t = useTranslations("audit");
   const {
     logs,
@@ -68,18 +64,10 @@ export function AuditLogPanel({
 
       {!dateOrderInvalid && listStatus === "success" && totalPages > 1 ? (
         <div className="flex items-center justify-center gap-3">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            disabled={page <= 1}
-            onClick={() => setPage(page - 1)}
-          >
+          <Button type="button" variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
             {t("prevPage")}
           </Button>
-          <span className="text-sm text-text-secondary">
-            {t("pageOf", { page, totalPages })}
-          </span>
+          <span className="text-sm text-text-secondary">{t("pageOf", { page, totalPages })}</span>
           <Button
             type="button"
             variant="secondary"

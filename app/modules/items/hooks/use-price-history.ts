@@ -1,20 +1,11 @@
 "use client";
 
-import type {
-  LoadStatus,
-  UsePriceHistoryResult,
-} from "../types/use-price-history.types";
+import type { LoadStatus, UsePriceHistoryResult } from "../types/use-price-history.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useEffect, useState } from "react";
-import {
-  getItem,
-  getPriceHistory,
-} from "@/app/modules/items/services/items.service";
-import type {
-  Item,
-  PriceHistoryEntry,
-} from "@/app/modules/items/types/items.types";
+import { getItem, getPriceHistory } from "@/app/modules/items/services/items.service";
+import type { Item, PriceHistoryEntry } from "@/app/modules/items/types/items.types";
 
 export function usePriceHistory(itemId: string | null): UsePriceHistoryResult {
   const describeError = useApiErrorMessage();
@@ -36,10 +27,7 @@ export function usePriceHistory(itemId: string | null): UsePriceHistoryResult {
     setStatus("loading");
     setError(null);
 
-    Promise.all([
-      getItem(itemId, controller.signal),
-      getPriceHistory(itemId, controller.signal),
-    ])
+    Promise.all([getItem(itemId, controller.signal), getPriceHistory(itemId, controller.signal)])
       .then(([loadedItem, entries]) => {
         setItem(loadedItem);
         setHistory(entries);

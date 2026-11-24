@@ -7,8 +7,8 @@ import type {
   StockStatusFilter,
 } from "@/app/modules/inventory/types/inventory.types";
 import { formatMoney } from "@/app/modules/shared/utils/format-money";
-import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
 import { Badge } from "@/app/modules/shared/components/badge";
+import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
 
 interface InventoryKpiCardsProps {
   valuation: InventoryValuation | null;
@@ -16,142 +16,87 @@ interface InventoryKpiCardsProps {
   onSelectStatusFilter?: (status: StockStatusFilter) => void;
 }
 
-export function InventoryKpiCards({
-  valuation,
-  summary,
-  onSelectStatusFilter,
-}: InventoryKpiCardsProps) {
+export function InventoryKpiCards({ valuation, summary, onSelectStatusFilter }: InventoryKpiCardsProps) {
   const t = useTranslations("inventory");
   const locale = useLocale();
 
   const totalCost = valuation?.totalValuationAtCost ?? 0;
   const totalSelling = valuation?.totalValuationAtSellingPrice ?? 0;
-  const potentialProfit =
-    valuation?.potentialProfit ?? totalSelling - totalCost;
-  const profitMargin =
-    totalSelling > 0
-      ? ((potentialProfit / totalSelling) * 100).toFixed(1)
-      : "0";
+  const potentialProfit = valuation?.potentialProfit ?? totalSelling - totalCost;
+  const profitMargin = totalSelling > 0 ? ((potentialProfit / totalSelling) * 100).toFixed(1) : "0";
 
-  const attentionCount =
-    summary.lowStockCount +
-    summary.outOfStockCount;
+  const attentionCount = summary.lowStockCount + summary.outOfStockCount;
 
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {/* Card 1: Valuation at Cost */}
-      <SurfaceCard padding="none" className="min-w-0 p-3 lg:min-h-36">
+      <SurfaceCard padding="none" className="min-w-0 p-4 lg:min-h-36">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-sm font-medium text-text-secondary">
-            {t("kpiValuationAtCost")}
-          </span>
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-warning/12 text-warning">
-            <BoxIcon className="h-3.5 w-3.5" />
-          </div>
+          <span className="text-sm font-medium text-text-secondary">{t("kpiValuationAtCost")}</span>
         </div>
         <div className="mt-1.5 flex flex-wrap items-baseline gap-1.5">
-          <span className="text-xl font-bold tracking-tight tabular-nums text-text-primary">
+          <span className="min-w-0 break-words text-xl font-semibold tabular-nums text-text-primary">
             {formatMoney(totalCost, locale)}
           </span>
-          <span className="text-xs font-medium text-text-muted">
-            {t("currency")}
-          </span>
+          <span className="text-sm text-text-muted">{t("currency")}</span>
         </div>
       </SurfaceCard>
 
       {/* Card 2: Expected Revenue at Selling Price */}
-      <SurfaceCard padding="none" className="min-w-0 p-3 lg:min-h-36">
+      <SurfaceCard padding="none" className="min-w-0 p-4 lg:min-h-36">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-sm font-medium text-text-secondary">
-            {t("kpiValuationAtSelling")}
-          </span>
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-info/12 text-info">
-            <TrendingUpIcon className="h-3.5 w-3.5" />
-          </div>
+          <span className="text-sm font-medium text-text-secondary">{t("kpiValuationAtSelling")}</span>
         </div>
         <div className="mt-1.5 flex flex-wrap items-baseline gap-1.5">
-          <span className="text-xl font-bold tracking-tight tabular-nums text-text-primary">
+          <span className="min-w-0 break-words text-xl font-semibold tabular-nums text-text-primary">
             {formatMoney(totalSelling, locale)}
           </span>
-          <span className="text-xs font-medium text-text-muted">
-            {t("currency")}
-          </span>
+          <span className="text-sm text-text-muted">{t("currency")}</span>
         </div>
       </SurfaceCard>
 
       {/* Card 3: Potential Profit & Margin */}
-      <SurfaceCard padding="none" className="min-w-0 p-3 lg:min-h-36">
+      <SurfaceCard padding="none" className="min-w-0 p-4 lg:min-h-36">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-sm font-medium text-text-secondary">
-            {t("kpiPotentialProfit")}
-          </span>
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-success/12 text-success">
-            <PercentIcon className="h-3.5 w-3.5" />
-          </div>
+          <span className="text-sm font-medium text-text-secondary">{t("kpiPotentialProfit")}</span>
         </div>
         <div className="mt-1.5 flex flex-col items-start gap-1.5">
           <div className="flex items-baseline gap-1.5">
-            <span className="text-xl font-bold tracking-tight tabular-nums text-success">
+            <span
+              className={`min-w-0 break-words text-xl font-semibold tabular-nums ${potentialProfit < 0 ? "text-danger" : potentialProfit > 0 ? "text-success" : "text-text-primary"}`}
+            >
               {formatMoney(potentialProfit, locale)}
             </span>
-            <span className="text-xs font-medium text-text-muted">
-              {t("currency")}
-            </span>
+            <span className="text-sm text-text-muted">{t("currency")}</span>
           </div>
-          <Badge
-            variant="success"
-            className="!text-xs !py-0.5 !px-2 font-medium"
-          >
+          <Badge variant="success" className="!text-xs !py-0.5 !px-2 font-medium">
             {t("kpiProfitMargin", { percent: profitMargin })}
           </Badge>
         </div>
       </SurfaceCard>
 
       {/* Card 4: Stock Alerts */}
-      <SurfaceCard padding="none" className="min-w-0 p-3 lg:min-h-36">
+      <SurfaceCard padding="none" className="min-w-0 p-4 lg:min-h-36">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-sm font-medium text-text-secondary">
-            {t("kpiStockAlerts")}
-          </span>
-          <div
-            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
-              summary.outOfStockCount > 0
-                ? "bg-danger/12 text-danger"
-                : attentionCount > 0
-                  ? "bg-warning/12 text-warning"
-                  : "bg-success/12 text-success"
-            }`}
-          >
-            {attentionCount > 0 ? (
-              <AlertTriangleIcon className="h-3.5 w-3.5" />
-            ) : (
-              <CheckCircleIcon className="h-3.5 w-3.5" />
-            )}
-          </div>
+          <span className="text-sm font-medium text-text-secondary">{t("kpiStockAlerts")}</span>
         </div>
         <div className="mt-1.5 flex flex-col items-start gap-1.5">
           <div className="flex items-baseline gap-1.5">
             <span
-              className={`text-xl font-bold tracking-tight tabular-nums ${
-                summary.outOfStockCount > 0
-                  ? "text-danger"
-                  : attentionCount > 0
-                    ? "text-warning"
-                    : "text-text-primary"
+              className={`min-w-0 break-words text-xl font-semibold tabular-nums ${
+                summary.outOfStockCount > 0 ? "text-danger" : attentionCount > 0 ? "text-warning" : "text-text-primary"
               }`}
             >
               {attentionCount}
             </span>
-            <span className="text-xs font-medium text-text-muted">
-              {t("kpiAttentionHint")}
-            </span>
+            <span className="text-sm text-text-muted">{t("kpiAttentionHint")}</span>
           </div>
           <div className="flex w-full flex-wrap items-center gap-1">
             {summary.lowStockCount > 0 && (
               <button
                 type="button"
                 onClick={() => onSelectStatusFilter?.("low_stock")}
-                className="ds-focus-ring min-h-11 cursor-pointer inline-flex items-center gap-1 rounded-full bg-warning/12 border border-warning/20 px-2 py-0.5 text-xs font-medium text-warning hover:bg-warning/20 transition-colors"
+                className="ds-focus-ring min-h-11 cursor-pointer inline-flex items-center gap-1 rounded-lg bg-warning/12 border border-warning/20 px-2 py-0.5 text-xs font-medium text-warning hover:bg-warning/20 transition-colors"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-warning" />
                 <span>
@@ -163,7 +108,7 @@ export function InventoryKpiCards({
               <button
                 type="button"
                 onClick={() => onSelectStatusFilter?.("out_of_stock")}
-                className="ds-focus-ring min-h-11 cursor-pointer inline-flex items-center gap-1 rounded-full bg-danger/12 border border-danger/20 px-2 py-0.5 text-xs font-medium text-danger hover:bg-danger/20 transition-colors"
+                className="ds-focus-ring min-h-11 cursor-pointer inline-flex items-center gap-1 rounded-lg bg-danger/12 border border-danger/20 px-2 py-0.5 text-xs font-medium text-danger hover:bg-danger/20 transition-colors"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-danger" />
                 <span>
@@ -181,98 +126,5 @@ export function InventoryKpiCards({
         </div>
       </SurfaceCard>
     </div>
-  );
-}
-
-function BoxIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
-      <path d="m3.3 7 8.7 5 8.7-5" />
-      <path d="M12 22V12" />
-    </svg>
-  );
-}
-
-function TrendingUpIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-      <polyline points="16 7 22 7 22 13" />
-    </svg>
-  );
-}
-
-function PercentIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <line x1="19" y1="5" x2="5" y2="19" />
-      <circle cx="6.5" cy="6.5" r="2.5" />
-      <circle cx="17.5" cy="17.5" r="2.5" />
-    </svg>
-  );
-}
-
-function AlertTriangleIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
-      <line x1="12" y1="9" x2="12" y2="13" />
-      <line x1="12" y1="17" x2="12.01" y2="17" />
-    </svg>
-  );
-}
-
-function CheckCircleIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-      <polyline points="22 4 12 14.01 9 11.01" />
-    </svg>
   );
 }

@@ -17,19 +17,12 @@ export function DashboardTopSellers({ items }: DashboardTopSellersProps) {
 
   return (
     <SurfaceCard padding="md" className="flex h-full flex-col">
-      <h3 className="text-base font-semibold text-text-primary">
-        {t("topSellersTitle")}
-      </h3>
-      <p className="mt-0.5 text-sm text-text-muted">
-        {t("topSellersSubtitle")}
-      </p>
+      <h3 className="text-base font-semibold text-text-primary">{t("topSellersTitle")}</h3>
+      <p className="mt-0.5 text-sm text-text-muted">{t("topSellersSubtitle")}</p>
 
       {items.length === 0 ? (
         <div className="mt-4 flex-1">
-          <EmptyState
-            title={t("topSellersEmptyTitle")}
-            description={t("topSellersEmptyDescription")}
-          />
+          <EmptyState title={t("topSellersEmptyTitle")} description={t("topSellersEmptyDescription")} />
         </div>
       ) : (
         <ul className="mt-4 flex flex-col gap-1">

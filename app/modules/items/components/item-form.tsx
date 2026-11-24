@@ -6,10 +6,7 @@ import { Input } from "@/app/modules/shared/components/input";
 import { DimensionDefaultsEditor } from "@/app/modules/items/components/dimension-defaults-editor";
 import { SegmentedControl } from "@/app/modules/shared/components/segmented-control";
 import type { ItemFormValues } from "@/app/modules/items/types/use-item-form.types";
-import type {
-  Category,
-  PricingMode,
-} from "@/app/modules/items/types/items.types";
+import type { Category, PricingMode } from "@/app/modules/items/types/items.types";
 
 interface ItemFormProps {
   values: ItemFormValues;
@@ -17,10 +14,7 @@ interface ItemFormProps {
   isEdit: boolean;
   isSubmitting: boolean;
   error: string | null;
-  onFieldChange: <K extends keyof ItemFormValues>(
-    key: K,
-    value: ItemFormValues[K],
-  ) => void;
+  onFieldChange: <K extends keyof ItemFormValues>(key: K, value: ItemFormValues[K]) => void;
   onSubmit: () => Promise<void>;
   compact?: boolean;
 }
@@ -51,11 +45,7 @@ export function ItemForm({
   const gap = compact ? "gap-4" : "gap-6";
 
   return (
-    <form
-      id="item-form"
-      onSubmit={handleSubmit}
-      className={`flex flex-col ${gap}`}
-    >
+    <form id="item-form" onSubmit={handleSubmit} className={`flex flex-col ${gap}`}>
       <Input
         name="name"
         label={t("fieldName")}
@@ -66,15 +56,13 @@ export function ItemForm({
       />
 
       <label className="flex w-full flex-col gap-1.5">
-        <span className="text-base font-medium text-text-secondary">
-          {t("fieldCategory")}
-        </span>
+        <span className="text-base font-medium text-text-secondary">{t("fieldCategory")}</span>
         <select
           value={values.categoryId}
           onChange={(event) => onFieldChange("categoryId", event.target.value)}
           required
           disabled={isSubmitting}
-          className="ds-focus-input min-h-11 rounded-xl border border-border bg-surface px-4 text-base text-text-primary disabled:bg-surface-muted"
+          className="ds-focus-input min-h-11 rounded-lg border border-border bg-surface px-4 text-base text-text-primary disabled:bg-surface-muted"
         >
           <option value="" disabled>
             {t("fieldCategoryPlaceholder")}
@@ -95,66 +83,64 @@ export function ItemForm({
         disabled={isSubmitting || isEdit}
       />
 
-      {values.pricingMode !== "free_amount" && <>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="sm:col-span-2">
-          <DimensionDefaultsEditor
-            value={values.dimensionDefaults}
-            disabled={isSubmitting}
-            onChange={(value) => onFieldChange("dimensionDefaults", value)}
-          />
-        </div>
-        <Input
-          name="unitPrice"
-          type="number"
-          min={0}
-          step="0.01"
-          label={t("fieldUnitPrice")}
-          value={values.unitPrice}
-          onChange={(event) => onFieldChange("unitPrice", event.target.value)}
-          disabled={isSubmitting}
-        />
-        <Input
-          name="cost"
-          type="number"
-          min={0}
-          step="0.01"
-          label={t("fieldCost")}
-          value={values.cost}
-          onChange={(event) => onFieldChange("cost", event.target.value)}
-          disabled={isSubmitting}
-        />
-      </div>
-      <div className={`grid gap-4 ${isEdit ? "" : "sm:grid-cols-2"}`}>
-        <Input
-          name="reorderThreshold"
-          type="number"
-          min={0}
-          step="1"
-          label={t("fieldReorderThreshold")}
-          value={values.reorderThreshold}
-          onChange={(event) =>
-            onFieldChange("reorderThreshold", event.target.value)
-          }
-          disabled={isSubmitting}
-        />
+      {values.pricingMode !== "free_amount" && (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <DimensionDefaultsEditor
+                value={values.dimensionDefaults}
+                disabled={isSubmitting}
+                onChange={(value) => onFieldChange("dimensionDefaults", value)}
+              />
+            </div>
+            <Input
+              name="unitPrice"
+              type="number"
+              min={0}
+              step="0.01"
+              label={t("fieldUnitPrice")}
+              value={values.unitPrice}
+              onChange={(event) => onFieldChange("unitPrice", event.target.value)}
+              disabled={isSubmitting}
+            />
+            <Input
+              name="cost"
+              type="number"
+              min={0}
+              step="0.01"
+              label={t("fieldCost")}
+              value={values.cost}
+              onChange={(event) => onFieldChange("cost", event.target.value)}
+              disabled={isSubmitting}
+            />
+          </div>
+          <div className={`grid gap-4 ${isEdit ? "" : "sm:grid-cols-2"}`}>
+            <Input
+              name="reorderThreshold"
+              type="number"
+              min={0}
+              step="1"
+              label={t("fieldReorderThreshold")}
+              value={values.reorderThreshold}
+              onChange={(event) => onFieldChange("reorderThreshold", event.target.value)}
+              disabled={isSubmitting}
+            />
 
-        {!isEdit ? (
-          <Input
-            name="stockQuantity"
-            type="number"
-            min={0}
-            step="1"
-            label={t("fieldStockQuantity")}
-            value={values.stockQuantity}
-            onChange={(event) =>
-              onFieldChange("stockQuantity", event.target.value)
-            }
-            disabled={isSubmitting}
-          />
-        ) : null}
-      </div>
-      </>}
+            {!isEdit ? (
+              <Input
+                name="stockQuantity"
+                type="number"
+                min={0}
+                step="1"
+                label={t("fieldStockQuantity")}
+                value={values.stockQuantity}
+                onChange={(event) => onFieldChange("stockQuantity", event.target.value)}
+                disabled={isSubmitting}
+              />
+            ) : null}
+          </div>
+        </>
+      )}
 
       <label className="inline-flex items-center gap-2 text-base text-text-secondary">
         <input
@@ -168,10 +154,7 @@ export function ItemForm({
       </label>
 
       {error ? (
-        <p
-          className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger"
-          role="alert"
-        >
+        <p className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger" role="alert">
           {error}
         </p>
       ) : null}

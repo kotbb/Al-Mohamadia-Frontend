@@ -17,9 +17,18 @@ export function CategoryToggleButton({ allCollapsed, onClick }: CategoryToggleBu
       variant="secondary"
       size="sm"
       onClick={onClick}
-      className="min-h-11 shrink-0 rounded-lg bg-surface font-semibold shadow-sm"
+      className="min-h-11 shrink-0 rounded-lg bg-surface font-medium"
     >
-      <svg className="h-4 w-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg
+        className="h-4 w-4 text-primary"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
         {allCollapsed ? (
           <path d="m8 7 4-4 4 4M8 17l4 4 4-4M4 10h16M4 14h16" />
         ) : (

@@ -4,17 +4,11 @@ import { isOptionalMobile, normalizeMobile } from "@/app/modules/shared/utils/eg
 import { isSignedMoneyAmount } from "@/app/modules/shared/utils/money-validation";
 import { useTranslations } from "next-intl";
 
-import type {
-  DetailStatus,
-  SupplierDetailToastKind,
-} from "../types/use-supplier-detail.types";
+import type { DetailStatus, SupplierDetailToastKind } from "../types/use-supplier-detail.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
-import {
-  getSupplier,
-  updateSupplier,
-} from "@/app/modules/suppliers/services/suppliers.service";
+import { getSupplier, updateSupplier } from "@/app/modules/suppliers/services/suppliers.service";
 import type { Supplier } from "@/app/modules/suppliers/types/suppliers.types";
 
 export function useSupplierDetail(id: string) {
@@ -120,7 +114,18 @@ export function useSupplierDetail(id: string) {
     } finally {
       setIsSaving(false);
     }
-  }, [supplier, formName, formPhone, originalPhone, shared, formAddress, formAmountOwed, originalBalance, account, refresh]);
+  }, [
+    supplier,
+    formName,
+    formPhone,
+    originalPhone,
+    shared,
+    formAddress,
+    formAmountOwed,
+    originalBalance,
+    account,
+    refresh,
+  ]);
 
   return {
     supplier,

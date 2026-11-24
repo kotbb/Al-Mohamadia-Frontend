@@ -1,7 +1,4 @@
-import type {
-  Item,
-  PriceHistoryEntry,
-} from "@/app/modules/items/types/items.types";
+import type { Item, PriceHistoryEntry } from "@/app/modules/items/types/items.types";
 
 export type LoadStatus = "idle" | "loading" | "success" | "error";
 

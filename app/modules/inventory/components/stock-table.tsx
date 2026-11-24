@@ -2,10 +2,7 @@
 
 import { useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import {
-  isCubicPricingMode,
-  type StockItem,
-} from "@/app/modules/inventory/types/inventory.types";
+import { isCubicPricingMode, type StockItem } from "@/app/modules/inventory/types/inventory.types";
 import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { Badge } from "@/app/modules/shared/components/badge";
 import { RowActionsMenu } from "@/app/modules/shared/components/row-actions-menu";
@@ -75,8 +72,9 @@ export function StockTable({
     return Array.from(map.values());
   }, [items, t]);
 
-  const { isCategoryCollapsed, allCollapsed, toggleCategory, toggleAll } =
-    useCategoryCollapse(groups.map((group) => group.categoryId));
+  const { isCategoryCollapsed, allCollapsed, toggleCategory, toggleAll } = useCategoryCollapse(
+    groups.map((group) => group.categoryId),
+  );
 
   return (
     <div className="space-y-3">
@@ -101,9 +99,7 @@ export function StockTable({
       ) : items.length === 0 ? (
         <div className="rounded-shell border border-border bg-surface p-16 text-center">
           <div className="mx-auto max-w-sm space-y-1">
-            <p className="font-semibold text-text-primary">
-              {t("emptyStockTitle")}
-            </p>
+            <p className="font-semibold text-text-primary">{t("emptyStockTitle")}</p>
             <p className="text-xs text-text-secondary">{t("emptyStockDesc")}</p>
           </div>
         </div>
@@ -114,10 +110,7 @@ export function StockTable({
             const isCollapsed = isCategoryCollapsed(group.categoryId);
 
             return (
-              <div
-                key={group.categoryId}
-                className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm"
-              >
+              <div key={group.categoryId} className="overflow-hidden rounded-xl border border-border bg-surface">
                 {/* Category Header Button (Click to collapse / expand) */}
                 <button
                   type="button"
@@ -131,24 +124,15 @@ export function StockTable({
                         isCollapsed ? "-rotate-90 rtl:rotate-90" : "rotate-0"
                       }`}
                     />
-                    <span
-                      className="h-4 w-1 shrink-0 rounded-full bg-primary"
-                      aria-hidden="true"
-                    />
-                    <span className="text-sm font-semibold text-text-primary">
-                      {group.categoryName}
-                    </span>
+                    <span className="h-4 w-1 shrink-0 rounded-full bg-primary" aria-hidden="true" />
+                    <span className="text-sm font-semibold text-text-primary">{group.categoryName}</span>
                   </div>
 
                   <div className="flex shrink-0 items-center gap-2">
                     <span className="rounded-full border border-border bg-surface px-2 py-0.5 text-xs font-medium text-text-secondary">
                       {group.items.length}
                     </span>
-                    {isCollapsed && (
-                      <span className="text-xs font-medium text-text-muted">
-                        {t("clickToExpand")}
-                      </span>
-                    )}
+                    {isCollapsed && <span className="text-xs font-medium text-text-muted">{t("clickToExpand")}</span>}
                   </div>
                 </button>
 
@@ -168,27 +152,13 @@ export function StockTable({
                       </colgroup>
                       <thead className="bg-surface">
                         <tr className="border-b border-border">
-                          <th className="px-3 py-2 text-start font-medium text-text-secondary">
-                            {t("colItem")}
-                          </th>
-                          <th className="px-3 py-2 text-end font-medium text-text-secondary">
-                            {t("colStock")}
-                          </th>
-                          <th className="px-3 py-2 text-end font-medium text-text-secondary">
-                            {t("colMinStock")}
-                          </th>
-                          <th className="px-3 py-2 text-center font-medium text-text-secondary">
-                            {t("colStatus")}
-                          </th>
-                          <th className="px-3 py-2 text-end font-medium text-text-secondary">
-                            {t("colCost")}
-                          </th>
-                          <th className="px-3 py-2 text-end font-medium text-text-secondary">
-                            {t("colSelling")}
-                          </th>
-                          <th className="px-3 py-2 text-end font-medium text-text-secondary">
-                            {t("colValuation")}
-                          </th>
+                          <th className="px-3 py-2 text-start font-medium text-text-secondary">{t("colItem")}</th>
+                          <th className="px-3 py-2 text-end font-medium text-text-secondary">{t("colStock")}</th>
+                          <th className="px-3 py-2 text-end font-medium text-text-secondary">{t("colMinStock")}</th>
+                          <th className="px-3 py-2 text-center font-medium text-text-secondary">{t("colStatus")}</th>
+                          <th className="px-3 py-2 text-end font-medium text-text-secondary">{t("colCost")}</th>
+                          <th className="px-3 py-2 text-end font-medium text-text-secondary">{t("colSelling")}</th>
+                          <th className="px-3 py-2 text-end font-medium text-text-secondary">{t("colValuation")}</th>
                           <th className="w-16 px-3 py-2 text-center font-medium text-text-secondary">
                             {t("colActions")}
                           </th>
@@ -197,20 +167,13 @@ export function StockTable({
                       <tbody className="divide-y divide-border">
                         {group.items.map((item) => {
                           const isCubic = isCubicPricingMode(item.pricingMode);
-                          const unitLabel = isCubic
-                            ? t("unitCubicMeter")
-                            : t("unitPiece");
+                          const unitLabel = isCubic ? t("unitCubicMeter") : t("unitPiece");
 
                           return (
-                            <tr
-                              key={item.id}
-                              className="transition-colors hover:bg-surface-muted/40"
-                            >
+                            <tr key={item.id} className="transition-colors hover:bg-surface-muted/40">
                               {/* Item Name */}
                               <td className="break-words px-3 py-1 text-start">
-                                <span className="font-semibold text-text-primary">
-                                  {item.name}
-                                </span>
+                                <span className="font-semibold text-text-primary">{item.name}</span>
                               </td>
 
                               {/* Current Stock */}
@@ -226,22 +189,13 @@ export function StockTable({
                                 >
                                   {formatQuantity(item.stockQuantity, isCubic)}
                                 </span>
-                                <span className="ms-1 text-xs font-medium text-text-muted">
-                                  {unitLabel}
-                                </span>
+                                <span className="ms-1 text-xs font-medium text-text-muted">{unitLabel}</span>
                               </td>
 
                               {/* Min Stock (Reorder Threshold) */}
                               <td className="whitespace-nowrap px-3 py-1 text-end tabular-nums text-text-secondary">
-                                <span>
-                                  {formatQuantity(
-                                    item.reorderThreshold ?? 0,
-                                    isCubic,
-                                  )}
-                                </span>
-                                <span className="ms-1 text-xs text-text-muted">
-                                  {unitLabel}
-                                </span>
+                                <span>{formatQuantity(item.reorderThreshold ?? 0, isCubic)}</span>
+                                <span className="ms-1 text-xs text-text-muted">{unitLabel}</span>
                               </td>
 
                               {/* Status Badge */}
@@ -295,8 +249,7 @@ export function StockTable({
                                     {
                                       id: "history",
                                       label: tAudit("viewHistory"),
-                                      onSelect: () =>
-                                        onViewAdjustmentsForItem(item),
+                                      onSelect: () => onViewAdjustmentsForItem(item),
                                     },
                                   ]}
                                 />

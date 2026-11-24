@@ -1,9 +1,6 @@
 import { apiClient } from "@/lib/api/client";
 import type { AuditActor } from "@/app/modules/audit/types/audit.types";
-import type {
-  AuditLogListResponse,
-  ListAuditLogsFilters,
-} from "@/app/modules/audit/types/audit.types";
+import type { AuditLogListResponse, ListAuditLogsFilters } from "@/app/modules/audit/types/audit.types";
 
 function buildAuditLogsQuery(filters?: ListAuditLogsFilters): string {
   if (!filters) return "/audit-logs";
@@ -29,8 +26,6 @@ export async function listAuditLogs(
   });
 }
 
-export async function listAuditActors(
-  signal?: AbortSignal,
-): Promise<AuditActor[]> {
+export async function listAuditActors(signal?: AbortSignal): Promise<AuditActor[]> {
   return apiClient.get<AuditActor[]>("/audit-logs/actors", { signal });
 }

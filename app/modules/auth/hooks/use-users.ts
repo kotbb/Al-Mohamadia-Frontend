@@ -1,22 +1,12 @@
 "use client";
 
-import type {
-  ListStatus,
-  UsersToastState,
-  UsersConfirmKind,
-  UseUsersResult,
-} from "../types/use-users.types";
+import type { ListStatus, UsersToastState, UsersConfirmKind, UseUsersResult } from "../types/use-users.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
-import { useCallback, useEffect, useState } from "react";
+import { useRef, useCallback, useEffect, useState } from "react";
 import type { AuthUser, UserRole } from "@/lib/auth/types";
 import { useAuth } from "@/lib/auth/auth-provider";
-import {
-  createAdmin,
-  deleteUser,
-  listUsers,
-  updateUser,
-} from "@/app/modules/auth/services/users.service";
+import { createAdmin, deleteUser, listUsers, updateUser } from "@/app/modules/auth/services/users.service";
 
 export function useUsers(): UseUsersResult {
   const describeError = useApiErrorMessage();
@@ -81,13 +71,16 @@ export function useUsers(): UseUsersResult {
     setEditingUserId(null);
   }, []);
 
+  const lastOpenedForm = useRef<AuthUser | null>(null);
   const openCreate = useCallback(() => {
+    lastOpenedForm.current = null;
     resetForm();
     setFormMode("create");
     setIsFormOpen(true);
   }, [resetForm]);
 
   const openEdit = useCallback((user: AuthUser) => {
+    lastOpenedForm.current = user;
     setFormMode("edit");
     setEditingUserId(user.id);
     setFormFirstName(user.firstName ?? "");
@@ -188,32 +181,21 @@ export function useUsers(): UseUsersResult {
       }
 
       const signedOutSelf =
-        confirmUser.id === currentUser?.id &&
-        (confirmKind === "delete" || confirmKind === "deactivate");
+        confirmUser.id === currentUser?.id && (confirmKind === "delete" || confirmKind === "deactivate");
       if (signedOutSelf) {
         await logout();
         return;
       }
 
       if (confirmKind === "delete") {
-        setUsers((current) =>
-          current.filter((item) => item.id !== confirmUser.id),
-        );
+        setUsers((current) => current.filter((item) => item.id !== confirmUser.id));
         setToast({ kind: "deleted", variant: "danger" });
       } else {
         const nextActive = confirmKind === "activate";
         setUsers((current) =>
-          current.map((item) =>
-            item.id === confirmUser.id
-              ? { ...item, isActive: nextActive }
-              : item,
-          ),
+          current.map((item) => (item.id === confirmUser.id ? { ...item, isActive: nextActive } : item)),
         );
-        setToast(
-          nextActive
-            ? { kind: "activated", variant: "success" }
-            : { kind: "deactivated", variant: "danger" },
-        );
+        setToast(nextActive ? { kind: "activated", variant: "success" } : { kind: "deactivated", variant: "danger" });
       }
       setConfirmKind(null);
       setConfirmUser(null);
@@ -226,6 +208,7 @@ export function useUsers(): UseUsersResult {
   }, [confirmUser, confirmKind, currentUser?.id, logout]);
 
   return {
+    restoreForm: () => (lastOpenedForm.current ? openEdit(lastOpenedForm.current) : openCreate()),
     users,
     listStatus,
     listError,

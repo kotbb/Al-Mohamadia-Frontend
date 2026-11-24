@@ -4,11 +4,7 @@ interface DashedAddButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   label: string;
 }
 
-export function DashedAddButton({
-  label,
-  className = "",
-  ...props
-}: DashedAddButtonProps) {
+export function DashedAddButton({ label, className = "", ...props }: DashedAddButtonProps) {
   return (
     <button
       type="button"

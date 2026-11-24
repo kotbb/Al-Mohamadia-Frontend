@@ -2,8 +2,7 @@ import type { AuthUser, UserRole } from "@/lib/auth/types";
 
 export type ListStatus = "idle" | "loading" | "success" | "error";
 
-export type UsersToastKind =
-  "created" | "updated" | "activated" | "deactivated" | "deleted";
+export type UsersToastKind = "created" | "updated" | "activated" | "deactivated" | "deleted";
 
 export interface UsersToastState {
   kind: UsersToastKind;
@@ -21,6 +20,7 @@ export interface UseUsersResult {
   isFormOpen: boolean;
   openCreate: () => void;
   openEdit: (user: AuthUser) => void;
+  restoreForm: () => void;
   closeForm: () => void;
   formFirstName: string;
   formLastName: string;

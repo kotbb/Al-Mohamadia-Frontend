@@ -31,21 +31,10 @@ interface AuditLogTableProps {
 }
 
 function isChangePair(value: unknown): value is { old: unknown; new: unknown } {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "old" in value &&
-    "new" in value
-  );
+  return typeof value === "object" && value !== null && "old" in value && "new" in value;
 }
 
-export function AuditLogTable({
-  logs,
-  status,
-  error,
-  hasActiveFilters,
-  onRetry,
-}: AuditLogTableProps) {
+export function AuditLogTable({ logs, status, error, hasActiveFilters, onRetry }: AuditLogTableProps) {
   const t = useTranslations("audit");
   const tShared = useTranslations("shared");
   const locale = useLocale();
@@ -56,51 +45,34 @@ export function AuditLogTable({
   }
 
   if (status === "error") {
-    return (
-      <ErrorState
-        title={t("listError")}
-        message={error ?? undefined}
-        retryLabel={t("retry")}
-        onRetry={onRetry}
-      />
-    );
+    return <ErrorState title={t("listError")} message={error ?? undefined} retryLabel={t("retry")} onRetry={onRetry} />;
   }
 
   if (logs.length === 0) {
     return (
       <EmptyState
         title={hasActiveFilters ? t("emptyFilteredTitle") : t("emptyTitle")}
-        description={
-          hasActiveFilters ? t("emptyFilteredDescription") : t("emptyDescription")
-        }
+        description={hasActiveFilters ? t("emptyFilteredDescription") : t("emptyDescription")}
       />
     );
   }
 
   function actionLabel(action: string): string {
-    return (AUDIT_LABEL_ACTIONS as readonly string[]).includes(action)
-      ? t(`actions.${action}`)
-      : action;
+    return (AUDIT_LABEL_ACTIONS as readonly string[]).includes(action) ? t(`actions.${action}`) : action;
   }
 
   function entityLabel(entityType: string): string {
-    return (AUDIT_LABEL_ENTITIES as readonly string[]).includes(entityType)
-      ? t(`entities.${entityType}`)
-      : entityType;
+    return (AUDIT_LABEL_ENTITIES as readonly string[]).includes(entityType) ? t(`entities.${entityType}`) : entityType;
   }
 
   function fieldLabel(field: string): string {
-    return (AUDIT_FIELD_KEYS as readonly string[]).includes(field)
-      ? t(`fields.${field}`)
-      : field;
+    return (AUDIT_FIELD_KEYS as readonly string[]).includes(field) ? t(`fields.${field}`) : field;
   }
 
   const valueLabels = {
     value(field: string, code: string): string | null {
       if (code === "true" || code === "false") return t(`values.${code}`);
-      return AUDIT_VALUE_CODES_BY_FIELD[field]?.includes(code)
-        ? t(`values.${code}`)
-        : null;
+      return AUDIT_VALUE_CODES_BY_FIELD[field]?.includes(code) ? t(`values.${code}`) : null;
     },
     dimension: (field: "thickness" | "width" | "length") => fieldLabel(field),
   };
@@ -110,52 +82,28 @@ export function AuditLogTable({
       <table className="w-full min-w-[48rem] border-collapse text-sm lg:text-base">
         <thead className="bg-surface-muted">
           <tr className="border-b border-border">
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colTime")}
-            </th>
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colUser")}
-            </th>
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colAction")}
-            </th>
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colEntity")}
-            </th>
-            <th className="px-4 py-3 text-start font-medium text-text-secondary">
-              {t("colDetails")}
-            </th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colTime")}</th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colUser")}</th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colAction")}</th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colEntity")}</th>
+            <th className="px-4 py-3 text-start font-medium text-text-secondary">{t("colDetails")}</th>
           </tr>
         </thead>
         <tbody>
           {logs.map((log) => {
-            const changeEntries = Object.entries(log.changes ?? {}).flatMap(
-              (entry) => {
-                if (!isChangePair(entry[1]) || isHiddenAuditField(entry[0])) {
-                  return [];
-                }
-                const oldText = formatAuditChangeValue(
-                  entry[0],
-                  entry[1].old,
-                  locale,
-                  "",
-                  valueLabels,
-                );
-                const newText = formatAuditChangeValue(
-                  entry[0],
-                  entry[1].new,
-                  locale,
-                  t("emptyValue"),
-                  valueLabels,
-                );
-                const oldShown = oldText ?? "";
-                const newShown = newText ?? t("emptyValue");
-                if (oldShown === "" && newShown === t("emptyValue")) {
-                  return [];
-                }
-                return [[entry[0], oldShown, newShown] as const];
-              },
-            );
+            const changeEntries = Object.entries(log.changes ?? {}).flatMap((entry) => {
+              if (!isChangePair(entry[1]) || isHiddenAuditField(entry[0])) {
+                return [];
+              }
+              const oldText = formatAuditChangeValue(entry[0], entry[1].old, locale, "", valueLabels);
+              const newText = formatAuditChangeValue(entry[0], entry[1].new, locale, t("emptyValue"), valueLabels);
+              const oldShown = oldText ?? "";
+              const newShown = newText ?? t("emptyValue");
+              if (oldShown === "" && newShown === t("emptyValue")) {
+                return [];
+              }
+              return [[entry[0], oldShown, newShown] as const];
+            });
             const hasChanges = changeEntries.length > 0;
             const isOpen = openId === log.id;
             const description = describeAuditSummary(log, actionLabel(log.action), fieldLabel);
@@ -181,9 +129,7 @@ export function AuditLogTable({
                 changesLabel={t("showChanges")}
                 hideChangesLabel={t("hideChanges")}
                 fieldLabel={fieldLabel}
-                onToggle={() =>
-                  setOpenId((current) => (current === log.id ? null : log.id))
-                }
+                onToggle={() => setOpenId((current) => (current === log.id ? null : log.id))}
               />
             );
           })}
@@ -227,9 +173,7 @@ function LogRows({
   return (
     <>
       <tr className="border-b border-border last:border-b-0 transition-colors hover:bg-surface-muted/50">
-        <td className="px-4 py-3 whitespace-nowrap text-text-secondary">
-          {timeText}
-        </td>
+        <td className="px-4 py-3 whitespace-nowrap text-text-secondary">{timeText}</td>
         <td className="px-4 py-3 font-medium text-text-primary">{userText}</td>
         <td className="px-4 py-3 whitespace-nowrap">
           <Badge variant={auditActionTone(log.action)}>{actionText}</Badge>
@@ -246,9 +190,7 @@ function LogRows({
                 aria-controls={`audit-changes-${log.id}`}
                 onClick={onToggle}
               >
-                <span className="font-bold">
-                  {isOpen ? hideChangesLabel : changesLabel}
-                </span>
+                <span className="font-bold">{isOpen ? hideChangesLabel : changesLabel}</span>
               </button>
             ) : null}
           </div>
@@ -274,8 +216,12 @@ function LogRows({
                       <th scope="row" className="px-4 py-2 text-start font-medium text-text-secondary">
                         {fieldLabel(field)}
                       </th>
-                      <td className="max-w-64 whitespace-pre-wrap break-words px-4 py-2 text-text-secondary"><bdi>{oldText}</bdi></td>
-                      <td className="max-w-64 whitespace-pre-wrap break-words px-4 py-2 text-text-primary"><bdi>{newText}</bdi></td>
+                      <td className="max-w-64 whitespace-pre-wrap break-words px-4 py-2 text-text-secondary">
+                        <bdi>{oldText}</bdi>
+                      </td>
+                      <td className="max-w-64 whitespace-pre-wrap break-words px-4 py-2 text-text-primary">
+                        <bdi>{newText}</bdi>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

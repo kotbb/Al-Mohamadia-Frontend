@@ -12,7 +12,14 @@ export function isUsableLine(params: {
   if (params.pricingMode === "free_amount") {
     return Number.isFinite(params.piecePrice) && params.piecePrice > 0 && Number.isFinite(lineTotalForPricing(params));
   }
-  const volume = params.pricingMode === "per_piece" ? 1 : metersToCubicMeters(params.thicknessM, params.widthM, params.lengthM);
+  const volume =
+    params.pricingMode === "per_piece" ? 1 : metersToCubicMeters(params.thicknessM, params.widthM, params.lengthM);
   const stock = Math.round(params.quantity * volume * 1_000_000) / 1_000_000;
-  return Number.isFinite(volume) && volume > 0 && Number.isFinite(stock) && stock > 0 && Number.isFinite(lineTotalForPricing(params));
+  return (
+    Number.isFinite(volume) &&
+    volume > 0 &&
+    Number.isFinite(stock) &&
+    stock > 0 &&
+    Number.isFinite(lineTotalForPricing(params))
+  );
 }

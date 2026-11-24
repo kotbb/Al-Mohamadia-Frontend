@@ -26,9 +26,7 @@ export function HubNavigation() {
 
   // 2. Procurement & Suppliers Hub: suppliers, purchases, supplier-payments
   const isProcurementHub =
-    pathname.startsWith("/suppliers") ||
-    pathname.startsWith("/purchases") ||
-    pathname.startsWith("/supplier-payments");
+    pathname.startsWith("/suppliers") || pathname.startsWith("/purchases") || pathname.startsWith("/supplier-payments");
 
   if (isProcurementHub) {
     const tabs: HubTabItem[] = [
@@ -45,9 +43,7 @@ export function HubNavigation() {
 
   // 3. Inventory & Catalog Hub: items, categories, inventory
   const isInventoryHub =
-    pathname.startsWith("/items") ||
-    pathname.startsWith("/categories") ||
-    pathname.startsWith("/inventory");
+    pathname.startsWith("/items") || pathname.startsWith("/categories") || pathname.startsWith("/inventory");
 
   if (isInventoryHub) {
     const tabs: HubTabItem[] = [

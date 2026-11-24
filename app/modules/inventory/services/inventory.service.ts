@@ -22,21 +22,14 @@ function buildStockQuery(filters?: ListStockFilters): string {
   return query ? `/inventory/stock?${query}` : "/inventory/stock";
 }
 
-export async function getStockList(
-  filters?: ListStockFilters,
-  signal?: AbortSignal,
-): Promise<StockListResponse> {
+export async function getStockList(filters?: ListStockFilters, signal?: AbortSignal): Promise<StockListResponse> {
   return apiClient.get<StockListResponse>(buildStockQuery(filters), { signal });
 }
 
-export async function getInventoryValuation(
-  signal?: AbortSignal,
-): Promise<InventoryValuation> {
+export async function getInventoryValuation(signal?: AbortSignal): Promise<InventoryValuation> {
   return apiClient.get<InventoryValuation>("/inventory/valuation", { signal });
 }
 
-export async function createStockAdjustment(
-  input: CreateStockAdjustmentInput,
-): Promise<AdjustStockResult> {
+export async function createStockAdjustment(input: CreateStockAdjustmentInput): Promise<AdjustStockResult> {
   return apiClient.post<AdjustStockResult>("/inventory/adjustments", input);
 }

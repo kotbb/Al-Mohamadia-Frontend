@@ -7,11 +7,7 @@ import { Badge } from "@/app/modules/shared/components/badge";
 import { EmptyState } from "@/app/modules/shared/components/empty-state";
 import { ErrorState } from "@/app/modules/shared/components/error-state";
 import { LoadingState } from "@/app/modules/shared/components/loading-state";
-import {
-  historyRowAction,
-  RowActionsMenu,
-  type RowActionItem,
-} from "@/app/modules/shared/components/row-actions-menu";
+import { historyRowAction, RowActionsMenu, type RowActionItem } from "@/app/modules/shared/components/row-actions-menu";
 import { formatInvoiceDate } from "@/app/modules/invoices/utils/format-invoice-date";
 
 interface UsersListProps {
@@ -45,12 +41,7 @@ function StatusIcon({ active }: { active: boolean }) {
   return (
     <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden>
       <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M5.5 5.5 10.5 10.5M10.5 5.5 5.5 10.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
+      <path d="M5.5 5.5 10.5 10.5M10.5 5.5 5.5 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
@@ -76,20 +67,11 @@ export function UsersList({
   }
 
   if (status === "error") {
-    return (
-      <ErrorState
-        title={t("listError")}
-        message={error ?? undefined}
-        retryLabel={t("retry")}
-        onRetry={onRetry}
-      />
-    );
+    return <ErrorState title={t("listError")} message={error ?? undefined} retryLabel={t("retry")} onRetry={onRetry} />;
   }
 
   if (users.length === 0) {
-    return (
-      <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />
-    );
+    return <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />;
   }
 
   const cell = "px-4 py-3.5";
@@ -108,40 +90,20 @@ export function UsersList({
         </colgroup>
         <thead>
           <tr className="border-b border-border bg-surface-muted">
-            <th className={`${cell} text-start font-medium text-text-secondary`}>
-              {t("colName")}
-            </th>
-            <th className={`${cell} text-start font-medium text-text-secondary`}>
-              {t("colUsername")}
-            </th>
-            <th className={`${cell} text-start font-medium text-text-secondary`}>
-              {t("colRole")}
-            </th>
-            <th className={`${cell} text-start font-medium text-text-secondary`}>
-              {t("colStatus")}
-            </th>
-            <th className={`${cell} text-start font-medium text-text-secondary`}>
-              {t("colCreated")}
-            </th>
-            <th className={`${cell} text-start font-medium text-text-secondary`}>
-              {t("colModified")}
-            </th>
-            <th className={`${cell} text-center font-medium text-text-secondary`}>
-              {t("colActions")}
-            </th>
+            <th className={`${cell} text-start font-medium text-text-secondary`}>{t("colName")}</th>
+            <th className={`${cell} text-start font-medium text-text-secondary`}>{t("colUsername")}</th>
+            <th className={`${cell} text-start font-medium text-text-secondary`}>{t("colRole")}</th>
+            <th className={`${cell} text-start font-medium text-text-secondary`}>{t("colStatus")}</th>
+            <th className={`${cell} text-start font-medium text-text-secondary`}>{t("colCreated")}</th>
+            <th className={`${cell} text-start font-medium text-text-secondary`}>{t("colModified")}</th>
+            <th className={`${cell} text-center font-medium text-text-secondary`}>{t("colActions")}</th>
           </tr>
         </thead>
         <tbody>
           {users.map((user) => {
-            const displayName = getDisplayName(
-              user.firstName,
-              user.lastName,
-              user.username,
-            );
+            const displayName = getDisplayName(user.firstName, user.lastName, user.username);
             const actions: RowActionItem[] = [
-              historyRowAction(tAudit("viewHistory"), () =>
-                onHistory(user, displayName),
-              ),
+              historyRowAction(tAudit("viewHistory"), () => onHistory(user, displayName)),
               {
                 id: "edit",
                 label: t("edit"),
@@ -168,10 +130,7 @@ export function UsersList({
               },
             ];
 
-            const initial = (user.firstName || user.username)
-              .trim()
-              .charAt(0)
-              .toUpperCase();
+            const initial = (user.firstName || user.username).trim().charAt(0).toUpperCase();
 
             return (
               <tr
@@ -184,7 +143,7 @@ export function UsersList({
                     onClick={() => onEdit(user)}
                     className="ds-focus-ring group inline-flex min-w-0 max-w-full items-center gap-3 rounded-xl text-start transition-colors"
                   >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xs font-bold text-primary transition-all duration-150 group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-sm">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xs font-bold text-primary transition-colors duration-150 group-hover:bg-primary group-hover:text-primary-foreground">
                       {initial}
                     </div>
                     <span className="truncate font-semibold text-text-primary transition-colors group-hover:text-primary group-hover:underline">
@@ -192,13 +151,9 @@ export function UsersList({
                     </span>
                   </button>
                 </td>
-                <td className={`${cell} truncate text-text-secondary`}>
-                  {user.username}
-                </td>
+                <td className={`${cell} truncate text-text-secondary`}>{user.username}</td>
                 <td className={`${cell} text-text-secondary`}>
-                  {user.role === "super_admin"
-                    ? t("roleSuperAdmin")
-                    : t("roleAdmin")}
+                  {user.role === "super_admin" ? t("roleSuperAdmin") : t("roleAdmin")}
                 </td>
                 <td className={cell}>
                   <Badge variant={user.isActive ? "success" : "danger"}>

@@ -22,7 +22,7 @@ export function CategoriesToolbar({ filters, onSearchChange, onActiveChange }: C
             value={filters.search}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder={t("searchPlaceholder")}
-            className="ds-focus-input min-h-9 w-full rounded-lg border border-border bg-surface px-3 text-sm text-text-primary placeholder:text-text-muted"
+            className="ds-focus-input min-h-11 sm:min-h-9 w-full rounded-lg border border-border bg-surface px-3 text-base sm:text-sm text-text-primary placeholder:text-text-muted"
           />
         </label>
         <label className="flex w-full flex-col gap-1 sm:w-32">
@@ -31,7 +31,7 @@ export function CategoriesToolbar({ filters, onSearchChange, onActiveChange }: C
             name="categoryStatus"
             value={filters.isActive}
             onChange={(event) => onActiveChange(event.target.value as CategoriesFilters["isActive"])}
-            className="ds-focus-input min-h-9 cursor-pointer rounded-lg border border-border bg-surface px-3 text-sm text-text-primary"
+            className="ds-focus-input min-h-11 sm:min-h-9 cursor-pointer rounded-lg border border-border bg-surface px-3 text-base sm:text-sm text-text-primary"
           >
             <option value="all">{t("filterAllStatus")}</option>
             <option value="active">{t("statusActive")}</option>

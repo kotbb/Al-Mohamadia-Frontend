@@ -12,14 +12,7 @@ interface MergePhoneFieldProps {
   showError?: boolean;
 }
 
-export function MergePhoneField({
-  name,
-  value,
-  currentPhone,
-  disabled,
-  onChange,
-  showError,
-}: MergePhoneFieldProps) {
+export function MergePhoneField({ name, value, currentPhone, disabled, onChange, showError }: MergePhoneFieldProps) {
   const t = useTranslations("shared");
   return (
     <div className="flex flex-col gap-3">
@@ -29,9 +22,7 @@ export function MergePhoneField({
           checked={value !== null}
           disabled={disabled}
           className="accent-primary"
-          onChange={(event) =>
-            onChange(event.target.checked ? (currentPhone ?? "") : null)
-          }
+          onChange={(event) => onChange(event.target.checked ? (currentPhone ?? "") : null)}
         />
         {t("mergePhoneOverride")}
       </label>

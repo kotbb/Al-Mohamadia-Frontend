@@ -2,10 +2,7 @@
 
 export type BalanceTier = "normal" | "attention" | "critical";
 
-export const BALANCE_TIER_CLASSES: Record<
-  BalanceTier,
-  { text: string; badge: string }
-> = {
+export const BALANCE_TIER_CLASSES: Record<BalanceTier, { text: string; badge: string }> = {
   normal: {
     text: "text-text-primary font-semibold",
     badge: "",

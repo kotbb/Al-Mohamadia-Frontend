@@ -5,10 +5,7 @@ interface AddInvoiceLineButtonProps {
   onClick: () => void;
 }
 
-export function AddInvoiceLineButton({
-  label,
-  onClick,
-}: AddInvoiceLineButtonProps) {
+export function AddInvoiceLineButton({ label, onClick }: AddInvoiceLineButtonProps) {
   return (
     <div className="mt-3 flex justify-end">
       <DashedAddButton label={label} onClick={onClick} />

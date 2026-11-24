@@ -8,10 +8,7 @@ interface PaymentMethodBadgeProps {
   className?: string;
 }
 
-export function PaymentMethodBadge({
-  method,
-  className = "",
-}: PaymentMethodBadgeProps) {
+export function PaymentMethodBadge({ method, className = "" }: PaymentMethodBadgeProps) {
   const t = useTranslations("payments");
 
   const labelMap: Record<PaymentMethod, string> = {
@@ -24,11 +21,5 @@ export function PaymentMethodBadge({
 
   const label = labelMap[method] || method;
 
-  return (
-    <span
-      className={`inline-flex items-center font-medium text-text-secondary ${className}`}
-    >
-      {label}
-    </span>
-  );
+  return <span className={`inline-flex items-center font-medium text-text-secondary ${className}`}>{label}</span>;
 }

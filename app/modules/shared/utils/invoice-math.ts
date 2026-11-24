@@ -6,11 +6,7 @@ export function roundMoney(value: number): number {
 }
 
 /** thickness × width × length in meters → m³, 6 decimal places — mirrors backend. */
-export function metersToCubicMeters(
-  thicknessM: number,
-  widthM: number,
-  lengthM: number,
-): number {
+export function metersToCubicMeters(thicknessM: number, widthM: number, lengthM: number): number {
   const volume = thicknessM * widthM * lengthM;
   return Math.round(volume * 1_000_000) / 1_000_000;
 }
@@ -39,11 +35,7 @@ export function lineTotalForPricing(params: {
   return params.quantity * volume * params.piecePrice;
 }
 
-export function computeInvoiceTotals(params: {
-  lineTotals: number[];
-  discount: number;
-  paid: number;
-}): {
+export function computeInvoiceTotals(params: { lineTotals: number[]; discount: number; paid: number }): {
   total: number;
   discount: number;
   paid: number;

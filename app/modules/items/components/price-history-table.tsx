@@ -10,10 +10,7 @@ interface PriceHistoryTableProps {
   compact?: boolean;
 }
 
-function formatFieldLabel(
-  field: string,
-  t: ReturnType<typeof useTranslations>,
-): string {
+function formatFieldLabel(field: string, t: ReturnType<typeof useTranslations>): string {
   if (field === "unitPrice") return t("historySellingPrice");
   if (field === "cost") return t("historyCost");
   return field;
@@ -28,10 +25,7 @@ function formatValue(field: string, value: unknown, locale: string): string {
   return String(value);
 }
 
-export function PriceHistoryTable({
-  history,
-  compact = false,
-}: PriceHistoryTableProps) {
+export function PriceHistoryTable({ history, compact = false }: PriceHistoryTableProps) {
   const t = useTranslations("items");
   const locale = useLocale();
   const cell = compact ? "px-3 py-2.5 text-sm" : "px-5 py-4";
@@ -41,11 +35,7 @@ export function PriceHistoryTable({
 
   return (
     <div className="overflow-x-auto rounded-xl border border-border bg-white dark:bg-surface">
-      <table
-        className={`w-full border-collapse ${
-          compact ? "min-w-[36rem] text-sm" : "min-w-[48rem] text-base"
-        }`}
-      >
+      <table className={`w-full border-collapse ${compact ? "min-w-[36rem] text-sm" : "min-w-[48rem] text-base"}`}>
         <thead>
           <tr className="border-b border-border bg-surface-muted">
             <th className={head}>{t("historyColField")}</th>
@@ -57,22 +47,13 @@ export function PriceHistoryTable({
         </thead>
         <tbody>
           {history.map((entry) => (
-            <tr
-              key={entry.id}
-              className="border-b border-border last:border-b-0"
-            >
-              <td className={`${cell} font-medium text-text-primary`}>
-                {formatFieldLabel(entry.field, t)}
-              </td>
-              <td className={`${cell} text-text-secondary`}>
-                {formatValue(entry.field, entry.oldValue, locale)}
-              </td>
+            <tr key={entry.id} className="border-b border-border last:border-b-0">
+              <td className={`${cell} font-medium text-text-primary`}>{formatFieldLabel(entry.field, t)}</td>
+              <td className={`${cell} text-text-secondary`}>{formatValue(entry.field, entry.oldValue, locale)}</td>
               <td className={`${cell} font-semibold text-text-primary`}>
                 {formatValue(entry.field, entry.newValue, locale)}
               </td>
-              <td className={`${cell} text-text-secondary`}>
-                {entry.changedBy?.trim() ? entry.changedBy : "-"}
-              </td>
+              <td className={`${cell} text-text-secondary`}>{entry.changedBy?.trim() ? entry.changedBy : "-"}</td>
               <td className={`${cell} whitespace-nowrap text-text-secondary`}>
                 {formatInvoiceDate(entry.createdAt, locale)}
               </td>

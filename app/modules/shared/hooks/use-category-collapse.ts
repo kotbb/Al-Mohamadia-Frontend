@@ -8,8 +8,7 @@ export function useCategoryCollapse(categoryIds: readonly string[]) {
     overrides: new Set<string>(),
   }));
 
-  const isCategoryCollapsed = (categoryId: string) =>
-    state.collapsedByDefault !== state.overrides.has(categoryId);
+  const isCategoryCollapsed = (categoryId: string) => state.collapsedByDefault !== state.overrides.has(categoryId);
 
   const allCollapsed = categoryIds.length > 0 && categoryIds.every(isCategoryCollapsed);
 

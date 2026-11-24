@@ -63,17 +63,11 @@ export function CreateAdminForm({
     <>
       {!isModal ? (
         <div>
-          <h2 className="text-lg font-semibold text-text-primary">
-            {isEdit ? t("editTitle") : t("createTitle")}
-          </h2>
-          <p className="mt-1 text-sm text-text-muted">
-            {isEdit ? t("editSubtitle") : t("createSubtitle")}
-          </p>
+          <h2 className="text-lg font-semibold text-text-primary">{isEdit ? t("editTitle") : t("createTitle")}</h2>
+          <p className="mt-1 text-sm text-text-muted">{isEdit ? t("editSubtitle") : t("createSubtitle")}</p>
         </div>
       ) : (
-        <p className="text-sm text-text-muted">
-          {isEdit ? t("editSubtitle") : t("createSubtitle")}
-        </p>
+        <p className="text-sm text-text-muted">{isEdit ? t("editSubtitle") : t("createSubtitle")}</p>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -129,7 +123,7 @@ export function CreateAdminForm({
             value={role}
             disabled={isSubmitting || roleLocked}
             onChange={(event) => onRoleChange(event.target.value as UserRole)}
-            className="ds-focus-input min-h-11 rounded-xl border border-border bg-surface px-4 text-base text-text-primary disabled:bg-surface-muted disabled:text-text-muted"
+            className="ds-focus-input min-h-11 rounded-lg border border-border bg-surface px-4 text-base text-text-primary disabled:bg-surface-muted disabled:text-text-muted"
           >
             <option value="admin">{t("roleAdmin")}</option>
             <option value="super_admin">{t("roleSuperAdmin")}</option>
@@ -138,28 +132,15 @@ export function CreateAdminForm({
       ) : null}
 
       {error ? (
-        <p
-          className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger"
-          role="alert"
-        >
+        <p className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger" role="alert">
           {error}
         </p>
       ) : null}
 
       {!isModal ? (
         <div>
-          <Button
-            type="submit"
-            variant="primary"
-            disabled={isSubmitting || !canSubmit}
-          >
-            {isSubmitting
-              ? isEdit
-                ? t("saving")
-                : t("creating")
-              : isEdit
-                ? t("saveChanges")
-                : t("createSubmit")}
+          <Button type="submit" variant="primary" disabled={isSubmitting || !canSubmit}>
+            {isSubmitting ? (isEdit ? t("saving") : t("creating")) : isEdit ? t("saveChanges") : t("createSubmit")}
           </Button>
         </div>
       ) : null}

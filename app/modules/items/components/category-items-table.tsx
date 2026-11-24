@@ -3,11 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import type { Category, Item } from "@/app/modules/items/types/items.types";
 import { formatMoney } from "@/app/modules/shared/utils/format-money";
-import {
-  historyRowAction,
-  RowActionsMenu,
-  type RowActionItem,
-} from "@/app/modules/shared/components/row-actions-menu";
+import { historyRowAction, RowActionsMenu, type RowActionItem } from "@/app/modules/shared/components/row-actions-menu";
 
 interface CategoryItemsTableProps {
   category: Category;
@@ -19,10 +15,7 @@ interface CategoryItemsTableProps {
   onHistory: (item: Item) => void;
 }
 
-function pricingModeLabel(
-  mode: Item["pricingMode"],
-  t: ReturnType<typeof useTranslations>,
-): string {
+function pricingModeLabel(mode: Item["pricingMode"], t: ReturnType<typeof useTranslations>): string {
   return mode === "free_amount"
     ? t("unitFreeAmount")
     : mode === "per_cubic_meter"
@@ -45,7 +38,7 @@ export function CategoryItemsTable({
   const cell = "px-3.5 py-2.5";
 
   return (
-    <section className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
+    <section className="overflow-hidden rounded-xl border border-border bg-surface">
       {/* Category Header */}
       <h2>
         <button
@@ -56,16 +49,20 @@ export function CategoryItemsTable({
           className={`ds-focus-ring flex min-h-12 w-full items-center justify-between gap-3 bg-surface-muted px-4 py-3 text-start transition-colors hover:bg-surface-muted/80 ${isCollapsed ? "" : "border-b border-border"}`}
         >
           <span className="flex items-center gap-2.5">
-            <svg className={`h-4 w-4 shrink-0 text-text-secondary transition-transform duration-200 motion-reduce:transition-none ${isCollapsed ? "-rotate-90 rtl:rotate-90" : "rotate-0"}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg
+              className={`h-4 w-4 shrink-0 text-text-secondary transition-transform duration-200 motion-reduce:transition-none ${isCollapsed ? "-rotate-90 rtl:rotate-90" : "rotate-0"}`}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
               <path d="m6 9 6 6 6-6" />
             </svg>
-            <span
-              className="h-4 w-1 rounded-full bg-primary"
-              aria-hidden="true"
-            />
-            <span className="text-sm font-semibold text-text-primary sm:text-base">
-              {category.name}
-            </span>
+            <span className="h-4 w-1 rounded-full bg-primary" aria-hidden="true" />
+            <span className="text-sm font-semibold text-text-primary sm:text-base">{category.name}</span>
           </span>
           <span className="inline-flex items-center rounded-full border border-border/70 bg-surface px-2.5 py-0.5 text-xs font-medium text-text-secondary">
             {items.length}
@@ -84,31 +81,11 @@ export function CategoryItemsTable({
           </colgroup>
           <thead>
             <tr className="border-b border-border bg-surface dark:bg-surface">
-              <th
-                className={`${cell} text-start font-medium text-text-secondary`}
-              >
-                {t("colItem")}
-              </th>
-              <th
-                className={`${cell} text-start font-medium text-text-secondary`}
-              >
-                {t("colUnit")}
-              </th>
-              <th
-                className={`${cell} text-end pe-6 font-medium text-text-secondary`}
-              >
-                {t("colCost")}
-              </th>
-              <th
-                className={`${cell} text-end pe-6 font-medium text-text-secondary`}
-              >
-                {t("colPrice")}
-              </th>
-              <th
-                className={`${cell} text-center font-medium text-text-secondary`}
-              >
-                {t("colActions")}
-              </th>
+              <th className={`${cell} text-start font-medium text-text-secondary`}>{t("colItem")}</th>
+              <th className={`${cell} text-start font-medium text-text-secondary`}>{t("colUnit")}</th>
+              <th className={`${cell} text-end pe-6 font-medium text-text-secondary`}>{t("colCost")}</th>
+              <th className={`${cell} text-end pe-6 font-medium text-text-secondary`}>{t("colPrice")}</th>
+              <th className={`${cell} text-center font-medium text-text-secondary`}>{t("colActions")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/60">
@@ -129,31 +106,18 @@ export function CategoryItemsTable({
               ];
 
               return (
-                <tr
-                  key={item.id}
-                  className="transition-colors hover:bg-surface-muted/80"
-                >
+                <tr key={item.id} className="transition-colors hover:bg-primary/10">
                   <td className={`${cell} align-middle text-text-primary`}>
-                    <div className="truncate font-semibold text-text-primary">
-                      {item.name}
-                    </div>
+                    <div className="truncate font-semibold text-text-primary">{item.name}</div>
                   </td>
                   <td className={`${cell} align-middle text-text-secondary`}>
                     {pricingModeLabel(item.pricingMode, t)}
                   </td>
-                  <td
-                    className={`${cell} align-middle text-end pe-6 tabular-nums text-text-secondary`}
-                  >
-                    {item.pricingMode === "free_amount"
-                      ? ""
-                      : formatMoney(item.cost, locale)}
+                  <td className={`${cell} align-middle text-end pe-6 tabular-nums text-text-secondary`}>
+                    {item.pricingMode === "free_amount" ? "" : formatMoney(item.cost, locale)}
                   </td>
-                  <td
-                    className={`${cell} align-middle text-end pe-6 font-medium tabular-nums text-text-primary`}
-                  >
-                    {item.pricingMode === "free_amount"
-                      ? ""
-                      : formatMoney(item.unitPrice, locale)}
+                  <td className={`${cell} align-middle text-end pe-6 font-medium tabular-nums text-text-primary`}>
+                    {item.pricingMode === "free_amount" ? "" : formatMoney(item.unitPrice, locale)}
                   </td>
                   <td className={`${cell} align-middle text-center`}>
                     <RowActionsMenu label={t("colActions")} items={actions} />

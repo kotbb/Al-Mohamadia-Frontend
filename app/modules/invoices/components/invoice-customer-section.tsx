@@ -56,48 +56,53 @@ export function InvoiceCustomerSection({
           ]}
         />
 
-        {type === "customer_sale" ? selectedCustomer ? (
-          <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-surface-muted px-4 py-3.5">
-            <div>
-              <p className="text-xs font-medium text-text-secondary">
-                {t("customerSelected")}
-              </p>
-              <p className="text-base font-bold text-text-primary">
-                {selectedCustomer.name}
-              </p>
-              <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-text-secondary">
-                <span>
-                  {selectedCustomer.balance < 0 ? account("customerCredit") : t("customerCurrentDebt")}:{" "}
-                  <strong className={selectedCustomer.balance < 0 ? "text-success" : "text-text-primary"}>
-                    <bdi>{formatMoney(Math.abs(selectedCustomer.balance), locale)} {t("currency")}</bdi>
-                  </strong>
-                </span>
+        {type === "customer_sale" ? (
+          selectedCustomer ? (
+            <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-surface-muted px-4 py-3.5">
+              <div>
+                <p className="text-xs font-medium text-text-secondary">{t("customerSelected")}</p>
+                <p className="text-base font-bold text-text-primary">{selectedCustomer.name}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-text-secondary">
+                  <span>
+                    {selectedCustomer.balance < 0 ? account("customerCredit") : t("customerCurrentDebt")}:{" "}
+                    <strong className={selectedCustomer.balance < 0 ? "text-success" : "text-text-primary"}>
+                      <bdi>
+                        {formatMoney(Math.abs(selectedCustomer.balance), locale)} {t("currency")}
+                      </bdi>
+                    </strong>
+                  </span>
+                </div>
               </div>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  onClearCustomer();
+                  onCustomerQueryChange("");
+                  setFocusCustomerSearch(true);
+                }}
+              >
+                {t("customerChange")}
+              </Button>
             </div>
-            <Button type="button" variant="secondary" size="sm" onClick={() => {
-              onClearCustomer();
-              onCustomerQueryChange("");
-              setFocusCustomerSearch(true);
-            }}>
-              {t("customerChange")}
-            </Button>
-          </div>
-        ) : (
-          <InvoiceCustomerCombobox
-            query={customerQuery}
-            onQueryChange={onCustomerQueryChange}
-            results={customerResults}
-            loading={customersLoading}
-            allCustomers={allCustomers}
-            allCustomersLoading={allCustomersLoading}
-            selectedCustomer={selectedCustomer}
-            focusOnMount={focusCustomerSearch}
-            onSelect={(customer) => {
-              setFocusCustomerSearch(false);
-              onSelectCustomer(customer);
-            }}
-            onClear={onClearCustomer}
-          />
+          ) : (
+            <InvoiceCustomerCombobox
+              query={customerQuery}
+              onQueryChange={onCustomerQueryChange}
+              results={customerResults}
+              loading={customersLoading}
+              allCustomers={allCustomers}
+              allCustomersLoading={allCustomersLoading}
+              selectedCustomer={selectedCustomer}
+              focusOnMount={focusCustomerSearch}
+              onSelect={(customer) => {
+                setFocusCustomerSearch(false);
+                onSelectCustomer(customer);
+              }}
+              onClear={onClearCustomer}
+            />
+          )
         ) : null}
       </div>
     </SurfaceCard>

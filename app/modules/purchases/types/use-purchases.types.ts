@@ -4,8 +4,7 @@ export type ListStatus = "idle" | "loading" | "success" | "error";
 
 export type PurchaseStatusFilterOption = "all" | PurchaseInvoiceStatus;
 
-export type PurchasePeriodFilterOption =
-  "off" | "day" | "week" | "month" | "year" | "custom";
+export type PurchasePeriodFilterOption = "off" | "day" | "week" | "month" | "year" | "custom";
 
 export interface PurchasesToastState {
   kind: "cancelled" | "created";

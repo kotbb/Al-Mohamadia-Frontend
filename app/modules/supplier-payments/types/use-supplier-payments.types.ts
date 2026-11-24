@@ -1,7 +1,4 @@
-import type {
-  PaymentMethod,
-  PaymentPeriod,
-} from "@/app/modules/supplier-payments/types/supplier-payments.types";
+import type { PaymentMethod, PaymentPeriod } from "@/app/modules/supplier-payments/types/supplier-payments.types";
 
 export type ListStatus = "idle" | "loading" | "success" | "error";
 

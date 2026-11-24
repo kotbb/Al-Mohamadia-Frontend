@@ -34,6 +34,7 @@ export function CategoriesPage() {
     openCreate,
     openEdit,
     closeForm,
+    restoreForm,
     formName,
     setFormName,
     isSaving,
@@ -86,11 +87,7 @@ export function CategoriesPage() {
           : "";
 
   const confirmLabel =
-    confirmKind === "delete"
-      ? t("delete")
-      : confirmKind === "deactivate"
-        ? t("deactivate")
-        : t("activate");
+    confirmKind === "delete" ? t("delete") : confirmKind === "deactivate" ? t("deactivate") : t("activate");
 
   return (
     <AppShell
@@ -113,17 +110,13 @@ export function CategoriesPage() {
       }
     >
       {history.modal}
-      <Toast
-        open={toast !== null}
-        message={toastMessage}
-        variant={toast?.variant ?? "success"}
-        onClose={clearToast}
-      />
+      <Toast open={toast !== null} message={toastMessage} variant={toast?.variant ?? "success"} onClose={clearToast} />
 
       <CategoryFormModal
         open={isFormOpen}
         mode={formMode}
         onClose={closeForm}
+        onRestore={restoreForm}
         name={formName}
         onNameChange={setFormName}
         isSubmitting={isSaving}
@@ -182,12 +175,7 @@ export function CategoriesPage() {
 function PlusIcon() {
   return (
     <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path
-        d="M8 3v10M3 8h10"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-      />
+      <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
     </svg>
   );
 }

@@ -5,10 +5,7 @@ import type { PurchaseLineFormState } from "@/app/modules/purchases/types/purcha
 import type { DimensionName } from "@/app/modules/items/types/items.types";
 import type { Item } from "@/app/modules/items/types/items.types";
 import { ItemCombobox } from "@/app/modules/shared/components/item-combobox";
-import {
-  formatMoney,
-  roundMoneyAmount,
-} from "@/app/modules/shared/utils/format-money";
+import { formatMoney, roundMoneyAmount } from "@/app/modules/shared/utils/format-money";
 import { Button } from "@/app/modules/shared/components/button";
 import { DimensionInput } from "@/app/modules/shared/components/dimension-input";
 import { Input } from "@/app/modules/shared/components/input";
@@ -23,10 +20,7 @@ interface PurchaseLineRowProps {
   onChange: (patch: Partial<PurchaseLineFormState>) => void;
   onDuplicate: () => void;
   onRemove: () => void;
-  onAddDimensionDefault: (
-    dimension: DimensionName,
-    value: number,
-  ) => Promise<void>;
+  onAddDimensionDefault: (dimension: DimensionName, value: number) => Promise<void>;
 }
 
 export function PurchaseLineRow({
@@ -49,20 +43,30 @@ export function PurchaseLineRow({
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-border bg-surface-muted/30 p-3 transition-colors hover:border-border-hover">
-      <div className={`grid items-end gap-2 sm:grid-cols-2 ${isFreeAmount ? "lg:grid-cols-[minmax(0,2fr)_minmax(7rem,1fr)_minmax(0,1.5fr)_minmax(6.5rem,1fr)_6rem]" : "lg:grid-cols-[minmax(0,2fr)_minmax(4rem,.65fr)_minmax(5.5rem,1fr)_minmax(0,1.5fr)_minmax(6.5rem,1fr)_6rem]"}`}>
-        <ItemCombobox eligibleInactiveItemIds={originalItemIds} items={items} value={line.itemId} name={`item-${line.key}`} onSelect={onSelectItem}
-          labels={{ label: t("fieldItem"), placeholder: t("itemSearchPlaceholder"), empty: t("noItemsFound") }} />
+      <div
+        className={`grid items-end gap-2 sm:grid-cols-2 ${isFreeAmount ? "lg:grid-cols-[minmax(0,2fr)_minmax(7rem,1fr)_minmax(0,1.5fr)_minmax(6.5rem,1fr)_6rem]" : "lg:grid-cols-[minmax(0,2fr)_minmax(4rem,.65fr)_minmax(5.5rem,1fr)_minmax(0,1.5fr)_minmax(6.5rem,1fr)_6rem]"}`}
+      >
+        <ItemCombobox
+          eligibleInactiveItemIds={originalItemIds}
+          items={items}
+          value={line.itemId}
+          name={`item-${line.key}`}
+          onSelect={onSelectItem}
+          labels={{ label: t("fieldItem"), placeholder: t("itemSearchPlaceholder"), empty: t("noItemsFound") }}
+        />
 
-        {!isFreeAmount && <Input
-          density="compact"
-          name={`qty-${line.key}`}
-          label={t("fieldQty")}
-          type="number"
-          min={0}
-          step="any"
-          value={line.quantity}
-          onChange={(e) => onChange({ quantity: e.target.value })}
-        />}
+        {!isFreeAmount && (
+          <Input
+            density="compact"
+            name={`qty-${line.key}`}
+            label={t("fieldQty")}
+            type="number"
+            min={0}
+            step="any"
+            value={line.quantity}
+            onChange={(e) => onChange({ quantity: e.target.value })}
+          />
+        )}
         <Input
           density="compact"
           name={`cost-${line.key}`}
@@ -104,23 +108,32 @@ export function PurchaseLineRow({
             title={t("duplicateLine")}
             onClick={onDuplicate}
           >
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
               <rect x="8" y="8" width="12" height="12" rx="2" />
               <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
             </svg>
           </Button>
           {canRemove ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="min-h-11 min-w-11 p-0 text-danger hover:bg-danger/10"
-            aria-label={t("removeLine")}
-            onClick={onRemove}
-            title={t("removeLine")}
-          >
-            <TrashIcon />
-          </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="min-h-11 min-w-11 p-0 text-danger hover:bg-danger/10"
+              aria-label={t("removeLine")}
+              onClick={onRemove}
+              title={t("removeLine")}
+            >
+              <TrashIcon />
+            </Button>
           ) : null}
         </div>
       </div>

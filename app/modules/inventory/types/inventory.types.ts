@@ -1,18 +1,10 @@
-export type InventoryPricingMode =
-  | "per_piece"
-  | "per_cubic_meter"
-  | "PIECE"
-  | "CUBIC_METER";
+export type InventoryPricingMode = "per_piece" | "per_cubic_meter" | "PIECE" | "CUBIC_METER";
 
 export function isCubicPricingMode(mode?: string): boolean {
   return mode === "per_cubic_meter" || mode === "CUBIC_METER";
 }
 
-export type StockStatusFilter =
-  | "all"
-  | "normal"
-  | "low_stock"
-  | "out_of_stock";
+export type StockStatusFilter = "all" | "normal" | "low_stock" | "out_of_stock";
 
 export interface StockItemCategory {
   id: string;

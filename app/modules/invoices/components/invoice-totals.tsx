@@ -1,10 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import {
-  formatMoney,
-  roundMoneyAmount,
-} from "@/app/modules/shared/utils/format-money";
+import { formatMoney, roundMoneyAmount } from "@/app/modules/shared/utils/format-money";
 import { Input } from "@/app/modules/shared/components/input";
 import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
 import { AccountPaymentSummary } from "@/app/modules/shared/components/account-payment-summary";
@@ -39,9 +36,7 @@ export function InvoiceTotals({
 
   return (
     <SurfaceCard>
-      <h2 className="mb-4 text-lg font-semibold text-text-primary">
-        {t("totalsTitle")}
-      </h2>
+      <h2 className="mb-4 text-lg font-semibold text-text-primary">{t("totalsTitle")}</h2>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-xl border border-border bg-surface-muted px-4 py-3">
           <p className="text-sm text-text-secondary">{t("total")}</p>
@@ -87,9 +82,14 @@ export function InvoiceTotals({
           }}
         />
       </div>
-      {!paidReadOnly ? <AccountPaymentSummary additionalAmount={additionalAmount}
-        invoicePaid={Math.max(0, (Number(paidInput) || 0) - additionalAmount)}
-        accountBalance={accountBalance} accountKind="customer" /> : null}
+      {!paidReadOnly ? (
+        <AccountPaymentSummary
+          additionalAmount={additionalAmount}
+          invoicePaid={Math.max(0, (Number(paidInput) || 0) - additionalAmount)}
+          accountBalance={accountBalance}
+          accountKind="customer"
+        />
+      ) : null}
     </SurfaceCard>
   );
 }

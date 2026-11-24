@@ -4,10 +4,7 @@ import type { DetailStatus } from "../types/use-purchase-detail.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
-import {
-  cancelPurchase,
-  getPurchase,
-} from "@/app/modules/purchases/services/purchases.service";
+import { cancelPurchase, getPurchase } from "@/app/modules/purchases/services/purchases.service";
 import type { PurchaseInvoiceDetail } from "@/app/modules/purchases/types/purchases.types";
 import type { Supplier } from "@/app/modules/suppliers/types/suppliers.types";
 import type { Item } from "@/app/modules/items/types/items.types";
@@ -77,7 +74,7 @@ export function usePurchaseDetail(purchaseId: string) {
 
     try {
       const updated = await cancelPurchase(purchaseId);
-      setPurchase((previous) => previous?.id === updated.id ? { ...previous, ...updated } : previous);
+      setPurchase((previous) => (previous?.id === updated.id ? { ...previous, ...updated } : previous));
       closeCancelConfirm();
       setToast({ kind: "cancelled", variant: "success" });
       onSuccess?.();
