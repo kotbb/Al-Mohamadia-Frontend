@@ -1,9 +1,8 @@
 "use client";
 
-import type {
-  ListStatus,
-  UseAuditLogsOptions,
-} from "../types/use-audit-logs.types";
+import { useUrlState } from "@/app/modules/shared/hooks/use-url-state";
+
+import type { ListStatus, UseAuditLogsOptions } from "../types/use-audit-logs.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
@@ -14,22 +13,23 @@ import { actionsForViewer } from "@/app/modules/audit/utils/audit-catalog";
 
 const PAGE_SIZE = 10;
 
-export function useAuditLogs({
-  lockedEntityType,
-  entityId,
-  initialAction = "",
-}: UseAuditLogsOptions = {}) {
+export function useAuditLogs({ lockedEntityType, entityId, initialAction = "" }: UseAuditLogsOptions = {}) {
   const describeError = useApiErrorMessage();
+  const scope = entityId || lockedEntityType ? "audit" : "";
   const { isSuperAdmin } = useAuth();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useUrlState(scope ? "auditPage" : "page", 1);
 
-  const [userId, setUserIdState] = useState("");
-  const [action, setActionState] = useState(initialAction);
-  const [entityType, setEntityTypeState] = useState(lockedEntityType ?? "");
-  const [from, setFromState] = useState("");
-  const [to, setToState] = useState("");
+  const [userId, setUserIdState] = useUrlState(scope ? "auditUserId" : "userId", "");
+  const [action, setActionState] = useUrlState(scope ? "auditAction" : "action", initialAction);
+  const [entityTypeFilter, setEntityTypeState] = useUrlState(
+    scope ? "auditEntityType" : "entityType",
+    lockedEntityType ?? "",
+  );
+  const entityType = lockedEntityType ?? entityTypeFilter;
+  const [from, setFromState] = useUrlState(scope ? "auditFrom" : "from", "");
+  const [to, setToState] = useUrlState(scope ? "auditTo" : "to", "");
 
   const [listStatus, setListStatus] = useState<ListStatus>("loading");
   const [listError, setListError] = useState<string | null>(null);
@@ -42,20 +42,23 @@ export function useAuditLogs({
     setListStatus("loading");
     setListError(null);
     setPage(1);
-  }, []);
+  }, [setPage]);
 
-  const goToPage = useCallback((next: number) => {
-    setListStatus("loading");
-    setListError(null);
-    setPage(next);
-  }, []);
+  const goToPage = useCallback(
+    (next: number) => {
+      setListStatus("loading");
+      setListError(null);
+      setPage(next);
+    },
+    [setPage],
+  );
 
   const setUserId = useCallback(
     (value: string) => {
       setUserIdState(value);
       resetPage();
     },
-    [resetPage],
+    [resetPage, setUserIdState],
   );
 
   const setAction = useCallback(
@@ -63,7 +66,7 @@ export function useAuditLogs({
       setActionState(value);
       resetPage();
     },
-    [resetPage],
+    [resetPage, setActionState],
   );
 
   const setEntityType = useCallback(
@@ -72,13 +75,11 @@ export function useAuditLogs({
       setEntityTypeState(value);
       setActionState((current) => {
         if (!current || !value) return current;
-        return actionsForViewer(value, isSuperAdmin).includes(current)
-          ? current
-          : "";
+        return actionsForViewer(value, isSuperAdmin).includes(current) ? current : "";
       });
       resetPage();
     },
-    [isSuperAdmin, lockedEntityType, resetPage],
+    [isSuperAdmin, lockedEntityType, resetPage, setActionState, setEntityTypeState],
   );
 
   const setFrom = useCallback(
@@ -87,7 +88,7 @@ export function useAuditLogs({
       if (value && to && value > to) return;
       resetPage();
     },
-    [resetPage, to],
+    [resetPage, to, setFromState],
   );
 
   const setTo = useCallback(
@@ -96,7 +97,7 @@ export function useAuditLogs({
       if (from && value && from > value) return;
       resetPage();
     },
-    [from, resetPage],
+    [from, resetPage, setToState],
   );
 
   const refresh = useCallback(() => {
@@ -137,26 +138,9 @@ export function useAuditLogs({
       });
 
     return () => controller.abort();
-  }, [
-    userId,
-    action,
-    entityType,
-    entityId,
-    from,
-    to,
-    page,
-    tick,
-    dateOrderInvalid,
-  ]);
+  }, [userId, action, entityType, entityId, from, to, page, tick, dateOrderInvalid]);
 
-  const hasActiveFilters = Boolean(
-    userId ||
-    action ||
-    entityId ||
-    (!lockedEntityType && entityType) ||
-    from ||
-    to,
-  );
+  const hasActiveFilters = Boolean(userId || action || entityId || (!lockedEntityType && entityType) || from || to);
 
   return {
     logs,

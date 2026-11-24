@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Link, useRouter } from "@/i18n/navigation";
+import { BackButton } from "@/app/modules/shared/components/back-button";
+import { useAppNavigation } from "@/app/modules/shared/hooks/use-app-navigation";
+
 import { AppShell } from "@/app/layout/app-shell";
 import { InvoiceCustomerSection } from "@/app/modules/invoices/components/invoice-customer-section";
 import { InvoiceLineRow } from "@/app/modules/invoices/components/invoice-line-row";
@@ -19,12 +21,10 @@ import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
 export function NewInvoicePage({ invoiceId }: { invoiceId?: string }) {
   const t = useTranslations("invoices");
   const tShared = useTranslations("shared");
-  const router = useRouter();
+  const router = useAppNavigation();
   const searchParams = useSearchParams();
   const form = useInvoiceForm({ initialCustomerId: invoiceId ? null : searchParams.get("customerId") });
-  const [editStatus, setEditStatus] = useState<"loading" | "success" | "error">(
-    invoiceId ? "loading" : "success",
-  );
+  const [editStatus, setEditStatus] = useState<"loading" | "success" | "error">(invoiceId ? "loading" : "success");
   const [editError, setEditError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -56,39 +56,22 @@ export function NewInvoicePage({ invoiceId }: { invoiceId?: string }) {
       t: (key) => t(key as Parameters<typeof t>[0]),
     });
     if (id) {
-      router.push(print ? `/invoices/${id}/export` : `/invoices/${id}`);
+      router.complete(print ? `/invoices/${id}/export` : `/invoices/${id}`);
     }
   }
 
   return (
     <AppShell
-      title={
-        invoiceId
-          ? t("editTitle", { number: form.invoiceNumber ?? "" })
-          : t("newTitle")
-      }
+      title={invoiceId ? t("editTitle", { number: form.invoiceNumber ?? "" }) : t("newTitle")}
       subtitle={invoiceId ? undefined : t("newSubtitle")}
+      navigation={<BackButton fallback="/invoices" />}
       density="compact"
-      actions={
-        <Link
-          href="/invoices"
-          className="ds-focus-ring inline-flex w-fit items-center gap-2 text-sm font-medium text-primary underline-offset-2 hover:underline"
-        >
-          <BackIcon />
-          {t("backToList")}
-        </Link>
-      }
     >
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
-        {editStatus === "loading" ||
-        form.itemsStatus === "loading" ||
-        form.itemsStatus === "idle" ? (
+        {editStatus === "loading" || form.itemsStatus === "loading" || form.itemsStatus === "idle" ? (
           <LoadingState message={tShared("loading")} />
         ) : editStatus === "error" || form.itemsStatus === "error" ? (
-          <ErrorState
-            title={t("listError")}
-            message={editError ?? form.itemsError ?? undefined}
-          />
+          <ErrorState title={t("listError")} message={editError ?? form.itemsError ?? undefined} />
         ) : (
           <>
             <InvoiceCustomerSection
@@ -107,13 +90,8 @@ export function NewInvoicePage({ invoiceId }: { invoiceId?: string }) {
             />
 
             {form.inactiveItemNames.length > 0 ? (
-              <div
-                className="rounded-xl border border-warning/30 bg-warning/10 p-4"
-                role="alert"
-              >
-                <p className="font-semibold text-text-primary">
-                  {t("inactiveItemsWarningTitle")}
-                </p>
+              <div className="rounded-xl border border-warning/30 bg-warning/10 p-4" role="alert">
+                <p className="font-semibold text-text-primary">{t("inactiveItemsWarningTitle")}</p>
                 <p className="text-sm text-text-secondary">
                   {t("inactiveItemsWarningDesc", {
                     names: form.inactiveItemNames.join(", "),
@@ -124,9 +102,7 @@ export function NewInvoicePage({ invoiceId }: { invoiceId?: string }) {
 
             <SurfaceCard padding="sm">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold text-text-primary">
-                  {t("linesTitle")}
-                </h2>
+                <h2 className="text-lg font-semibold text-text-primary">{t("linesTitle")}</h2>
               </div>
               <div className="flex flex-col gap-2">
                 {form.lines.map((line, index) => (
@@ -141,20 +117,12 @@ export function NewInvoicePage({ invoiceId }: { invoiceId?: string }) {
                     onDuplicate={() => form.duplicateLine(line.key)}
                     onRemove={() => form.removeLine(line.key)}
                     onAddDimensionDefault={(dimension, value) =>
-                      form.addDimensionDefault(
-                        line.key,
-                        line.itemId,
-                        dimension,
-                        value,
-                      )
+                      form.addDimensionDefault(line.key, line.itemId, dimension, value)
                     }
                   />
                 ))}
               </div>
-              <AddInvoiceLineButton
-                label={t("addLine")}
-                onClick={form.addLine}
-              />
+              <AddInvoiceLineButton label={t("addLine")} onClick={form.addLine} />
             </SurfaceCard>
 
             <InvoiceTotals
@@ -190,38 +158,26 @@ export function NewInvoicePage({ invoiceId }: { invoiceId?: string }) {
                     ? t("saveChanges")
                     : t("save")}
               </Button>
-              {!invoiceId ? <Button
-                type="button"
-                variant="primary"
-                disabled={form.isSubmitting}
-                onClick={() => void handleSubmit(true)}
-              >
-                {form.isSubmitting
-                  ? invoiceId
-                    ? t("updating")
-                    : t("saving")
-                  : invoiceId
-                    ? t("saveChangesAndPrint")
-                    : t("saveAndPrint")}
-              </Button> : null}
+              {!invoiceId ? (
+                <Button
+                  type="button"
+                  variant="primary"
+                  disabled={form.isSubmitting}
+                  onClick={() => void handleSubmit(true)}
+                >
+                  {form.isSubmitting
+                    ? invoiceId
+                      ? t("updating")
+                      : t("saving")
+                    : invoiceId
+                      ? t("saveChangesAndPrint")
+                      : t("saveAndPrint")}
+                </Button>
+              ) : null}
             </div>
           </>
         )}
       </div>
     </AppShell>
-  );
-}
-
-function BackIcon() {
-  return (
-    <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path
-        d="M10 3 5 8l5 5"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }

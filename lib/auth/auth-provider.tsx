@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   clearSession,
   getAccessToken,
@@ -45,6 +37,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const clearLocalSession = useCallback(() => {
     clearSession();
+    try {
+      for (const key of Object.keys(sessionStorage)) {
+        if (/^al-(scroll|navigation|ledger|ui)-v1:/.test(key)) sessionStorage.removeItem(key);
+      }
+    } catch {
+      /* Browsing context remains in memory when storage is unavailable. */
+    }
     setUser(null);
     setStatus("unauthenticated");
   }, []);

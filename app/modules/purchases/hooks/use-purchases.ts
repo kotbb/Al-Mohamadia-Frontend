@@ -1,5 +1,8 @@
 "use client";
 
+import { useUrlSearch } from "@/app/modules/shared/hooks/use-url-search";
+import { useUrlState } from "@/app/modules/shared/hooks/use-url-state";
+
 import type {
   ListStatus,
   PurchaseStatusFilterOption,
@@ -11,10 +14,7 @@ import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
 import { todayIsoDate } from "@/app/modules/invoices/utils/format-invoice-date";
-import {
-  cancelPurchase,
-  listPurchases,
-} from "@/app/modules/purchases/services/purchases.service";
+import { cancelPurchase, listPurchases } from "@/app/modules/purchases/services/purchases.service";
 import type {
   ListPurchasesFilters,
   PurchaseInvoice,
@@ -29,42 +29,46 @@ export function usePurchases(options?: UsePurchasesOptions) {
   const [purchases, setPurchases] = useState<PurchaseInvoiceListItem[]>([]);
   const [total, setTotal] = useState(0);
   const [summaryTotalAmount, setSummaryTotalAmount] = useState(0);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useUrlState(options?.supplierId ? "purchasePage" : "page", 1);
   const pageSize = options?.pageSize ?? PAGE_SIZE;
 
-  const [statusFilter, setStatusFilter] =
-    useState<PurchaseStatusFilterOption>("all");
-  const [supplierIdFilter, setSupplierIdFilter] = useState<string>(
-    options?.supplierId ?? "",
+  const [statusFilter, setStatusFilter] = useUrlState<PurchaseStatusFilterOption>("status", "all", [
+    "all",
+    "saved",
+    "cancelled",
+  ]);
+  const [supplierIdFilter, setSupplierIdFilter] = useUrlState<string>("supplierId", options?.supplierId ?? "");
+  const [periodFilter, setPeriodFilter] = useUrlState<PurchasePeriodFilterOption>("period", "off", [
+    "off",
+    "day",
+    "week",
+    "month",
+    "year",
+    "custom",
+  ]);
+  const [periodDate, setPeriodDate] = useUrlState("date", todayIsoDate());
+  const [customRange, setCustomRange] = useUrlState("", () => {
+    const today = todayIsoDate();
+    return { from: `${today.slice(0, 7)}-01`, to: today };
+  });
+  const [searchInput, setSearchInput, debouncedSearch] = useUrlSearch(
+    "q",
+    options?.supplierId ? "purchasePage" : "page",
+    SEARCH_DEBOUNCE_MS,
   );
-  const [periodFilter, setPeriodFilter] =
-    useState<PurchasePeriodFilterOption>("off");
-  const [periodDate, setPeriodDate] = useState(todayIsoDate());
-  const [customRange, setCustomRange] = useState(() => { const today = todayIsoDate(); return { from: `${today.slice(0, 7)}-01`, to: today }; });
-  const [searchInput, setSearchInput] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const [listStatus, setListStatus] = useState<ListStatus>("loading");
   const [listError, setListError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
 
-
   // Cancel invoice state
-  const [confirmPurchase, setConfirmPurchase] =
-    useState<PurchaseInvoice | null>(null);
+  const [confirmPurchase, setConfirmPurchase] = useState<PurchaseInvoice | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [toast, setToast] = useState<PurchasesToastState | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   // Debounce search input
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setDebouncedSearch(searchInput.trim());
-      setPage(1);
-    }, SEARCH_DEBOUNCE_MS);
-    return () => window.clearTimeout(timer);
-  }, [searchInput]);
 
   const refresh = useCallback(() => {
     setListStatus("loading");
@@ -109,8 +113,6 @@ export function usePurchases(options?: UsePurchasesOptions) {
         setTotal(res.meta.total);
         setSummaryTotalAmount(res.summary?.totalAmount ?? 0);
         setListStatus("success");
-
-
       })
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
@@ -200,7 +202,10 @@ export function usePurchases(options?: UsePurchasesOptions) {
     },
     periodDate,
     customRange,
-    setCustomRange: (from: string, to: string) => { setCustomRange({ from, to }); setPage(1); },
+    setCustomRange: (from: string, to: string) => {
+      setCustomRange({ from, to });
+      setPage(1);
+    },
     setPeriodDate: (d: string) => {
       setPeriodDate(d);
       setPage(1);

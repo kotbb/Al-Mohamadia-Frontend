@@ -2,7 +2,7 @@
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useState } from "react";
-import { useRouter } from "@/i18n/navigation";
+import { useAppNavigation as useRouter } from "@/app/modules/shared/hooks/use-app-navigation";
 import { useTranslations } from "next-intl";
 import { AppShell } from "@/app/layout/app-shell";
 import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
@@ -48,8 +48,9 @@ export function ItemsPage() {
     setCategoryId,
     setIsActive,
   } = useItemsPage();
-  const { isCategoryCollapsed, allCollapsed, toggleCategory, toggleAll } =
-    useCategoryCollapse(groupedItems.map(({ category }) => category.id));
+  const { isCategoryCollapsed, allCollapsed, toggleCategory, toggleAll } = useCategoryCollapse(
+    groupedItems.map(({ category }) => category.id),
+  );
 
   function openCreatePage() {
     router.push("/items/new");
@@ -96,12 +97,7 @@ export function ItemsPage() {
       }
     >
       {history.modal}
-      <Toast
-        open={toastOpen}
-        message={t("deleteSuccess")}
-        variant="danger"
-        onClose={() => setToastOpen(false)}
-      />
+      <Toast open={toastOpen} message={t("deleteSuccess")} variant="danger" onClose={() => setToastOpen(false)} />
 
       <ConfirmDialog
         open={deleteTarget !== null}
@@ -149,17 +145,9 @@ export function ItemsPage() {
         {status === "loading" || status === "idle" ? (
           <LoadingState message={tShared("loading")} />
         ) : status === "error" ? (
-          <ErrorState
-            title={t("listError")}
-            message={error ?? undefined}
-            retryLabel={t("retry")}
-            onRetry={refresh}
-          />
+          <ErrorState title={t("listError")} message={error ?? undefined} retryLabel={t("retry")} onRetry={refresh} />
         ) : groupedItems.length === 0 ? (
-          <EmptyState
-            title={t("emptyTitle")}
-            description={t("emptyDescription")}
-          />
+          <EmptyState title={t("emptyTitle")} description={t("emptyDescription")} />
         ) : (
           <div className="flex flex-col gap-6 pb-2">
             <div className="flex justify-end">
@@ -179,9 +167,7 @@ export function ItemsPage() {
             ))}
           </div>
         )}
-        {status === "success" ? (
-          <CatalogPagination page={page} totalPages={totalPages} onPageChange={setPage} />
-        ) : null}
+        {status === "success" ? <CatalogPagination page={page} totalPages={totalPages} onPageChange={setPage} /> : null}
       </div>
     </AppShell>
   );
@@ -190,12 +176,7 @@ export function ItemsPage() {
 function PlusIcon() {
   return (
     <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path
-        d="M8 3v10M3 8h10"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-      />
+      <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
     </svg>
   );
 }

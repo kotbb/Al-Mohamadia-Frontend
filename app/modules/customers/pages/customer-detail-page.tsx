@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { BackButton } from "@/app/modules/shared/components/back-button";
 import { AppShell } from "@/app/layout/app-shell";
 import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { CustomerInvoiceHistory } from "@/app/modules/customers/components/customer-invoice-history";
@@ -31,13 +31,7 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
   const tShared = useTranslations("shared");
   const account = useTranslations("accountDetails");
   const locale = useLocale();
-  const searchParams = useSearchParams();
-  const fromParam = searchParams.get("from");
-  const backHref =
-    fromParam && fromParam.startsWith("/") ? fromParam : "/customers";
-  const [paymentToast, setPaymentToast] = useState<
-    "recorded" | "cancelled" | null
-  >(null);
+  const [paymentToast, setPaymentToast] = useState<"recorded" | "cancelled" | null>(null);
   const recordPaymentHook = useRecordPayment();
   const customerPayments = useCustomerPayments(customerId);
   const paymentHistory = useAuditHistory({ entityType: "Payment" });
@@ -86,7 +80,7 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
 
   if (status === "loading") {
     return (
-      <AppShell title={t("title")} subtitle={t("subtitle")}>
+      <AppShell title={t("title")} subtitle={t("subtitle")} navigation={<BackButton fallback="/customers" />}>
         <LoadingState message={tShared("loading")} />
       </AppShell>
     );
@@ -94,31 +88,24 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
 
   if (status === "error" || !customer) {
     return (
-      <AppShell title={t("title")} subtitle={t("subtitle")}>
-        <ErrorState
-          title={t("detailError")}
-          message={error ?? undefined}
-          retryLabel={t("retry")}
-          onRetry={refresh}
-        />
+      <AppShell title={t("title")} subtitle={t("subtitle")} navigation={<BackButton fallback="/customers" />}>
+        <ErrorState title={t("detailError")} message={error ?? undefined} retryLabel={t("retry")} onRetry={refresh} />
       </AppShell>
     );
   }
 
   return (
     <AppShell
+      navigation={<BackButton fallback="/customers" />}
       title={customer.name}
+      titleAlignment="center"
       actions={
         <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href={backHref}
-            className="ds-focus-ring inline-flex min-h-10 items-center rounded-lg border border-border bg-surface px-3.5 text-sm font-medium text-text-secondary hover:bg-surface-muted"
-          >
-            {t("backToList")}
-          </Link>
           {customer.isActive ? (
-            <Link href={`/invoices/new?customerId=${customer.id}`}
-              className="ds-focus-ring inline-flex min-h-11 items-center rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary-hover">
+            <Link
+              href={`/invoices/new?customerId=${customer.id}`}
+              className="ds-focus-ring inline-flex min-h-11 items-center rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
+            >
               {account("newInvoice")}
             </Link>
           ) : null}
@@ -137,25 +124,14 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
           >
             {t("recordPayment")}
           </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={openEdit}
-          >
+          <Button type="button" variant="secondary" size="sm" onClick={openEdit}>
             {t("edit")}
           </Button>
-
         </div>
       }
     >
       {paymentHistory.modal}
-      <Toast
-        open={toast !== null}
-        message={toastMessage}
-        variant={toast?.variant ?? "success"}
-        onClose={clearToast}
-      />
+      <Toast open={toast !== null} message={toastMessage} variant={toast?.variant ?? "success"} onClose={clearToast} />
 
       <Toast
         open={paymentToast !== null}
@@ -174,6 +150,7 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
         open={isFormOpen}
         mode={formMode}
         onClose={closeForm}
+        onRestore={openEdit}
         name={formName}
         onNameChange={setFormName}
         phone={formPhone}
@@ -188,11 +165,10 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
         onSubmit={submitForm}
       />
 
-
-
       <RecordPaymentModal
         open={recordPaymentHook.isOpen}
         onClose={recordPaymentHook.close}
+        onRestore={recordPaymentHook.restore}
         customer={recordPaymentHook.customer}
         amount={recordPaymentHook.amount}
         onAmountChange={recordPaymentHook.setAmount}
@@ -211,8 +187,6 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
         }}
       />
 
-
-
       <ConfirmDialog
         open={customerPayments.confirmPayment !== null}
         title={t("confirmCancelPaymentTitle")}
@@ -220,10 +194,7 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
           <div className="flex flex-col gap-2">
             <p>
               {t("confirmCancelPaymentBody", {
-                amount: formatMoney(
-                  customerPayments.confirmPayment?.amount ?? 0,
-                  locale,
-                ),
+                amount: formatMoney(customerPayments.confirmPayment?.amount ?? 0, locale),
                 currency: t("currency"),
               })}
             </p>
@@ -251,16 +222,23 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
         <AccountFinancialSummary
           totalInvoiced={customer.financialSummary?.totalInvoiced ?? 0}
           totalPaid={customer.financialSummary?.totalPaid ?? 0}
-          currentBalance={customer.balance} party="customer" currency={t("currency")} />
+          currentBalance={customer.balance}
+          party="customer"
+          currency={t("currency")}
+        />
 
-        <CustomerInvoiceHistory customerId={customerId} onFinancialChange={() => { refresh(); customerPayments.refresh(); }} />
+        <CustomerInvoiceHistory
+          customerId={customerId}
+          onFinancialChange={() => {
+            refresh();
+            customerPayments.refresh();
+          }}
+        />
 
         {/* Payment History Section */}
         <SurfaceCard padding="lg">
           <div className="flex flex-col gap-4">
-            <h2 className="text-base font-semibold text-text-primary">
-              {t("paymentHistoryTitle")}
-            </h2>
+            <h2 className="text-base font-semibold text-text-primary">{t("paymentHistoryTitle")}</h2>
 
             <PaymentsTable
               payments={customerPayments.payments}
@@ -269,22 +247,17 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
               error={customerPayments.error}
               onRetry={customerPayments.refresh}
               onCancel={customerPayments.openCancelConfirm}
-              onHistory={(payment, label) =>
-                paymentHistory.openRecord(payment.id, label)
-              }
+              onHistory={(payment, label) => paymentHistory.openRecord(payment.id, label)}
             />
 
-            {customerPayments.status === "success" &&
-            customerPayments.totalPages > 1 ? (
+            {customerPayments.status === "success" && customerPayments.totalPages > 1 ? (
               <div className="flex items-center justify-center gap-3 pt-2">
                 <Button
                   type="button"
                   variant="secondary"
                   size="sm"
                   disabled={customerPayments.page <= 1}
-                  onClick={() =>
-                    customerPayments.setPage(customerPayments.page - 1)
-                  }
+                  onClick={() => customerPayments.setPage(customerPayments.page - 1)}
                 >
                   {tShared("prevPage")}
                 </Button>
@@ -295,12 +268,8 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
                   type="button"
                   variant="secondary"
                   size="sm"
-                  disabled={
-                    customerPayments.page >= customerPayments.totalPages
-                  }
-                  onClick={() =>
-                    customerPayments.setPage(customerPayments.page + 1)
-                  }
+                  disabled={customerPayments.page >= customerPayments.totalPages}
+                  onClick={() => customerPayments.setPage(customerPayments.page + 1)}
                 >
                   {tShared("nextPage")}
                 </Button>
@@ -308,8 +277,6 @@ export function CustomerDetailPage({ customerId }: CustomerDetailPageProps) {
             ) : null}
           </div>
         </SurfaceCard>
-
-
       </div>
     </AppShell>
   );

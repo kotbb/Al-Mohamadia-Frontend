@@ -8,6 +8,7 @@ import { Modal } from "@/app/modules/shared/components/modal";
 interface AuditHistoryModalProps {
   open: boolean;
   onClose: () => void;
+  onRestore?: () => void;
   entityType: AuditEntityType;
   entityId?: string;
   recordLabel?: string;
@@ -17,6 +18,7 @@ interface AuditHistoryModalProps {
 export function AuditHistoryModal({
   open,
   onClose,
+  onRestore,
   entityType,
   entityId,
   recordLabel,
@@ -28,14 +30,15 @@ export function AuditHistoryModal({
     : t("historyTitle", { entity: t(`entities.${entityType}`) });
 
   return (
-    <Modal open={open} onClose={onClose} title={title} size="wide">
-      {open ? (
-        <AuditLogPanel
-          lockedEntityType={entityType}
-          entityId={entityId}
-          initialAction={defaultAction}
-        />
-      ) : null}
+    <Modal
+      open={open}
+      layerKey={`audit:${entityType}:${entityId ?? "all"}`}
+      onRestore={onRestore}
+      onClose={onClose}
+      title={title}
+      size="wide"
+    >
+      {open ? <AuditLogPanel lockedEntityType={entityType} entityId={entityId} initialAction={defaultAction} /> : null}
     </Modal>
   );
 }

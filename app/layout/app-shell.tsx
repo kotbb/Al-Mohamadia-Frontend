@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "@/i18n/navigation";
+import { useNavigationScroll } from "@/app/modules/shared/hooks/use-navigation-scroll";
 import { GlobalHeader } from "./global-header";
 import { HubNavigation } from "./hub-navigation";
 import { Sidebar } from "./sidebar";
@@ -10,7 +11,10 @@ import { Sidebar } from "./sidebar";
 interface AppShellProps {
   children: ReactNode;
   title: string;
-  subtitle?: string;
+  titleAlignment?: "start" | "center";
+  subtitle?: ReactNode;
+  metadata?: ReactNode;
+  navigation?: ReactNode;
   actions?: ReactNode;
   hubTabs?: ReactNode | false;
   contentWidth?: "dashboard" | "comfortable";
@@ -20,12 +24,16 @@ interface AppShellProps {
 export function AppShell({
   children,
   title,
+  titleAlignment = "start",
   subtitle,
+  metadata,
+  navigation,
   actions,
   hubTabs,
   contentWidth = "dashboard",
   density = "default",
 }: AppShellProps) {
+  const scrollRef = useNavigationScroll();
   const contentClass =
     contentWidth === "comfortable"
       ? "mx-auto w-full max-w-3xl px-5 sm:px-6"
@@ -55,7 +63,7 @@ export function AppShell({
           <div className="fixed inset-0 z-40 lg:hidden">
             <button
               type="button"
-              className="absolute inset-0 cursor-default bg-black/40"
+              className="absolute inset-0 cursor-default ds-scrim"
               aria-label={tNav("closeMenu")}
               onClick={() => setOpenPath(null)}
             />
@@ -65,18 +73,14 @@ export function AppShell({
           </div>
         ) : null}
 
-        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto">
+        <div ref={scrollRef} className="min-h-0 min-w-0 flex-1 overflow-y-auto">
           <div className="px-5 pt-3 sm:px-6 lg:px-7">
             <GlobalHeader onOpenNav={() => setOpenPath(pathname)} />
           </div>
 
-          <div
-            className={`${contentClass} pb-8 ${density === "compact" ? "pt-4" : "pt-8"}`}
-          >
+          <div className={`${contentClass} pb-8 ${density === "compact" ? "pt-4" : "pt-8"}`}>
             {hubTabs === false ? null : hubTabs !== undefined ? (
-              <div className={density === "compact" ? "mb-4" : "mb-6"}>
-                {hubTabs}
-              </div>
+              <div className={density === "compact" ? "mb-4" : "mb-6"}>{hubTabs}</div>
             ) : (
               <div className={density === "compact" ? "mb-4" : "mb-6"}>
                 <HubNavigation />
@@ -86,18 +90,16 @@ export function AppShell({
             <header
               className={`${density === "compact" ? "mb-3" : "mb-5"} flex flex-wrap items-start justify-between gap-3`}
             >
-              <div className="min-w-0">
-                <h1 className="text-xl font-bold leading-tight tracking-tight text-text-primary">
-                  {title}
-                </h1>
-                {subtitle ? (
-                  <p className="mt-0.5 text-sm leading-snug text-text-secondary">
-                    {subtitle}
-                  </p>
-                ) : null}
+              <div className={`flex min-w-0 gap-3 ${titleAlignment === "center" ? "items-center" : "items-start"}`}>
+                {navigation}
+                <div className="min-w-0">
+                  <h1 className="text-[1.5rem] font-semibold leading-snug text-text-primary">{title}</h1>
+                  {subtitle ? <p className="mt-0.5 text-sm leading-snug text-text-secondary">{subtitle}</p> : null}
+                  {metadata ? <div className="mt-2">{metadata}</div> : null}
+                </div>
               </div>
               {actions ? (
-                <div className="flex flex-wrap items-center gap-2">
+                <div className={`flex flex-wrap items-center gap-2 ${metadata ? "w-full sm:w-auto" : ""}`}>
                   {actions}
                 </div>
               ) : null}

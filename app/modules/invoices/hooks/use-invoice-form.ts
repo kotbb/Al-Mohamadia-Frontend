@@ -1,5 +1,8 @@
 "use client";
 
+import { useFormDirtyState } from "@/app/modules/shared/hooks/use-form-dirty-state";
+import { useLeaveGuard } from "@/app/modules/shared/hooks/use-leave-guard";
+
 import { isUsableLine } from "@/app/modules/shared/utils/line-validation";
 import { useItemDimensionDefaults } from "@/app/modules/items/hooks/use-item-dimension-defaults";
 import type { DimensionName } from "@/app/modules/items/types/items.types";
@@ -7,38 +10,30 @@ import { applySavedDimension } from "@/app/modules/shared/utils/saved-dimension"
 
 import type { InvoiceFormLine } from "../types/use-invoice-form.types";
 import { newLine, lineTotalForFormLine } from "../utils/invoice-form";
-import {
-  parsePositive,
-  parseNonNegative,
-} from "@/app/modules/shared/utils/form-numbers";
+import { parsePositive, parseNonNegative } from "@/app/modules/shared/utils/form-numbers";
 import { moneyFieldString } from "@/app/modules/shared/utils/format-money";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  getCustomer,
-  listCustomers,
-} from "@/app/modules/customers/services/customers.service";
+import { getCustomer, listCustomers } from "@/app/modules/customers/services/customers.service";
 import type { Customer } from "@/app/modules/customers/types/customers.types";
-import {
-  createSalesInvoice,
-  updateSalesInvoice,
-} from "@/app/modules/invoices/services/invoices.service";
+import { createSalesInvoice, updateSalesInvoice } from "@/app/modules/invoices/services/invoices.service";
 import type {
   CreateSalesInvoiceInput,
   SalesInvoice,
   SalesInvoiceDetail,
   SalesInvoiceType,
 } from "@/app/modules/invoices/types/invoices.types";
-import {
-  computeInvoiceTotals,
-  roundMoney,
-} from "@/app/modules/shared/utils/invoice-math";
+import { computeInvoiceTotals, roundMoney } from "@/app/modules/shared/utils/invoice-math";
 import { listItems } from "@/app/modules/items/services/items.service";
 import type { Item } from "@/app/modules/items/types/items.types";
 import { initialDimensions } from "@/app/modules/items/utils/dimension-defaults";
 import { roundMoneyAmount } from "@/app/modules/shared/utils/format-money";
-import { accountBalanceAfterInvoice, parseAccountPayment, splitInvoicePayment } from "@/app/modules/shared/utils/account-payment";
+import {
+  accountBalanceAfterInvoice,
+  parseAccountPayment,
+  splitInvoicePayment,
+} from "@/app/modules/shared/utils/account-payment";
 import type { UseInvoiceFormOptions } from "../types/use-invoice-form.types";
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -46,10 +41,8 @@ const SEARCH_DEBOUNCE_MS = 300;
 export function useInvoiceForm(options?: UseInvoiceFormOptions) {
   const describeError = useApiErrorMessage();
   const [type, setType] = useState<SalesInvoiceType>("customer_sale");
-  const [customerId, setCustomerId] = useState<string | null>(null);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
-    null,
-  );
+  const [customerId, setCustomerId] = useState<string | null>(options?.initialCustomerId ?? null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [allCustomers, setAllCustomers] = useState<Customer[]>([]);
   const [allCustomersLoading, setAllCustomersLoading] = useState(false);
   const [customerQuery, setCustomerQuery] = useState("");
@@ -60,9 +53,7 @@ export function useInvoiceForm(options?: UseInvoiceFormOptions) {
   const saveItemDefault = useItemDimensionDefaults(setItems);
   const selectionVersions = useRef(new Map<string, number>());
 
-  const [itemsStatus, setItemsStatus] = useState<
-    "idle" | "loading" | "success" | "error"
-  >("loading");
+  const [itemsStatus, setItemsStatus] = useState<"idle" | "loading" | "success" | "error">("loading");
   const [itemsError, setItemsError] = useState<string | null>(null);
 
   const [mode, setMode] = useState<"create" | "edit">("create");
@@ -78,18 +69,29 @@ export function useInvoiceForm(options?: UseInvoiceFormOptions) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  const { isDirty, resetBaseline } = useFormDirtyState({
+    type,
+    customerId,
+    lines,
+    discountInput,
+    paidInput: type === "cash_sale" ? "" : paidInput,
+  });
+  useLeaveGuard({ dirty: isDirty, busy: isSubmitting });
+
   const initialCustomerId = options?.initialCustomerId;
   useEffect(() => {
     if (!initialCustomerId) return;
     const controller = new AbortController();
     setType("customer_sale");
-    getCustomer(initialCustomerId, controller.signal).then((customer) => {
-      if (controller.signal.aborted) return;
-      setCustomerId(customer.id);
-      setSelectedCustomer(customer);
-    }).catch((error: unknown) => {
-      if (!controller.signal.aborted) setSubmitError(describeError(error, "Failed to load customer"));
-    });
+    getCustomer(initialCustomerId, controller.signal)
+      .then((customer) => {
+        if (controller.signal.aborted) return;
+        setCustomerId(customer.id);
+        setSelectedCustomer(customer);
+      })
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted) setSubmitError(describeError(error, "Failed to load customer"));
+      });
     return () => controller.abort();
   }, [initialCustomerId]);
 
@@ -132,10 +134,7 @@ export function useInvoiceForm(options?: UseInvoiceFormOptions) {
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
       setCustomersLoading(true);
-      listCustomers(
-        { q, isActive: true, page: 1, limit: 10 },
-        controller.signal,
-      )
+      listCustomers({ q, isActive: true, page: 1, limit: 10 }, controller.signal)
         .then((result) => {
           if (controller.signal.aborted) return;
           setCustomerResults(result.items);
@@ -204,11 +203,16 @@ export function useInvoiceForm(options?: UseInvoiceFormOptions) {
   const paymentParts = splitInvoicePayment(enteredTotals.paid, enteredTotals.net);
   const totals = { ...enteredTotals, paid: paymentParts.paid, remaining: paymentParts.remaining };
   const accountPaymentAmount = type === "customer_sale" ? paymentParts.accountPaymentAmount : 0;
-  const previousInvoiceRemaining = originalInvoice?.customerId === selectedCustomer?.id
-    ? originalInvoice?.remaining ?? 0 : 0;
-  const accountBalance = selectedCustomer ? accountBalanceAfterInvoice(
-    selectedCustomer.balance, totals.remaining, accountPaymentAmount, previousInvoiceRemaining,
-  ) : undefined;
+  const previousInvoiceRemaining =
+    originalInvoice?.customerId === selectedCustomer?.id ? (originalInvoice?.remaining ?? 0) : 0;
+  const accountBalance = selectedCustomer
+    ? accountBalanceAfterInvoice(
+        selectedCustomer.balance,
+        totals.remaining,
+        accountPaymentAmount,
+        previousInvoiceRemaining,
+      )
+    : undefined;
 
   useEffect(() => {
     if (type === "cash_sale") {
@@ -250,9 +254,7 @@ export function useInvoiceForm(options?: UseInvoiceFormOptions) {
       clearCustomer();
       return;
     }
-    const found =
-      allCustomers.find((c) => c.id === id) ||
-      customerResults.find((c) => c.id === id);
+    const found = allCustomers.find((c) => c.id === id) || customerResults.find((c) => c.id === id);
     if (found) {
       selectCustomer(found);
     } else {
@@ -276,42 +278,28 @@ export function useInvoiceForm(options?: UseInvoiceFormOptions) {
   }
 
   function removeLine(key: string) {
-    selectionVersions.current.set(
-      key,
-      (selectionVersions.current.get(key) ?? 0) + 1,
-    );
-    setLines((prev) =>
-      prev.length <= 1 ? prev : prev.filter((l) => l.key !== key),
-    );
+    selectionVersions.current.set(key, (selectionVersions.current.get(key) ?? 0) + 1);
+    setLines((prev) => (prev.length <= 1 ? prev : prev.filter((l) => l.key !== key)));
   }
 
   function updateLine(key: string, patch: Partial<InvoiceFormLine>) {
-    setLines((prev) =>
-      prev.map((line) => (line.key === key ? { ...line, ...patch } : line)),
-    );
+    setLines((prev) => prev.map((line) => (line.key === key ? { ...line, ...patch } : line)));
   }
 
-  async function addDimensionDefault(
-    key: string,
-    itemId: string,
-    dimension: DimensionName,
-    value: number,
-  ) {
+  async function addDimensionDefault(key: string, itemId: string, dimension: DimensionName, value: number) {
     const version = selectionVersions.current.get(key) ?? 0;
     await saveItemDefault(itemId, dimension, value);
     const isCurrent = (selectionVersions.current.get(key) ?? 0) === version;
-    setLines((current) =>
-      applySavedDimension(current, key, itemId, dimension, value, isCurrent),
-    );
+    setLines((current) => applySavedDimension(current, key, itemId, dimension, value, isCurrent));
   }
 
   function selectItem(key: string, itemId: string) {
-    selectionVersions.current.set(
-      key,
-      (selectionVersions.current.get(key) ?? 0) + 1,
-    );
+    selectionVersions.current.set(key, (selectionVersions.current.get(key) ?? 0) + 1);
     const item = itemsById.get(itemId);
-    const dimensions = item?.pricingMode === "free_amount" ? { thickness: "", width: "", length: "" } : initialDimensions(item?.dimensionDefaults);
+    const dimensions =
+      item?.pricingMode === "free_amount"
+        ? { thickness: "", width: "", length: "" }
+        : initialDimensions(item?.dimensionDefaults);
     updateLine(key, {
       itemId,
       quantity: "1",
@@ -342,13 +330,22 @@ export function useInvoiceForm(options?: UseInvoiceFormOptions) {
       if (!item) return t("validationItem");
       if (item.pricingMode !== "free_amount" && parsePositive(line.quantity) === null) return t("validationItem");
       if (parsePositive(line.piecePrice) === null) return t("validationItem");
-      if (item.pricingMode !== "free_amount" &&
-        [line.thickness, line.width, line.length].some(
-          (value) => value.trim() && parsePositive(value) === null,
-        )
+      if (
+        item.pricingMode !== "free_amount" &&
+        [line.thickness, line.width, line.length].some((value) => value.trim() && parsePositive(value) === null)
       )
         return t("validationOptionalDims");
-      if (!isUsableLine({ pricingMode: item.pricingMode, quantity: Number(line.quantity), piecePrice: Number(line.piecePrice), thicknessM: Number(line.thickness), widthM: Number(line.width), lengthM: Number(line.length) })) return t("validationCalculation");
+      if (
+        !isUsableLine({
+          pricingMode: item.pricingMode,
+          quantity: Number(line.quantity),
+          piecePrice: Number(line.piecePrice),
+          thicknessM: Number(line.thickness),
+          widthM: Number(line.width),
+          lengthM: Number(line.length),
+        })
+      )
+        return t("validationCalculation");
       if (item.pricingMode === "per_cubic_meter") {
         if (
           parsePositive(line.thickness) === null ||
@@ -360,7 +357,8 @@ export function useInvoiceForm(options?: UseInvoiceFormOptions) {
       }
     }
 
-    if (!Number.isFinite(snapshotTotals.total) || !Number.isFinite(snapshotPaid) || !Number.isFinite(snapshotDiscount)) return t("validationCalculation");
+    if (!Number.isFinite(snapshotTotals.total) || !Number.isFinite(snapshotPaid) || !Number.isFinite(snapshotDiscount))
+      return t("validationCalculation");
     if (snapshotDiscount > snapshotTotals.total) return t("validationDiscount");
 
     if (type === "cash_sale") {
@@ -390,9 +388,9 @@ export function useInvoiceForm(options?: UseInvoiceFormOptions) {
           quantity: freeAmount ? 1 : parsePositive(line.quantity)!,
           piecePrice: roundMoney(parsePositive(line.piecePrice)!),
           note: line.note.trim() || undefined,
-          thickness: freeAmount ? undefined : parsePositive(line.thickness) ?? undefined,
-          width: freeAmount ? undefined : parsePositive(line.width) ?? undefined,
-          length: freeAmount ? undefined : parsePositive(line.length) ?? undefined,
+          thickness: freeAmount ? undefined : (parsePositive(line.thickness) ?? undefined),
+          width: freeAmount ? undefined : (parsePositive(line.width) ?? undefined),
+          length: freeAmount ? undefined : (parsePositive(line.length) ?? undefined),
         };
         return base;
       });
@@ -407,16 +405,17 @@ export function useInvoiceForm(options?: UseInvoiceFormOptions) {
     };
   }
 
-  async function submit(options: {
-    print: boolean;
-    t: (key: string) => string;
-  }): Promise<string | null> {
+  async function submit(options: { print: boolean; t: (key: string) => string }): Promise<string | null> {
     if (isSubmitting) return null;
     if (type === "customer_sale" && parseAccountPayment(paidInput) === null) {
       setSubmitError(options.t("validationCalculation"));
       return null;
     }
-    if ([discountInput, ...(type === "customer_sale" ? [paidInput] : [])].some((value) => value.trim() && parseNonNegative(value) === null)) {
+    if (
+      [discountInput, ...(type === "customer_sale" ? [paidInput] : [])].some(
+        (value) => value.trim() && parseNonNegative(value) === null,
+      )
+    ) {
       setSubmitError(options.t("validationCalculation"));
       return null;
     }
@@ -425,29 +424,18 @@ export function useInvoiceForm(options?: UseInvoiceFormOptions) {
       piecePrice: moneyFieldString(line.piecePrice),
     }));
     const discountRounded = roundMoneyAmount(discountInput);
-    const snapshotDiscount =
-      discountRounded ?? parseNonNegative(discountInput) ?? 0;
-    const snapshotDiscountInput =
-      discountRounded === null ? discountInput : String(discountRounded);
-    const snapshotLineTotals = snapshotLines.map((line) =>
-      lineTotalForFormLine(line, itemsById),
-    );
+    const snapshotDiscount = discountRounded ?? parseNonNegative(discountInput) ?? 0;
+    const snapshotDiscountInput = discountRounded === null ? discountInput : String(discountRounded);
+    const snapshotLineTotals = snapshotLines.map((line) => lineTotalForFormLine(line, itemsById));
     const preview = computeInvoiceTotals({
       lineTotals: snapshotLineTotals,
       discount: snapshotDiscount,
       paid: 0,
     });
     const paidRounded = roundMoneyAmount(paidInput);
-    const snapshotPaid =
-      type === "cash_sale"
-        ? preview.net
-        : (paidRounded ?? parseNonNegative(paidInput) ?? 0);
+    const snapshotPaid = type === "cash_sale" ? preview.net : (paidRounded ?? parseNonNegative(paidInput) ?? 0);
     const snapshotPaidInput =
-      type === "cash_sale"
-        ? String(preview.net)
-        : paidRounded === null
-          ? paidInput
-          : String(paidRounded);
+      type === "cash_sale" ? String(preview.net) : paidRounded === null ? paidInput : String(paidRounded);
     const snapshotPayment = splitInvoicePayment(snapshotPaid, preview.net);
     const snapshotAccountPayment = type === "customer_sale" ? snapshotPayment.accountPaymentAmount : 0;
     const snapshotTotals = computeInvoiceTotals({
@@ -460,13 +448,7 @@ export function useInvoiceForm(options?: UseInvoiceFormOptions) {
     setDiscountInput(snapshotDiscountInput);
     setPaidInput(snapshotPaidInput);
 
-    const error = validationError(
-      snapshotLines,
-      snapshotDiscount,
-      snapshotPayment.paid,
-      snapshotTotals,
-      options.t,
-    );
+    const error = validationError(snapshotLines, snapshotDiscount, snapshotPayment.paid, snapshotTotals, options.t);
     if (error) {
       setSubmitError(error);
       return null;
@@ -486,9 +468,7 @@ export function useInvoiceForm(options?: UseInvoiceFormOptions) {
       );
       return created.id;
     } catch (error: unknown) {
-      setSubmitError(
-        describeError(error, mode === "edit" ? "Update failed" : "Save failed"),
-      );
+      setSubmitError(describeError(error, mode === "edit" ? "Update failed" : "Save failed"));
       return null;
     } finally {
       setIsSubmitting(false);
@@ -526,9 +506,17 @@ export function useInvoiceForm(options?: UseInvoiceFormOptions) {
         length: line.length != null ? String(line.length) : "",
         note: line.note ?? "",
       }));
-      setLines(formLines.length > 0 ? formLines : [newLine()]);
+      const initializedLines = formLines.length > 0 ? formLines : [newLine()];
+      setLines(initializedLines);
+      resetBaseline({
+        type: invoice.type,
+        customerId: invoice.customerId,
+        lines: initializedLines,
+        discountInput: String(invoice.discount),
+        paidInput: invoice.type === "cash_sale" ? "" : String(invoice.paid),
+      });
     },
-    [],
+    [resetBaseline],
   );
 
   const resetForm = useCallback(() => {
@@ -542,13 +530,22 @@ export function useInvoiceForm(options?: UseInvoiceFormOptions) {
     setSelectedCustomer(null);
     setCustomerQuery("");
     setCustomerResults([]);
-    setLines([newLine()]);
+    const initializedLines = [newLine()];
+    setLines(initializedLines);
+    resetBaseline({
+      type: "customer_sale",
+      customerId: null,
+      lines: initializedLines,
+      discountInput: "0",
+      paidInput: "0",
+    });
     setDiscountInput("0");
     setPaidInput("0");
     setSubmitError(null);
-  }, []);
+  }, [resetBaseline]);
 
   return {
+    isDirty,
     mode,
     isEdit: mode === "edit",
     invoiceId,

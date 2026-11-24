@@ -1,10 +1,10 @@
 "use client";
 
+import { useModalFormGuard } from "@/app/modules/shared/hooks/use-modal-form-guard";
+
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import {
-  formatMoney,
-} from "@/app/modules/shared/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { listSuppliers } from "@/app/modules/suppliers/services/suppliers.service";
 import type { Supplier } from "@/app/modules/suppliers/types/suppliers.types";
 import type { PaymentMethod } from "@/app/modules/supplier-payments/types/supplier-payments.types";
@@ -25,6 +25,7 @@ export interface SelectedSupplierTarget {
 interface RecordSupplierPaymentModalProps {
   open: boolean;
   onClose: () => void;
+  onRestore?: () => void;
   supplier: SelectedSupplierTarget | null;
   onSelectSupplier?: (supplier: SelectedSupplierTarget) => void;
   onClearSupplier?: () => void;
@@ -41,7 +42,8 @@ interface RecordSupplierPaymentModalProps {
 
 export function RecordSupplierPaymentModal({
   open,
-  onClose,
+  onClose: closeWithoutGuard,
+  onRestore,
   supplier,
   onSelectSupplier,
   onClearSupplier,
@@ -58,6 +60,13 @@ export function RecordSupplierPaymentModal({
   const t = useTranslations("supplierPayments");
   const locale = useLocale();
   const account = useTranslations("accountDetails");
+  const { requestClose } = useModalFormGuard(
+    open,
+    { supplierId: supplier?.id ?? null, amount, method, notes },
+    isSubmitting,
+  );
+  const onClose = () => requestClose(closeWithoutGuard);
+
   const currency = t("currency");
 
   const [availableSuppliers, setAvailableSuppliers] = useState<Supplier[]>([]);
@@ -76,10 +85,7 @@ export function RecordSupplierPaymentModal({
 
     const controller = new AbortController();
     setIsLoadingAccounts(true);
-    listSuppliers(
-      { isActive: true, page: 1, limit: 100 },
-      controller.signal,
-    )
+    listSuppliers({ isActive: true, page: 1, limit: 100 }, controller.signal)
       .then((res) => {
         setAvailableSuppliers(res.items);
       })
@@ -105,10 +111,7 @@ export function RecordSupplierPaymentModal({
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
       setIsSearching(true);
-      listSuppliers(
-        { q, isActive: true, page: 1, limit: 10 },
-        controller.signal,
-      )
+      listSuppliers({ q, isActive: true, page: 1, limit: 10 }, controller.signal)
         .then((res) => {
           setSearchResults(res.items);
         })
@@ -144,8 +147,11 @@ export function RecordSupplierPaymentModal({
 
   return (
     <Modal
+      layerKey="supplier-payments:record-supplier-payment-modal"
       open={open}
-      onClose={onClose}
+      onRestore={onRestore}
+      busy={isSubmitting}
+      onClose={closeWithoutGuard}
       title={t("recordTitle")}
       size="md"
       footer={
@@ -153,11 +159,7 @@ export function RecordSupplierPaymentModal({
           <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
             {t("modalCancel")}
           </Button>
-          <Button
-            variant="primary"
-            onClick={onSubmit}
-            disabled={isSubmitting || !supplier || !amount.trim()}
-          >
+          <Button variant="primary" onClick={onSubmit} disabled={isSubmitting || !supplier || !amount.trim()}>
             {isSubmitting ? t("recording") : t("recordSubmit")}
           </Button>
         </div>
@@ -168,27 +170,18 @@ export function RecordSupplierPaymentModal({
         {supplier ? (
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface-muted p-4">
             <div>
-              <p className="text-xs font-medium text-text-secondary">
-                {t("supplierLabel")}
-              </p>
-              <p className="mt-0.5 text-base font-bold text-text-primary">
-                {supplier.name}
-              </p>
+              <p className="text-xs font-medium text-text-secondary">{t("supplierLabel")}</p>
+              <p className="mt-0.5 text-base font-bold text-text-primary">{supplier.name}</p>
               <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-text-secondary">
                 {supplier.phone ? <span>{supplier.phone}</span> : null}
                 <span className="font-semibold text-primary">
-                  {account(supplier.amountOwed < 0 ? "supplierCredit" : "currentBalance")}: {formatMoney(supplier.amountOwed, locale)} {currency}
+                  {account(supplier.amountOwed < 0 ? "supplierCredit" : "currentBalance")}:{" "}
+                  {formatMoney(supplier.amountOwed, locale)} {currency}
                 </span>
               </div>
             </div>
             {onClearSupplier ? (
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={onClearSupplier}
-                disabled={isSubmitting}
-              >
+              <Button type="button" variant="secondary" size="sm" onClick={onClearSupplier} disabled={isSubmitting}>
                 {t("supplierChange")}
               </Button>
             ) : null}
@@ -198,16 +191,12 @@ export function RecordSupplierPaymentModal({
             <div className="grid gap-3 sm:grid-cols-2">
               {/* 1. Droplist of suppliers with debt */}
               <label className="flex w-full flex-col gap-1.5">
-                <span className="text-sm font-semibold text-text-secondary">
-                  {t("selectSupplierLabel")}
-                </span>
+                <span className="text-sm font-semibold text-text-secondary">{t("selectSupplierLabel")}</span>
                 <select
-                  className="ds-focus-input min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm text-text-primary"
+                  className="ds-focus-input min-h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-text-primary"
                   value=""
                   onChange={(e) => {
-                    const found = availableSuppliers.find(
-                      (s) => s.id === e.target.value,
-                    );
+                    const found = availableSuppliers.find((s) => s.id === e.target.value);
                     if (found && onSelectSupplier) {
                       onSelectSupplier({
                         id: found.id,
@@ -220,11 +209,7 @@ export function RecordSupplierPaymentModal({
                   }}
                   disabled={isLoadingAccounts || isSubmitting}
                 >
-                  <option value="">
-                    {isLoadingAccounts
-                      ? t("loadingSuppliers")
-                      : t("selectSupplierPlaceholder")}
-                  </option>
+                  <option value="">{isLoadingAccounts ? t("loadingSuppliers") : t("selectSupplierPlaceholder")}</option>
                   {availableSuppliers.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name} ({formatMoney(s.amountOwed, locale)} {currency})
@@ -247,13 +232,9 @@ export function RecordSupplierPaymentModal({
                 {searchQuery.trim() ? (
                   <ul className="absolute z-30 mt-1 max-h-52 w-full overflow-auto rounded-xl border border-border bg-surface shadow-lg">
                     {isSearching ? (
-                      <li className="px-4 py-3 text-sm text-text-secondary">
-                        …
-                      </li>
+                      <li className="px-4 py-3 text-sm text-text-secondary">…</li>
                     ) : searchResults.length === 0 ? (
-                      <li className="px-4 py-3 text-sm text-text-secondary">
-                        {t("noSuppliersWithDebt")}
-                      </li>
+                      <li className="px-4 py-3 text-sm text-text-secondary">{t("noSuppliersWithDebt")}</li>
                     ) : (
                       searchResults.map((s) => (
                         <li key={s.id}>
@@ -272,9 +253,7 @@ export function RecordSupplierPaymentModal({
                               }
                             }}
                           >
-                            <span className="font-semibold text-text-primary">
-                              {s.name}
-                            </span>
+                            <span className="font-semibold text-text-primary">{s.name}</span>
                             <span className="text-xs text-text-secondary">
                               {s.phone ? `${s.phone} • ` : ""}
                               <strong className="text-primary font-medium">
@@ -334,9 +313,7 @@ export function RecordSupplierPaymentModal({
 
         {/* Notes */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-base font-medium text-text-secondary">
-            {t("fieldNotes")}
-          </label>
+          <label className="text-base font-medium text-text-secondary">{t("fieldNotes")}</label>
           <textarea
             name="paymentNotes"
             rows={3}

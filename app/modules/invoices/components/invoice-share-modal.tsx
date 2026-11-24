@@ -11,7 +11,7 @@ import { receiptDisplayNumber } from "../utils/receipt-format";
 
 type PreparedImage = { file: File; showPrices: boolean };
 
-export function InvoiceShareModal({ invoiceId, onClose, initialShowPrices = true, initialFormat = "png" }: { invoiceId: string; onClose: () => void; initialShowPrices?: boolean; initialFormat?: InvoiceFileFormat }) {
+export function InvoiceShareModal({ invoiceId, onClose, onRestore, initialShowPrices = true, initialFormat = "png" }: { invoiceId: string; onClose: () => void; onRestore?: () => void; initialShowPrices?: boolean; initialFormat?: InvoiceFileFormat }) {
   const t = useTranslations("invoices");
   const locale = useLocale();
   const [invoice, setInvoice] = useState<PublicInvoice | null>(null);
@@ -91,7 +91,7 @@ export function InvoiceShareModal({ invoiceId, onClose, initialShowPrices = true
     }
   }
 
-  return <Modal open onClose={onClose} title={t("shareInvoiceTitle", { number: invoice?.invoiceNumber ?? "…" })}>
+  return <Modal open layerKey={`invoice-share:${invoiceId}`} onRestore={onRestore} busy={busy} onClose={onClose} title={t("shareInvoiceTitle", { number: invoice?.invoiceNumber ?? "…" })}>
     <div dir={locale === "ar" ? "rtl" : "ltr"} className="space-y-5">
       <fieldset>
         <legend className="mb-2 text-sm font-semibold text-text-primary">{t("priceVisibility")}</legend>

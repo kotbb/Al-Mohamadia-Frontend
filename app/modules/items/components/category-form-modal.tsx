@@ -1,5 +1,7 @@
 "use client";
 
+import { useModalFormGuard } from "@/app/modules/shared/hooks/use-modal-form-guard";
+
 import type { FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { Modal } from "@/app/modules/shared/components/modal";
@@ -10,6 +12,7 @@ interface CategoryFormModalProps {
   open: boolean;
   mode: "create" | "edit";
   onClose: () => void;
+  onRestore?: () => void;
   name: string;
   onNameChange: (value: string) => void;
   isSubmitting: boolean;
@@ -20,7 +23,8 @@ interface CategoryFormModalProps {
 export function CategoryFormModal({
   open,
   mode,
-  onClose,
+  onClose: closeWithoutGuard,
+  onRestore,
   name,
   onNameChange,
   isSubmitting,
@@ -29,6 +33,9 @@ export function CategoryFormModal({
 }: CategoryFormModalProps) {
   const t = useTranslations("categories");
   const isEdit = mode === "edit";
+  const { requestClose } = useModalFormGuard(open, { name }, isSubmitting);
+  const onClose = () => requestClose(closeWithoutGuard);
+
   const canSubmit = name.trim().length > 0;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -38,40 +45,25 @@ export function CategoryFormModal({
 
   return (
     <Modal
+      layerKey="items:category-form-modal"
       open={open}
-      onClose={onClose}
+      onRestore={onRestore}
+      busy={isSubmitting}
+      onClose={closeWithoutGuard}
       title={isEdit ? t("editTitle") : t("createTitle")}
       footer={
         <div className="flex justify-end gap-3">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onClose}
-            disabled={isSubmitting}
-          >
+          <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
             {t("modalCancel")}
           </Button>
-          <Button
-            type="submit"
-            form="category-form"
-            variant="primary"
-            disabled={isSubmitting || !canSubmit}
-          >
-            {isSubmitting
-              ? isEdit
-                ? t("saving")
-                : t("creating")
-              : isEdit
-                ? t("saveChanges")
-                : t("createSubmit")}
+          <Button type="submit" form="category-form" variant="primary" disabled={isSubmitting || !canSubmit}>
+            {isSubmitting ? (isEdit ? t("saving") : t("creating")) : isEdit ? t("saveChanges") : t("createSubmit")}
           </Button>
         </div>
       }
     >
       <form id="category-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <p className="text-sm text-text-muted">
-          {isEdit ? t("editSubtitle") : t("createSubtitle")}
-        </p>
+        <p className="text-sm text-text-muted">{isEdit ? t("editSubtitle") : t("createSubtitle")}</p>
         <Input
           name="categoryName"
           label={t("fieldName")}
@@ -82,10 +74,7 @@ export function CategoryFormModal({
           autoComplete="off"
         />
         {error ? (
-          <p
-            className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger"
-            role="alert"
-          >
+          <p className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger" role="alert">
             {error}
           </p>
         ) : null}

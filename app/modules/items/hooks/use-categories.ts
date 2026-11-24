@@ -1,5 +1,7 @@
 "use client";
 
+import { useUrlState } from "@/app/modules/shared/hooks/use-url-state";
+
 import type {
   ListStatus,
   CategoriesToastState,
@@ -10,7 +12,7 @@ import type {
 } from "../types/use-categories.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRef, useCallback, useEffect, useMemo, useState } from "react";
 import {
   createCategory,
   deleteCategory,
@@ -27,13 +29,11 @@ export function useCategories(): UseCategoriesResult {
   const [listStatus, setListStatus] = useState<ListStatus>("loading");
   const [listError, setListError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
-  const [requestedPage, setPage] = useState(1);
-  const [filters, setFilters] = useState<CategoriesFilters>({ search: "", isActive: "all" });
+  const [requestedPage, setPage] = useUrlState("page", 1);
+  const [filters, setFilters] = useUrlState<CategoriesFilters>("", { search: "", isActive: "all" });
 
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
-  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
-    null,
-  );
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formName, setFormName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -41,13 +41,11 @@ export function useCategories(): UseCategoriesResult {
   const [toast, setToast] = useState<CategoriesToastState | null>(null);
 
   const [confirmKind, setConfirmKind] = useState<CategoriesConfirmKind>(null);
-  const [confirmCategory, setConfirmCategory] =
-    useState<CategoryListRow | null>(null);
+  const [confirmCategory, setConfirmCategory] = useState<CategoryListRow | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
-    setPage(1);
     setListStatus("loading");
     setListError(null);
     setTick((value) => value + 1);
@@ -91,13 +89,16 @@ export function useCategories(): UseCategoriesResult {
     setEditingCategoryId(null);
   }, []);
 
+  const lastOpenedForm = useRef<CategoryListRow | null>(null);
   const openCreate = useCallback(() => {
+    lastOpenedForm.current = null;
     resetForm();
     setFormMode("create");
     setIsFormOpen(true);
   }, [resetForm]);
 
   const openEdit = useCallback((category: CategoryListRow) => {
+    lastOpenedForm.current = category;
     setFormMode("edit");
     setEditingCategoryId(category.id);
     setFormName(category.name);
@@ -177,11 +178,7 @@ export function useCategories(): UseCategoriesResult {
       } else {
         const nextActive = confirmKind === "activate";
         await updateCategory(confirmCategory.id, { isActive: nextActive });
-        setToast(
-          nextActive
-            ? { kind: "activated", variant: "success" }
-            : { kind: "deactivated", variant: "danger" },
-        );
+        setToast(nextActive ? { kind: "activated", variant: "success" } : { kind: "deactivated", variant: "danger" });
       }
       setConfirmKind(null);
       setConfirmCategory(null);
@@ -217,6 +214,7 @@ export function useCategories(): UseCategoriesResult {
   const page = Math.max(1, Math.min(requestedPage, totalPages));
 
   return {
+    restoreForm: () => (lastOpenedForm.current ? openEdit(lastOpenedForm.current) : openCreate()),
     categories: rows,
     pageCategories: filteredCategories.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
     page,

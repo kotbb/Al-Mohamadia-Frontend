@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
+import { useAppNavigation as useRouter } from "@/app/modules/shared/hooks/use-app-navigation";
 import { DashboardPeriodControls } from "@/app/modules/dashboard/components/dashboard-period-controls";
 import { DashboardPeriodFinancials } from "@/app/modules/dashboard/components/dashboard-period-financials";
 import { DashboardTodayKpis } from "@/app/modules/dashboard/components/dashboard-today-kpis";

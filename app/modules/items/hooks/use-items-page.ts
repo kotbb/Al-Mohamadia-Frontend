@@ -1,10 +1,8 @@
 "use client";
 
-import type {
-  LoadStatus,
-  ItemsPageFilters,
-  UseItemsPageResult,
-} from "../types/use-items-page.types";
+import { useUrlState } from "@/app/modules/shared/hooks/use-url-state";
+
+import type { LoadStatus, ItemsPageFilters, UseItemsPageResult } from "../types/use-items-page.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -21,16 +19,15 @@ export function useItemsPage(): UseItemsPageResult {
   const [status, setStatus] = useState<LoadStatus>("loading");
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
-  const [requestedPage, setPage] = useState(1);
+  const [requestedPage, setPage] = useUrlState("page", 1);
 
-  const [filters, setFilters] = useState<ItemsPageFilters>({
+  const [filters, setFilters] = useUrlState<ItemsPageFilters>("", {
     search: "",
     categoryId: "",
     isActive: "all",
   });
 
   const refresh = useCallback(() => {
-    setPage(1);
     setStatus("loading");
     setError(null);
     setTick((value) => value + 1);
@@ -39,10 +36,7 @@ export function useItemsPage(): UseItemsPageResult {
   useEffect(() => {
     const controller = new AbortController();
 
-    Promise.all([
-      listCategories(controller.signal),
-      listItems(undefined, controller.signal),
-    ])
+    Promise.all([listCategories(controller.signal), listItems(undefined, controller.signal)])
       .then(([categoryList, itemList]) => {
         setCategories(categoryList.filter((category) => !category.isDeleted));
         setItems(itemList.filter((item) => !item.isDeleted));
@@ -75,9 +69,7 @@ export function useItemsPage(): UseItemsPageResult {
   }, [items, filters]);
 
   const groupedItems = useMemo(() => {
-    const categoryMap = new Map(
-      categories.map((category) => [category.id, category]),
-    );
+    const categoryMap = new Map(categories.map((category) => [category.id, category]));
     // The categories API supplies oldest-first creation order with ID ties.
     const categoryOrder = new Map(categories.map((category, index) => [category.id, index]));
     const groups = new Map<string, Item[]>();
@@ -101,27 +93,36 @@ export function useItemsPage(): UseItemsPageResult {
           } satisfies Category);
         return { category, items: groupItems };
       })
-      .sort((a, b) =>
-        (categoryOrder.get(a.category.id) ?? Number.MAX_SAFE_INTEGER) -
-          (categoryOrder.get(b.category.id) ?? Number.MAX_SAFE_INTEGER) ||
-        a.category.id.localeCompare(b.category.id),
+      .sort(
+        (a, b) =>
+          (categoryOrder.get(a.category.id) ?? Number.MAX_SAFE_INTEGER) -
+            (categoryOrder.get(b.category.id) ?? Number.MAX_SAFE_INTEGER) || a.category.id.localeCompare(b.category.id),
       );
   }, [categories, filteredItems]);
 
-  const setSearch = useCallback((value: string) => {
-    setPage(1);
-    setFilters((current) => ({ ...current, search: value }));
-  }, []);
+  const setSearch = useCallback(
+    (value: string) => {
+      setPage(1);
+      setFilters((current) => ({ ...current, search: value }));
+    },
+    [setFilters, setPage],
+  );
 
-  const setCategoryId = useCallback((value: string) => {
-    setPage(1);
-    setFilters((current) => ({ ...current, categoryId: value }));
-  }, []);
+  const setCategoryId = useCallback(
+    (value: string) => {
+      setPage(1);
+      setFilters((current) => ({ ...current, categoryId: value }));
+    },
+    [setFilters, setPage],
+  );
 
-  const setIsActive = useCallback((value: ItemsPageFilters["isActive"]) => {
-    setPage(1);
-    setFilters((current) => ({ ...current, isActive: value }));
-  }, []);
+  const setIsActive = useCallback(
+    (value: ItemsPageFilters["isActive"]) => {
+      setPage(1);
+      setFilters((current) => ({ ...current, isActive: value }));
+    },
+    [setFilters, setPage],
+  );
 
   const totalPages = Math.max(1, Math.ceil(groupedItems.length / CATEGORIES_PER_PAGE));
   const page = Math.max(1, Math.min(requestedPage, totalPages));

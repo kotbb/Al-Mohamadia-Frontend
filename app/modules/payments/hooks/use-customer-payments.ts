@@ -1,13 +1,12 @@
 "use client";
 
+import { useUrlState } from "@/app/modules/shared/hooks/use-url-state";
+
 import type { ListStatus } from "../types/use-customer-payments.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
-import {
-  cancelPayment,
-  listPayments,
-} from "@/app/modules/payments/services/payments.service";
+import { cancelPayment, listPayments } from "@/app/modules/payments/services/payments.service";
 import type { Payment, PaymentListItem } from "@/app/modules/payments/types/payments.types";
 
 const PAGE_SIZE = 10;
@@ -15,7 +14,7 @@ const PAGE_SIZE = 10;
 export function useCustomerPayments(customerId: string) {
   const describeError = useApiErrorMessage();
   const [payments, setPayments] = useState<PaymentListItem[]>([]);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useUrlState("paymentPage", 1);
   const [total, setTotal] = useState(0);
   const [status, setStatus] = useState<ListStatus>("loading");
   const [error, setError] = useState<string | null>(null);

@@ -1,5 +1,7 @@
 "use client";
 
+import { useModalFormGuard } from "@/app/modules/shared/hooks/use-modal-form-guard";
+
 import { EgyptianPhoneInput } from "@/app/modules/shared/components/egyptian-phone-input";
 import { isOptionalMobile } from "@/app/modules/shared/utils/egyptian-mobile";
 import { useState, type FormEvent } from "react";
@@ -12,6 +14,7 @@ interface CustomerFormModalProps {
   open: boolean;
   mode: "create" | "edit";
   onClose: () => void;
+  onRestore?: () => void;
   name: string;
   onNameChange: (value: string) => void;
   phone: string;
@@ -29,7 +32,8 @@ interface CustomerFormModalProps {
 export function CustomerFormModal({
   open,
   mode,
-  onClose,
+  onClose: closeWithoutGuard,
+  onRestore,
   name,
   onNameChange,
   phone,
@@ -50,6 +54,9 @@ export function CustomerFormModal({
     setPhoneError(false);
     onClose();
   }
+  const { requestClose } = useModalFormGuard(open, { name, phone, address, balance }, isSubmitting);
+  const onClose = () => requestClose(closeWithoutGuard);
+
   const canSubmit = name.trim().length > 0;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -64,44 +71,28 @@ export function CustomerFormModal({
 
   return (
     <Modal
+      layerKey="customers:customer-form-modal"
       open={open}
-      onClose={closeForm}
+      onRestore={onRestore}
+      busy={isSubmitting}
+      onClose={() => {
+        setPhoneError(false);
+        closeWithoutGuard();
+      }}
       title={isEdit ? t("editTitle") : t("createTitle")}
       footer={
         <div className="flex justify-end gap-3">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={closeForm}
-            disabled={isSubmitting}
-          >
+          <Button type="button" variant="secondary" onClick={closeForm} disabled={isSubmitting}>
             {t("modalCancel")}
           </Button>
-          <Button
-            type="submit"
-            form="customer-form"
-            variant="primary"
-            disabled={isSubmitting || !canSubmit}
-          >
-            {isSubmitting
-              ? isEdit
-                ? t("saving")
-                : t("creating")
-              : isEdit
-                ? t("saveChanges")
-                : t("createSubmit")}
+          <Button type="submit" form="customer-form" variant="primary" disabled={isSubmitting || !canSubmit}>
+            {isSubmitting ? (isEdit ? t("saving") : t("creating")) : isEdit ? t("saveChanges") : t("createSubmit")}
           </Button>
         </div>
       }
     >
-      <form
-        id="customer-form"
-        onSubmit={handleSubmit}
-        className="flex flex-col gap-4"
-      >
-        <p className="text-sm text-text-muted">
-          {isEdit ? t("editSubtitle") : t("createSubtitle")}
-        </p>
+      <form id="customer-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <p className="text-sm text-text-muted">{isEdit ? t("editSubtitle") : t("createSubtitle")}</p>
         <Input
           name="customerName"
           label={t("fieldName")}
@@ -142,10 +133,7 @@ export function CustomerFormModal({
           disabled={isSubmitting}
         />
         {error ? (
-          <p
-            className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger"
-            role="alert"
-          >
+          <p className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger" role="alert">
             {error}
           </p>
         ) : null}

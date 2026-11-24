@@ -1,5 +1,7 @@
 "use client";
 
+import { useUrlState } from "@/app/modules/shared/hooks/use-url-state";
+
 import type { ListStatus } from "../types/use-supplier-account-payments.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
@@ -8,22 +10,23 @@ import {
   cancelSupplierPayment,
   listSupplierPayments,
 } from "@/app/modules/supplier-payments/services/supplier-payments.service";
-import type { SupplierPayment, SupplierPaymentListItem } from "@/app/modules/supplier-payments/types/supplier-payments.types";
+import type {
+  SupplierPayment,
+  SupplierPaymentListItem,
+} from "@/app/modules/supplier-payments/types/supplier-payments.types";
 
 const PAGE_SIZE = 10;
 
 export function useSupplierAccountPayments(supplierId: string) {
   const describeError = useApiErrorMessage();
   const [payments, setPayments] = useState<SupplierPaymentListItem[]>([]);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useUrlState("paymentPage", 1);
   const [total, setTotal] = useState(0);
   const [status, setStatus] = useState<ListStatus>("loading");
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
 
-  const [confirmPayment, setConfirmPayment] = useState<SupplierPayment | null>(
-    null,
-  );
+  const [confirmPayment, setConfirmPayment] = useState<SupplierPayment | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
 

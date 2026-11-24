@@ -21,7 +21,11 @@
     "deposits": "إجمالي الإيداع",
     "withdrawals": "إجمالي السحب",
     "net": "الصافي (الإيداع − السحب)",
-    "lifetime": { "deposits": "إجمالي الإيداع لكل الفترات", "withdrawals": "إجمالي السحب لكل الفترات", "net": "الصافي لكل الفترات" },
+    "lifetime": {
+      "deposits": "إجمالي الإيداع لكل الفترات",
+      "withdrawals": "إجمالي السحب لكل الفترات",
+      "net": "الصافي لكل الفترات"
+    },
     "amount": "المبلغ",
     "currency": "ج.م",
     "date": "التاريخ",
@@ -29,7 +33,13 @@
     "methodOptional": "طريقة الدفع (اختياري)",
     "notes": "ملاحظات",
     "notesOptional": "ملاحظات (اختياري)",
-    "methods": { "cash": "نقدي", "instapay": "إنستاباي", "vodafone_cash": "فودافون كاش", "bank_transfer": "تحويل بنكي", "check": "شيك" },
+    "methods": {
+      "cash": "نقدي",
+      "instapay": "إنستاباي",
+      "vodafone_cash": "فودافون كاش",
+      "bank_transfer": "تحويل بنكي",
+      "check": "شيك"
+    },
     "search": "بحث",
     "searchPlaceholder": "ابحث بالاسم أو الملاحظات…",
     "period": "الفترة",
@@ -202,7 +212,9 @@
     "egypt": "مصر",
     "invalidEgyptianMobile": "أدخل رقم موبايل مصري صحيح يبدأ بـ 010 أو 011 أو 012 أو 015 (11 رقمًا محليًا).",
     "validationNumbers": "أدخل مبالغ صحيحة غير سالبة وبحد أقصى منزلتين عشريتين.",
-    "requiredText": "أكمل الحقول النصية المطلوبة."
+    "requiredText": "أكمل الحقول النصية المطلوبة.",
+    "back": "رجوع",
+    "close": "إغلاق"
   },
   "dashboard": {
     "title": "لوحة التحكم",
@@ -353,13 +365,13 @@
     "historyColDate": "التاريخ",
     "historySellingPrice": "سعر البيع",
     "historyCost": "التكلفة",
-    "dimensionDefaultsTitle": "الأبعاد الافتراضية (م)",
+    "dimensionDefaultsTitle": "الأبعاد الافتراضية",
     "dimensionDefaultsHint": "أدخل المقاسات الشائعة بالمتر. القيمة الوحيدة تُملأ تلقائياً، والقيم المتعددة تظهر كخيارات في الفواتير.",
-    "thickness": "السماكة (م)",
-    "width": "العرض (م)",
-    "length": "الطول (م)",
+    "thickness": "التخانة",
+    "width": "العرض",
+    "length": "الطول",
     "addDimensionDefault": "إضافة قيمة",
-    "newDimensionValue": "قيمة جديدة (م)",
+    "newDimensionValue": "قيمة جديدة",
     "dimensionDefaultHint": "تُحفظ لاستخدامها في الفواتير القادمة.",
     "validationDimensionValue": "أدخل قيمة موجبة بالمتر.",
     "dimensionDefaultSaveFailed": "تعذر حفظ القيمة. حاول مرة أخرى.",
@@ -1243,5 +1255,12 @@
     "allocationTitle": "توزيع المدفوع",
     "invoicePortion": "لهذه الفاتورة",
     "additionalAccountPaymentNote": "(مديونية سابقة) إضافية"
+  },
+  "navigation": {
+    "back": "رجوع",
+    "discardTitle": "تجاهل التغييرات؟",
+    "discardDescription": "ستفقد التغييرات التي لم تحفظها.",
+    "keepEditing": "متابعة التعديل",
+    "discardChanges": "تجاهل التغييرات"
   }
 }

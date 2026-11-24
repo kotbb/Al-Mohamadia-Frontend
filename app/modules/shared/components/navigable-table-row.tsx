@@ -1,7 +1,7 @@
 "use client";
 
 import type { HTMLAttributes } from "react";
-import { useRouter } from "@/i18n/navigation";
+import { useAppNavigation as useRouter } from "@/app/modules/shared/hooks/use-app-navigation";
 import { canNavigateRow } from "../utils/row-navigation";
 
 interface NavigableTableRowProps extends HTMLAttributes<HTMLTableRowElement> {
@@ -28,8 +28,7 @@ export function NavigableTableRow({
           canNavigateRow({
             disabled,
             button: event.button,
-            modified:
-              event.ctrlKey || event.metaKey || event.shiftKey || event.altKey,
+            modified: event.ctrlKey || event.metaKey || event.shiftKey || event.altKey,
             defaultPrevented: event.defaultPrevented,
             interactiveTarget:
               !event.currentTarget.contains(target) ||

@@ -3,14 +3,11 @@
 import type { CustomerTarget } from "../types/use-record-payment.types";
 
 import { isMoneyAmount } from "@/app/modules/shared/utils/money-validation";
-import { useCallback, useState } from "react";
+import { useRef, useCallback, useState } from "react";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { roundMoneyAmount } from "@/app/modules/shared/utils/format-money";
 import { recordPayment } from "@/app/modules/payments/services/payments.service";
-import type {
-  Payment,
-  PaymentMethod,
-} from "@/app/modules/payments/types/payments.types";
+import type { Payment, PaymentMethod } from "@/app/modules/payments/types/payments.types";
 
 export function useRecordPayment() {
   const describeError = useApiErrorMessage();
@@ -22,14 +19,12 @@ export function useRecordPayment() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const lastTarget = useRef<CustomerTarget | undefined>(undefined);
   const open = useCallback((target?: CustomerTarget) => {
+    lastTarget.current = target;
     if (target) {
       setCustomer(target);
-      setAmount(
-        target.balance > 0
-          ? String(roundMoneyAmount(String(target.balance)) ?? target.balance)
-          : "",
-      );
+      setAmount(target.balance > 0 ? String(roundMoneyAmount(String(target.balance)) ?? target.balance) : "");
     } else {
       setCustomer(null);
       setAmount("");
@@ -42,11 +37,7 @@ export function useRecordPayment() {
 
   const selectCustomer = useCallback((target: CustomerTarget) => {
     setCustomer(target);
-    setAmount(
-      target.balance > 0
-        ? String(roundMoneyAmount(String(target.balance)) ?? target.balance)
-        : "",
-    );
+    setAmount(target.balance > 0 ? String(roundMoneyAmount(String(target.balance)) ?? target.balance) : "");
     setError(null);
   }, []);
 
@@ -101,6 +92,7 @@ export function useRecordPayment() {
   );
 
   return {
+    restore: () => open(lastTarget.current),
     isOpen,
     customer,
     amount,

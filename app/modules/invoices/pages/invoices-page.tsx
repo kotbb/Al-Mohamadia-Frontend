@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
+import { useAppNavigation as useRouter } from "@/app/modules/shared/hooks/use-app-navigation";
 import { AppShell } from "@/app/layout/app-shell";
 import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { InvoiceFilters } from "@/app/modules/invoices/components/invoice-filters";
@@ -11,6 +11,7 @@ import { InvoiceShareModal } from "@/app/modules/invoices/components/invoice-sha
 import { InvoicesList } from "@/app/modules/invoices/components/invoices-list";
 import { useInvoices } from "@/app/modules/invoices/hooks/use-invoices";
 import type { SalesInvoice } from "@/app/modules/invoices/types/invoices.types";
+import { useDialogDescriptor } from "@/app/modules/shared/hooks/use-dialog-descriptor";
 import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import { Button } from "@/app/modules/shared/components/button";
 import { ConfirmDialog } from "@/app/modules/shared/components/row-actions-menu";
@@ -23,9 +24,7 @@ export function InvoicesPage() {
   const router = useRouter();
   const history = useAuditHistory({ entityType: "SalesInvoice" });
   const searchParams = useSearchParams();
-  const [shareInvoiceTarget, setShareInvoiceTarget] = useState<SalesInvoice | null>(
-    null,
-  );
+  const [shareInvoiceTarget, setShareInvoiceTarget, restoreShare] = useDialogDescriptor<string>("invoice-share");
 
   const {
     invoices,
@@ -103,14 +102,14 @@ export function InvoicesPage() {
       }
     >
       {history.modal}
-      {shareInvoiceTarget && <InvoiceShareModal invoiceId={shareInvoiceTarget.id} onClose={() => setShareInvoiceTarget(null)} />}
-      <Toast
-        open={toast !== null}
-        message={toastMessage}
-        variant={toast?.variant ?? "success"}
-        onClose={clearToast}
-      />
-
+      {shareInvoiceTarget && (
+        <InvoiceShareModal
+          invoiceId={shareInvoiceTarget}
+          onRestore={restoreShare}
+          onClose={() => setShareInvoiceTarget(null)}
+        />
+      )}
+      <Toast open={toast !== null} message={toastMessage} variant={toast?.variant ?? "success"} onClose={clearToast} />
 
       <ConfirmDialog
         open={confirmInvoice !== null}
@@ -142,10 +141,8 @@ export function InvoicesPage() {
           <SurfaceCard padding="sm">
             <div className="flex flex-wrap items-center justify-between gap-4 px-2 py-1">
               <div>
-                <p className="text-xs font-medium text-text-secondary">
-                  {t("summarySalesTotal")}
-                </p>
-                <p className="mt-1 text-2xl font-bold text-text-primary">
+                <p className="text-xs font-medium text-text-secondary">{t("summarySalesTotal")}</p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums text-text-primary">
                   {formatMoney(summaryTotalAmount, locale)} {t("currency")}
                 </p>
               </div>
@@ -168,10 +165,7 @@ export function InvoicesPage() {
 
         <div aria-busy={isRefreshing}>
           {hasLoaded ? (
-            <div
-              className="mb-2 flex min-h-6 items-center gap-2 text-sm text-text-secondary"
-              role="status"
-            >
+            <div className="mb-2 flex min-h-6 items-center gap-2 text-sm text-text-secondary" role="status">
               {isRefreshing ? (
                 <>
                   <span
@@ -181,17 +175,9 @@ export function InvoicesPage() {
                   {t("updatingList")}
                 </>
               ) : listStatus === "error" ? (
-                <div
-                  className="flex flex-wrap items-center gap-2 text-danger"
-                  role="alert"
-                >
+                <div className="flex flex-wrap items-center gap-2 text-danger" role="alert">
                   <span>{listError ?? t("listError")}</span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={refresh}
-                  >
+                  <Button type="button" variant="ghost" size="sm" onClick={refresh}>
                     {t("retry")}
                   </Button>
                 </div>
@@ -206,11 +192,9 @@ export function InvoicesPage() {
             onRetry={refresh}
             onEdit={handleEdit}
             onPrint={(invoice) => router.push(`/invoices/${invoice.id}/export`)}
-            onShare={(invoice) => setShareInvoiceTarget(invoice)}
+            onShare={(invoice) => setShareInvoiceTarget(invoice.id)}
             onCancel={openCancelConfirm}
-            onHistory={(invoice) =>
-              history.openRecord(invoice.id, invoice.invoiceNumber)
-            }
+            onHistory={(invoice) => history.openRecord(invoice.id, invoice.invoiceNumber)}
           />
         </div>
 
@@ -225,9 +209,7 @@ export function InvoicesPage() {
             >
               {t("prevPage")}
             </Button>
-            <span className="text-sm text-text-secondary">
-              {t("pageOf", { page, totalPages })}
-            </span>
+            <span className="text-sm text-text-secondary">{t("pageOf", { page, totalPages })}</span>
             <Button
               type="button"
               variant="secondary"
@@ -247,12 +229,7 @@ export function InvoicesPage() {
 function PlusIcon() {
   return (
     <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path
-        d="M8 3v10M3 8h10"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-      />
+      <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
     </svg>
   );
 }

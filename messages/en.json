@@ -21,7 +21,11 @@
     "deposits": "Total deposits",
     "withdrawals": "Total withdrawals",
     "net": "Net (deposits − withdrawals)",
-    "lifetime": { "deposits": "Lifetime deposits", "withdrawals": "Lifetime withdrawals", "net": "Lifetime net" },
+    "lifetime": {
+      "deposits": "Lifetime deposits",
+      "withdrawals": "Lifetime withdrawals",
+      "net": "Lifetime net"
+    },
     "amount": "Amount",
     "currency": "EGP",
     "date": "Date",
@@ -29,7 +33,13 @@
     "methodOptional": "Payment method (optional)",
     "notes": "Notes",
     "notesOptional": "Notes (optional)",
-    "methods": { "cash": "Cash", "instapay": "InstaPay", "vodafone_cash": "Vodafone Cash", "bank_transfer": "Bank transfer", "check": "Check" },
+    "methods": {
+      "cash": "Cash",
+      "instapay": "InstaPay",
+      "vodafone_cash": "Vodafone Cash",
+      "bank_transfer": "Bank transfer",
+      "check": "Check"
+    },
     "search": "Search",
     "searchPlaceholder": "Search by person or notes…",
     "period": "Period",
@@ -202,7 +212,9 @@
     "egypt": "Egypt",
     "invalidEgyptianMobile": "Enter a valid Egyptian mobile number starting with 010, 011, 012 or 015 (11 local digits).",
     "validationNumbers": "Enter finite, non-negative amounts with at most 2 decimal places.",
-    "requiredText": "Fill in the required text fields."
+    "requiredText": "Fill in the required text fields.",
+    "back": "Back",
+    "close": "Close"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -353,13 +365,13 @@
     "historyColDate": "Date",
     "historySellingPrice": "Selling price",
     "historyCost": "Cost",
-    "dimensionDefaultsTitle": "Default dimensions (m)",
+    "dimensionDefaultsTitle": "Default dimensions",
     "dimensionDefaultsHint": "Enter common sizes in meters. One value fills automatically; multiple values offer choices in invoices.",
-    "thickness": "Thickness (m)",
-    "width": "Width (m)",
-    "length": "Length (m)",
+    "thickness": "Thickness",
+    "width": "Width",
+    "length": "Length",
     "addDimensionDefault": "Add value",
-    "newDimensionValue": "New value (m)",
+    "newDimensionValue": "New value",
     "dimensionDefaultHint": "Saved for future invoices.",
     "validationDimensionValue": "Enter a positive value",
     "dimensionDefaultSaveFailed": "Could not save the value. Please try again.",
@@ -1243,5 +1255,12 @@
     "allocationTitle": "Payment breakdown",
     "invoicePortion": "This invoice",
     "additionalAccountPaymentNote": "Additional (previous debt)"
+  },
+  "navigation": {
+    "back": "Back",
+    "discardTitle": "Discard changes?",
+    "discardDescription": "Your unsaved changes will be lost.",
+    "keepEditing": "Keep editing",
+    "discardChanges": "Discard changes"
   }
 }

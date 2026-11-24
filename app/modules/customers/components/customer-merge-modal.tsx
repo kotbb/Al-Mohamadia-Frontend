@@ -1,5 +1,7 @@
 "use client";
 
+import { useModalFormGuard } from "@/app/modules/shared/hooks/use-modal-form-guard";
+
 import { useEffect, useState } from "react";
 import { MergePhoneField } from "@/app/modules/shared/components/merge-phone-field";
 import { isOptionalMobile } from "@/app/modules/shared/utils/egyptian-mobile";
@@ -11,6 +13,7 @@ import { Button } from "@/app/modules/shared/components/button";
 interface CustomerMergeModalProps {
   open: boolean;
   onClose: () => void;
+  onRestore?: () => void;
   options: Customer[];
   targetId: string;
   onTargetChange: (id: string) => void;
@@ -23,7 +26,8 @@ interface CustomerMergeModalProps {
 
 export function CustomerMergeModal({
   open,
-  onClose,
+  onClose: closeWithoutGuard,
+  onRestore,
   options,
   targetId,
   onTargetChange,
@@ -42,22 +46,23 @@ export function CustomerMergeModal({
       setPhoneError(false);
     }
   }, [open]);
+  const { requestClose } = useModalFormGuard(open, { targetId, sourceIds, phoneOverride }, isSubmitting);
+  const onClose = () => requestClose(closeWithoutGuard);
+
   const canSubmit = Boolean(targetId) && sourceIds.length > 0;
 
   return (
     <Modal
+      layerKey="customers:customer-merge-modal"
       open={open}
-      onClose={onClose}
+      onRestore={onRestore}
+      busy={isSubmitting}
+      onClose={closeWithoutGuard}
       title={t("mergeTitle")}
       size="lg"
       footer={
         <div className="flex justify-end gap-3">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onClose}
-            disabled={isSubmitting}
-          >
+          <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
             {t("modalCancel")}
           </Button>
           <Button
@@ -65,22 +70,13 @@ export function CustomerMergeModal({
             variant="primary"
             disabled={isSubmitting || !canSubmit}
             onClick={() => {
-              const originalPhone =
-                options.find((option) => option.id === targetId)?.phone ?? "";
-              if (
-                phoneOverride !== null &&
-                phoneOverride !== originalPhone &&
-                !isOptionalMobile(phoneOverride)
-              ) {
+              const originalPhone = options.find((option) => option.id === targetId)?.phone ?? "";
+              if (phoneOverride !== null && phoneOverride !== originalPhone && !isOptionalMobile(phoneOverride)) {
                 setPhoneError(true);
                 return;
               }
               setPhoneError(false);
-              void onSubmit(
-                phoneOverride === null
-                  ? undefined
-                  : phoneOverride.trim() || null,
-              );
+              void onSubmit(phoneOverride === null ? undefined : phoneOverride.trim() || null);
             }}
           >
             {isSubmitting ? t("merging") : t("mergeSubmit")}
@@ -92,11 +88,9 @@ export function CustomerMergeModal({
         <p className="text-sm text-text-muted">{t("mergeSubtitle")}</p>
 
         <label className="flex w-full flex-col gap-1.5">
-          <span className="text-base font-medium text-text-secondary">
-            {t("mergeTargetLabel")}
-          </span>
+          <span className="text-base font-medium text-text-secondary">{t("mergeTargetLabel")}</span>
           <select
-            className="ds-focus-input min-h-11 w-full rounded-xl border border-border bg-surface px-4 text-base text-text-primary"
+            className="ds-focus-input min-h-11 w-full rounded-lg border border-border bg-surface px-4 text-base text-text-primary"
             value={targetId}
             disabled={isSubmitting}
             onChange={(event) => {
@@ -118,9 +112,7 @@ export function CustomerMergeModal({
         <MergePhoneField
           name="customerMergePhone"
           value={phoneOverride}
-          currentPhone={
-            options.find((option) => option.id === targetId)?.phone ?? null
-          }
+          currentPhone={options.find((option) => option.id === targetId)?.phone ?? null}
           disabled={isSubmitting || !targetId}
           showError={phoneError}
           onChange={(value) => {
@@ -130,9 +122,7 @@ export function CustomerMergeModal({
         />
 
         <fieldset className="flex flex-col gap-2">
-          <legend className="text-base font-medium text-text-secondary">
-            {t("mergeSourcesLabel")}
-          </legend>
+          <legend className="text-base font-medium text-text-secondary">{t("mergeSourcesLabel")}</legend>
           <div className="max-h-56 overflow-y-auto rounded-xl border border-border">
             {options
               .filter((customer) => customer.id !== targetId)
@@ -151,12 +141,8 @@ export function CustomerMergeModal({
                       onChange={() => onToggleSource(customer.id)}
                     />
                     <span className="min-w-0 flex-1">
-                      <span className="block font-medium text-text-primary">
-                        {customer.name}
-                      </span>
-                      <span className="block text-sm text-text-muted">
-                        {customer.phone ?? "-"}
-                      </span>
+                      <span className="block font-medium text-text-primary">{customer.name}</span>
+                      <span className="block text-sm text-text-muted">{customer.phone ?? "-"}</span>
                     </span>
                   </label>
                 );
@@ -172,10 +158,7 @@ export function CustomerMergeModal({
         </div>
 
         {error ? (
-          <p
-            className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger"
-            role="alert"
-          >
+          <p className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger" role="alert">
             {error}
           </p>
         ) : null}

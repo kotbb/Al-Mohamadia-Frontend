@@ -1,18 +1,16 @@
 "use client";
 
+import { useUrlSearch } from "@/app/modules/shared/hooks/use-url-search";
+import { useUrlState } from "@/app/modules/shared/hooks/use-url-state";
+
 import { isOptionalMobile, normalizeMobile } from "@/app/modules/shared/utils/egyptian-mobile";
 import { isSignedMoneyAmount } from "@/app/modules/shared/utils/money-validation";
 import { useTranslations } from "next-intl";
 
-import type {
-  ListStatus,
-  DebtFilter,
-  SuppliersToastState,
-  SuppliersConfirmKind,
-} from "../types/use-suppliers.types";
+import type { ListStatus, DebtFilter, SuppliersToastState, SuppliersConfirmKind } from "../types/use-suppliers.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
-import { useCallback, useEffect, useState } from "react";
+import { useRef, useCallback, useEffect, useState } from "react";
 import {
   createSupplier,
   deleteSupplier,
@@ -31,11 +29,10 @@ export function useSuppliers() {
   const account = useTranslations("accountDetails");
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [totalOwed, setTotalOwed] = useState(0);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useUrlState("page", 1);
   const [total, setTotal] = useState(0);
-  const [debtFilter, setDebtFilter] = useState<DebtFilter>("all");
-  const [searchInput, setSearchInput] = useState("");
-  const [debouncedQ, setDebouncedQ] = useState("");
+  const [debtFilter, setDebtFilter] = useUrlState<DebtFilter>("hasDebt", "all");
+  const [searchInput, setSearchInput, debouncedQ] = useUrlSearch("q", "page", SEARCH_DEBOUNCE_MS);
   const [listStatus, setListStatus] = useState<ListStatus>("loading");
   const [listError, setListError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
@@ -64,14 +61,6 @@ export function useSuppliers() {
   const [confirmSupplier, setConfirmSupplier] = useState<Supplier | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setDebouncedQ(searchInput.trim());
-      setPage(1);
-    }, SEARCH_DEBOUNCE_MS);
-    return () => window.clearTimeout(timer);
-  }, [searchInput]);
 
   const refresh = useCallback(() => {
     setListStatus("loading");
@@ -124,13 +113,16 @@ export function useSuppliers() {
     setEditingId(null);
   }, []);
 
+  const lastOpenedForm = useRef<Supplier | null>(null);
   const openCreate = useCallback(() => {
+    lastOpenedForm.current = null;
     resetForm();
     setFormMode("create");
     setIsFormOpen(true);
   }, [resetForm]);
 
   const openEdit = useCallback((supplier: Supplier) => {
+    lastOpenedForm.current = supplier;
     setFormMode("edit");
     setEditingId(supplier.id);
     setFormName(supplier.name);
@@ -213,7 +205,9 @@ export function useSuppliers() {
     resetForm,
   ]);
 
+  const lastMergeTarget = useRef<string | undefined>(undefined);
   const openMerge = useCallback(async (preselectedTargetId?: string) => {
+    lastMergeTarget.current = preselectedTargetId;
     setMergeError(null);
     setMergeSourceIds([]);
     setMergeTargetId(preselectedTargetId ?? "");
@@ -236,9 +230,7 @@ export function useSuppliers() {
   }, [isMerging]);
 
   const toggleMergeSource = useCallback((id: string) => {
-    setMergeSourceIds((prev) =>
-      prev.includes(id) ? prev.filter((value) => value !== id) : [...prev, id],
-    );
+    setMergeSourceIds((prev) => (prev.includes(id) ? prev.filter((value) => value !== id) : [...prev, id]));
   }, []);
 
   const submitMerge = useCallback(
@@ -311,11 +303,7 @@ export function useSuppliers() {
       } else {
         const nextActive = confirmKind === "activate";
         await updateSupplier(confirmSupplier.id, { isActive: nextActive });
-        setToast(
-          nextActive
-            ? { kind: "activated", variant: "success" }
-            : { kind: "deactivated", variant: "danger" },
-        );
+        setToast(nextActive ? { kind: "activated", variant: "success" } : { kind: "deactivated", variant: "danger" });
       }
       setConfirmKind(null);
       setConfirmSupplier(null);
@@ -328,14 +316,21 @@ export function useSuppliers() {
     }
   }, [confirmSupplier, confirmKind, refresh]);
 
-  const setDebtFilterAndResetPage = useCallback((value: DebtFilter) => {
-    setDebtFilter(value);
-    setPage(1);
-  }, []);
+  const setDebtFilterAndResetPage = useCallback(
+    (value: DebtFilter) => {
+      setDebtFilter(value);
+      setPage(1);
+    },
+    [setDebtFilter, setPage],
+  );
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return {
+    restoreMerge: () => {
+      void openMerge(lastMergeTarget.current);
+    },
+    restoreForm: () => (lastOpenedForm.current ? openEdit(lastOpenedForm.current) : openCreate()),
     suppliers,
     totalOwed,
     page,

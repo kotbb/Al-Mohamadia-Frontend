@@ -2,18 +2,16 @@
 
 import type { AuditHistoryRequest } from "../types/use-audit-history.types";
 
-import { useCallback, useState } from "react";
+import { useDialogDescriptor } from "@/app/modules/shared/hooks/use-dialog-descriptor";
+import { useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { AuditHistoryModal } from "@/app/modules/audit/components/audit-history-modal";
 import type { AuditEntityType } from "@/app/modules/audit/utils/audit-catalog";
 import { Button } from "@/app/modules/shared/components/button";
 
-export function useAuditHistory(options: {
-  entityType: AuditEntityType;
-  defaultAction?: string;
-}) {
+export function useAuditHistory(options: { entityType: AuditEntityType; defaultAction?: string }) {
   const t = useTranslations("audit");
-  const [request, setRequest] = useState<AuditHistoryRequest | null>(null);
+  const [request, setRequest, restore] = useDialogDescriptor<AuditHistoryRequest>(`audit:${options.entityType}`);
 
   const openType = useCallback(() => {
     setRequest({});
@@ -43,6 +41,7 @@ export function useAuditHistory(options: {
     <AuditHistoryModal
       open={request !== null}
       onClose={close}
+      onRestore={restore}
       entityType={options.entityType}
       entityId={request?.entityId}
       recordLabel={request?.recordLabel}

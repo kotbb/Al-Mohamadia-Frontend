@@ -3,14 +3,11 @@
 import type { SupplierTarget } from "../types/use-record-supplier-payment.types";
 
 import { isMoneyAmount } from "@/app/modules/shared/utils/money-validation";
-import { useCallback, useState } from "react";
+import { useRef, useCallback, useState } from "react";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { roundMoneyAmount } from "@/app/modules/shared/utils/format-money";
 import { recordSupplierPayment } from "@/app/modules/supplier-payments/services/supplier-payments.service";
-import type {
-  SupplierPayment,
-  PaymentMethod,
-} from "@/app/modules/supplier-payments/types/supplier-payments.types";
+import type { SupplierPayment, PaymentMethod } from "@/app/modules/supplier-payments/types/supplier-payments.types";
 
 export function useRecordSupplierPayment() {
   const describeError = useApiErrorMessage();
@@ -22,16 +19,12 @@ export function useRecordSupplierPayment() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const lastTarget = useRef<SupplierTarget | undefined>(undefined);
   const open = useCallback((target?: SupplierTarget) => {
+    lastTarget.current = target;
     if (target) {
       setSupplier(target);
-      setAmount(
-        target.amountOwed > 0
-          ? String(
-              roundMoneyAmount(String(target.amountOwed)) ?? target.amountOwed,
-            )
-          : "",
-      );
+      setAmount(target.amountOwed > 0 ? String(roundMoneyAmount(String(target.amountOwed)) ?? target.amountOwed) : "");
     } else {
       setSupplier(null);
       setAmount("");
@@ -44,13 +37,7 @@ export function useRecordSupplierPayment() {
 
   const selectSupplier = useCallback((target: SupplierTarget) => {
     setSupplier(target);
-    setAmount(
-      target.amountOwed > 0
-        ? String(
-            roundMoneyAmount(String(target.amountOwed)) ?? target.amountOwed,
-          )
-        : "",
-    );
+    setAmount(target.amountOwed > 0 ? String(roundMoneyAmount(String(target.amountOwed)) ?? target.amountOwed) : "");
     setError(null);
   }, []);
 
@@ -70,9 +57,7 @@ export function useRecordSupplierPayment() {
   }, [isSubmitting]);
 
   const submit = useCallback(
-    async (
-      onSuccess?: (payment: SupplierPayment) => void,
-    ): Promise<SupplierPayment | null> => {
+    async (onSuccess?: (payment: SupplierPayment) => void): Promise<SupplierPayment | null> => {
       if (!supplier) return null;
 
       const numAmount = Number(amount);
@@ -107,6 +92,7 @@ export function useRecordSupplierPayment() {
   );
 
   return {
+    restore: () => open(lastTarget.current),
     isOpen,
     supplier,
     amount,

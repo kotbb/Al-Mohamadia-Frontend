@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
+import { useAppNavigation as useRouter } from "@/app/modules/shared/hooks/use-app-navigation";
 import { AppShell } from "@/app/layout/app-shell";
 import { useAuditHistory } from "@/app/modules/audit/hooks/use-audit-history";
 import { PurchaseFilters } from "@/app/modules/purchases/components/purchase-filters";
@@ -57,11 +57,7 @@ export function PurchasesPage() {
   useEffect(() => {
     if (searchParams.get("new") === "1") {
       const supplierId = searchParams.get("supplierId");
-      router.replace(
-        supplierId
-          ? `/purchases/new?supplierId=${encodeURIComponent(supplierId)}`
-          : "/purchases/new",
-      );
+      router.replace(supplierId ? `/purchases/new?supplierId=${encodeURIComponent(supplierId)}` : "/purchases/new");
     }
   }, [searchParams, router]);
 
@@ -70,11 +66,7 @@ export function PurchasesPage() {
   }
 
   const toastMessage =
-    toast?.kind === "cancelled"
-      ? t("cancelSuccess")
-      : toast?.kind === "created"
-        ? t("createSuccess")
-        : "";
+    toast?.kind === "cancelled" ? t("cancelSuccess") : toast?.kind === "created" ? t("createSuccess") : "";
 
   return (
     <AppShell
@@ -97,19 +89,9 @@ export function PurchasesPage() {
       }
     >
       {history.modal}
-      <Toast
-        open={toast !== null}
-        message={toastMessage}
-        variant={toast?.variant ?? "success"}
-        onClose={clearToast}
-      />
+      <Toast open={toast !== null} message={toastMessage} variant={toast?.variant ?? "success"} onClose={clearToast} />
 
-      <Toast
-        open={actionError !== null}
-        message={actionError ?? ""}
-        variant="danger"
-        onClose={clearActionError}
-      />
+      <Toast open={actionError !== null} message={actionError ?? ""} variant="danger" onClose={clearActionError} />
 
       <ConfirmDialog
         open={confirmPurchase !== null}
@@ -142,10 +124,8 @@ export function PurchasesPage() {
           <SurfaceCard padding="sm">
             <div className="flex flex-wrap items-center justify-between gap-4 px-2 py-1">
               <div>
-                <p className="text-xs font-medium text-text-secondary">
-                  {t("summaryPurchasesTotal")}
-                </p>
-                <p className="mt-1 text-2xl font-bold text-text-primary">
+                <p className="text-xs font-medium text-text-secondary">{t("summaryPurchasesTotal")}</p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums text-text-primary">
                   {formatMoney(summaryTotalAmount, locale)} {t("currency")}
                 </p>
               </div>
@@ -175,25 +155,15 @@ export function PurchasesPage() {
           onRetry={refresh}
           onCancel={openCancelConfirm}
           onEdit={(purchase) => router.push(`/purchases/${purchase.id}/edit`)}
-          onHistory={(purchase) =>
-            history.openRecord(purchase.id, purchase.invoiceNumber)
-          }
+          onHistory={(purchase) => history.openRecord(purchase.id, purchase.invoiceNumber)}
         />
 
         {listStatus === "success" && totalPages > 1 ? (
           <div className="flex items-center justify-center gap-3 pt-2">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage(page - 1)}
-            >
+            <Button type="button" variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
               {tShared("prevPage")}
             </Button>
-            <span className="text-sm text-text-secondary">
-              {t("pageOf", { page, totalPages })}
-            </span>
+            <span className="text-sm text-text-secondary">{t("pageOf", { page, totalPages })}</span>
             <Button
               type="button"
               variant="secondary"
@@ -213,12 +183,7 @@ export function PurchasesPage() {
 function PlusIcon() {
   return (
     <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path
-        d="M8 3v10M3 8h10"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-      />
+      <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
     </svg>
   );
 }

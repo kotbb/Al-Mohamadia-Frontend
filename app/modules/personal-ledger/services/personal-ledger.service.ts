@@ -1,5 +1,14 @@
 import { apiClient } from "@/lib/api/client";
-import type { LedgerContact, LedgerContactDetail, LedgerContactFilters, LedgerContactList, LedgerMovement, LedgerMovementFilters, LedgerMovementInput, LedgerMovementList } from "../types/personal-ledger.types";
+import type {
+  LedgerContact,
+  LedgerContactDetail,
+  LedgerContactFilters,
+  LedgerContactList,
+  LedgerMovement,
+  LedgerMovementFilters,
+  LedgerMovementInput,
+  LedgerMovementList,
+} from "../types/personal-ledger.types";
 
 function ledgerQuery(resource: string, filters: object = {}): string {
   const params = new URLSearchParams();

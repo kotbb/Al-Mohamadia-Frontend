@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Link, useRouter } from "@/i18n/navigation";
+import { BackButton } from "@/app/modules/shared/components/back-button";
+import { useAppNavigation } from "@/app/modules/shared/hooks/use-app-navigation";
+
 import { AppShell } from "@/app/layout/app-shell";
 import { PurchaseLineRow } from "@/app/modules/purchases/components/purchase-line-row";
 import { PurchaseSupplierSection } from "@/app/modules/purchases/components/purchase-supplier-section";
@@ -19,7 +21,7 @@ import { SurfaceCard } from "@/app/modules/shared/components/surface-card";
 export function NewPurchasePage({ purchaseId }: { purchaseId?: string }) {
   const t = useTranslations("purchases");
   const tShared = useTranslations("shared");
-  const router = useRouter();
+  const router = useAppNavigation();
   const searchParams = useSearchParams();
   const initialSupplierId = purchaseId ? null : searchParams.get("supplierId");
 
@@ -35,7 +37,10 @@ export function NewPurchasePage({ purchaseId }: { purchaseId?: string }) {
     getPurchase(purchaseId, controller.signal)
       .then((purchase) => {
         if (controller.signal.aborted) return;
-        if (purchase.status !== "saved") { setEditStatus("error"); return; }
+        if (purchase.status !== "saved") {
+          setEditStatus("error");
+          return;
+        }
         form.initializeForEdit(purchase);
         if (!controller.signal.aborted) setEditStatus("success");
       })
@@ -52,7 +57,7 @@ export function NewPurchasePage({ purchaseId }: { purchaseId?: string }) {
       t: (key) => t(key as Parameters<typeof t>[0]),
     });
     if (id) {
-      router.push(`/purchases/${id}`);
+      router.complete(`/purchases/${id}`);
     }
   }
 
@@ -60,25 +65,14 @@ export function NewPurchasePage({ purchaseId }: { purchaseId?: string }) {
     <AppShell
       title={purchaseId ? t("editTitle", { number: form.editInvoice?.invoiceNumber ?? "" }) : t("newTitle")}
       subtitle={purchaseId ? undefined : t("newSubtitle")}
+      navigation={<BackButton fallback="/purchases" />}
       density="compact"
-      actions={
-        <Link
-          href="/purchases"
-          className="ds-focus-ring inline-flex w-fit items-center gap-2 text-sm font-medium text-primary underline-offset-2 hover:underline"
-        >
-          <BackIcon />
-          <span>{t("backToList")}</span>
-        </Link>
-      }
     >
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-4">
         {editStatus === "loading" || form.itemsStatus === "loading" || form.itemsStatus === "idle" ? (
           <LoadingState message={tShared("loading")} />
         ) : editStatus === "error" || form.itemsStatus === "error" ? (
-          <ErrorState
-            title={t("listError")}
-            message={editError ?? form.itemsError ?? undefined}
-          />
+          <ErrorState title={t("listError")} message={editError ?? form.itemsError ?? undefined} />
         ) : (
           <>
             {/* Supplier Section */}
@@ -100,9 +94,7 @@ export function NewPurchasePage({ purchaseId }: { purchaseId?: string }) {
             {/* Lines Section */}
             <SurfaceCard padding="sm">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold text-text-primary">
-                  {t("linesTitle")}
-                </h2>
+                <h2 className="text-lg font-semibold text-text-primary">{t("linesTitle")}</h2>
               </div>
 
               <div className="flex flex-col gap-2">
@@ -119,20 +111,12 @@ export function NewPurchasePage({ purchaseId }: { purchaseId?: string }) {
                     onDuplicate={() => form.duplicateLine(line.key)}
                     onRemove={() => form.removeLine(line.key)}
                     onAddDimensionDefault={(dimension, value) =>
-                      form.addDimensionDefault(
-                        line.key,
-                        line.itemId,
-                        dimension,
-                        value,
-                      )
+                      form.addDimensionDefault(line.key, line.itemId, dimension, value)
                     }
                   />
                 ))}
               </div>
-              <AddInvoiceLineButton
-                label={t("addLine")}
-                onClick={form.addLine}
-              />
+              <AddInvoiceLineButton label={t("addLine")} onClick={form.addLine} />
             </SurfaceCard>
 
             {/* Totals Section */}
@@ -157,16 +141,11 @@ export function NewPurchasePage({ purchaseId }: { purchaseId?: string }) {
                 type="button"
                 variant="secondary"
                 disabled={form.isSubmitting}
-                onClick={() => router.push("/purchases")}
+                onClick={() => router.back("/purchases")}
               >
                 {t("modalCancel")}
               </Button>
-              <Button
-                type="button"
-                variant="primary"
-                disabled={form.isSubmitting}
-                onClick={() => void handleSubmit()}
-              >
+              <Button type="button" variant="primary" disabled={form.isSubmitting} onClick={() => void handleSubmit()}>
                 {form.isSubmitting ? t("saving") : purchaseId ? t("saveChanges") : t("save")}
               </Button>
             </div>
@@ -174,19 +153,5 @@ export function NewPurchasePage({ purchaseId }: { purchaseId?: string }) {
         )}
       </div>
     </AppShell>
-  );
-}
-
-function BackIcon() {
-  return (
-    <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path
-        d="M10 3 5 8l5 5"
-        stroke="currentColor"
-        strokeWidth="1.75"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }

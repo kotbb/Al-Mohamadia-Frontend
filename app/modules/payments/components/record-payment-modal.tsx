@@ -1,12 +1,12 @@
 "use client";
 
+import { useModalFormGuard } from "@/app/modules/shared/hooks/use-modal-form-guard";
+
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { listCustomers } from "@/app/modules/customers/services/customers.service";
 import type { Customer } from "@/app/modules/customers/types/customers.types";
-import {
-  formatMoney,
-} from "@/app/modules/shared/utils/format-money";
+import { formatMoney } from "@/app/modules/shared/utils/format-money";
 import type { PaymentMethod } from "@/app/modules/payments/types/payments.types";
 import { Button } from "@/app/modules/shared/components/button";
 import { Input } from "@/app/modules/shared/components/input";
@@ -25,6 +25,7 @@ export interface SelectedCustomerTarget {
 interface RecordPaymentModalProps {
   open: boolean;
   onClose: () => void;
+  onRestore?: () => void;
   customer: SelectedCustomerTarget | null;
   onSelectCustomer?: (customer: SelectedCustomerTarget) => void;
   onClearCustomer?: () => void;
@@ -41,7 +42,8 @@ interface RecordPaymentModalProps {
 
 export function RecordPaymentModal({
   open,
-  onClose,
+  onClose: closeWithoutGuard,
+  onRestore,
   customer,
   onSelectCustomer,
   onClearCustomer,
@@ -58,6 +60,13 @@ export function RecordPaymentModal({
   const t = useTranslations("payments");
   const locale = useLocale();
   const account = useTranslations("accountDetails");
+  const { requestClose } = useModalFormGuard(
+    open,
+    { customerId: customer?.id ?? null, amount, method, notes },
+    isSubmitting,
+  );
+  const onClose = () => requestClose(closeWithoutGuard);
+
   const currency = t("currency");
 
   const [availableCustomers, setAvailableCustomers] = useState<Customer[]>([]);
@@ -76,10 +85,7 @@ export function RecordPaymentModal({
 
     const controller = new AbortController();
     setIsLoadingAccounts(true);
-    listCustomers(
-      { isActive: true, page: 1, limit: 100 },
-      controller.signal,
-    )
+    listCustomers({ isActive: true, page: 1, limit: 100 }, controller.signal)
       .then((res) => {
         setAvailableCustomers(res.items);
       })
@@ -105,10 +111,7 @@ export function RecordPaymentModal({
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
       setIsSearching(true);
-      listCustomers(
-        { q, isActive: true, page: 1, limit: 10 },
-        controller.signal,
-      )
+      listCustomers({ q, isActive: true, page: 1, limit: 10 }, controller.signal)
         .then((res) => {
           setSearchResults(res.items);
         })
@@ -144,8 +147,11 @@ export function RecordPaymentModal({
 
   return (
     <Modal
+      layerKey="payments:record-payment-modal"
       open={open}
-      onClose={onClose}
+      onRestore={onRestore}
+      busy={isSubmitting}
+      onClose={closeWithoutGuard}
       title={t("recordTitle")}
       size="md"
       footer={
@@ -153,11 +159,7 @@ export function RecordPaymentModal({
           <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
             {t("modalCancel")}
           </Button>
-          <Button
-            variant="primary"
-            onClick={onSubmit}
-            disabled={isSubmitting || !customer || !amount.trim()}
-          >
+          <Button variant="primary" onClick={onSubmit} disabled={isSubmitting || !customer || !amount.trim()}>
             {isSubmitting ? t("recording") : t("recordSubmit")}
           </Button>
         </div>
@@ -168,27 +170,18 @@ export function RecordPaymentModal({
         {customer ? (
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface-muted p-4">
             <div>
-              <p className="text-xs font-medium text-text-secondary">
-                {t("customerLabel")}
-              </p>
-              <p className="mt-0.5 text-base font-bold text-text-primary">
-                {customer.name}
-              </p>
+              <p className="text-xs font-medium text-text-secondary">{t("customerLabel")}</p>
+              <p className="mt-0.5 text-base font-bold text-text-primary">{customer.name}</p>
               <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-text-secondary">
                 {customer.phone ? <span>{customer.phone}</span> : null}
                 <span className="font-semibold text-primary">
-                  {account(customer.balance < 0 ? "customerCredit" : "currentBalance")}: {formatMoney(customer.balance, locale)} {currency}
+                  {account(customer.balance < 0 ? "customerCredit" : "currentBalance")}:{" "}
+                  {formatMoney(customer.balance, locale)} {currency}
                 </span>
               </div>
             </div>
             {onClearCustomer ? (
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={onClearCustomer}
-                disabled={isSubmitting}
-              >
+              <Button type="button" variant="secondary" size="sm" onClick={onClearCustomer} disabled={isSubmitting}>
                 {t("customerChange")}
               </Button>
             ) : null}
@@ -198,16 +191,12 @@ export function RecordPaymentModal({
             <div className="grid gap-3 sm:grid-cols-2">
               {/* 1. Droplist of customers with debt */}
               <label className="flex w-full flex-col gap-1.5">
-                <span className="text-sm font-semibold text-text-secondary">
-                  {t("selectCustomerLabel")}
-                </span>
+                <span className="text-sm font-semibold text-text-secondary">{t("selectCustomerLabel")}</span>
                 <select
-                  className="ds-focus-input min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm text-text-primary"
+                  className="ds-focus-input min-h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-text-primary"
                   value=""
                   onChange={(e) => {
-                    const found = availableCustomers.find(
-                      (c) => c.id === e.target.value,
-                    );
+                    const found = availableCustomers.find((c) => c.id === e.target.value);
                     if (found && onSelectCustomer) {
                       onSelectCustomer({
                         id: found.id,
@@ -220,11 +209,7 @@ export function RecordPaymentModal({
                   }}
                   disabled={isLoadingAccounts || isSubmitting}
                 >
-                  <option value="">
-                    {isLoadingAccounts
-                      ? t("loadingCustomers")
-                      : t("selectCustomerPlaceholder")}
-                  </option>
+                  <option value="">{isLoadingAccounts ? t("loadingCustomers") : t("selectCustomerPlaceholder")}</option>
                   {availableCustomers.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name} ({formatMoney(c.balance, locale)} {currency})
@@ -247,13 +232,9 @@ export function RecordPaymentModal({
                 {searchQuery.trim() ? (
                   <ul className="absolute z-30 mt-1 max-h-52 w-full overflow-auto rounded-xl border border-border bg-surface shadow-lg">
                     {isSearching ? (
-                      <li className="px-4 py-3 text-sm text-text-secondary">
-                        …
-                      </li>
+                      <li className="px-4 py-3 text-sm text-text-secondary">…</li>
                     ) : searchResults.length === 0 ? (
-                      <li className="px-4 py-3 text-sm text-text-secondary">
-                        {t("noCustomersWithDebt")}
-                      </li>
+                      <li className="px-4 py-3 text-sm text-text-secondary">{t("noCustomersWithDebt")}</li>
                     ) : (
                       searchResults.map((c) => (
                         <li key={c.id}>
@@ -272,9 +253,7 @@ export function RecordPaymentModal({
                               }
                             }}
                           >
-                            <span className="font-semibold text-text-primary">
-                              {c.name}
-                            </span>
+                            <span className="font-semibold text-text-primary">{c.name}</span>
                             <span className="text-xs text-text-secondary">
                               <strong className="text-primary font-medium">
                                 {formatMoney(c.balance, locale)} {currency}
@@ -333,9 +312,7 @@ export function RecordPaymentModal({
 
         {/* Notes */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-base font-medium text-text-secondary">
-            {t("fieldNotes")}
-          </label>
+          <label className="text-base font-medium text-text-secondary">{t("fieldNotes")}</label>
           <textarea
             name="paymentNotes"
             rows={3}

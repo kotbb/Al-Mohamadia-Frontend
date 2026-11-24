@@ -1,18 +1,13 @@
 "use client";
 
-import type {
-  ListStatus,
-  StatusFilter,
-  PeriodFilter,
-  InvoicesToastState,
-} from "../types/use-invoices.types";
+import { useUrlSearch } from "@/app/modules/shared/hooks/use-url-search";
+import { useUrlState } from "@/app/modules/shared/hooks/use-url-state";
+
+import type { ListStatus, StatusFilter, PeriodFilter, InvoicesToastState } from "../types/use-invoices.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
-import {
-  cancelSalesInvoice,
-  listSalesInvoices,
-} from "@/app/modules/invoices/services/invoices.service";
+import { cancelSalesInvoice, listSalesInvoices } from "@/app/modules/invoices/services/invoices.service";
 import type { SalesInvoice, SalesInvoiceListItem } from "@/app/modules/invoices/types/invoices.types";
 import { todayIsoDate } from "@/app/modules/invoices/utils/format-invoice-date";
 
@@ -24,22 +19,33 @@ export function useInvoices(options?: { customerId?: string; pageSize?: number }
   const pageSize = options?.pageSize ?? PAGE_SIZE;
   const describeError = useApiErrorMessage();
   const [invoices, setInvoices] = useState<SalesInvoiceListItem[]>([]);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useUrlState(customerId ? "invoicePage" : "page", 1);
   const [total, setTotal] = useState(0);
   const [summaryTotalAmount, setSummaryTotalAmount] = useState(0);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>("off");
-  const [periodDate, setPeriodDate] = useState(todayIsoDate());
-  const [customRange, setCustomRange] = useState(() => { const today = todayIsoDate(); return { from: `${today.slice(0, 7)}-01`, to: today }; });
-  const [searchInput, setSearchInput] = useState("");
-  const [debouncedQ, setDebouncedQ] = useState("");
+  const [statusFilter, setStatusFilter] = useUrlState<StatusFilter>("status", "all", ["all", "saved", "cancelled"]);
+  const [periodFilter, setPeriodFilter] = useUrlState<PeriodFilter>("period", "off", [
+    "off",
+    "day",
+    "week",
+    "month",
+    "year",
+    "custom",
+  ]);
+  const [periodDate, setPeriodDate] = useUrlState("date", todayIsoDate());
+  const [customRange, setCustomRange] = useUrlState("", () => {
+    const today = todayIsoDate();
+    return { from: `${today.slice(0, 7)}-01`, to: today };
+  });
+  const [searchInput, setSearchInput, debouncedQ] = useUrlSearch(
+    "q",
+    customerId ? "invoicePage" : "page",
+    SEARCH_DEBOUNCE_MS,
+  );
   const [listStatus, setListStatus] = useState<ListStatus>("loading");
   const [listError, setListError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
   const [toast, setToast] = useState<InvoicesToastState | null>(null);
-  const [confirmInvoice, setConfirmInvoice] = useState<SalesInvoice | null>(
-    null,
-  );
+  const [confirmInvoice, setConfirmInvoice] = useState<SalesInvoice | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [loadedRequestKey, setLoadedRequestKey] = useState<string | null>(null);
@@ -56,17 +62,8 @@ export function useInvoices(options?: { customerId?: string; pageSize?: number }
     tick,
   ]);
   const hasLoaded = loadedRequestKey !== null;
-  const actionsDisabled =
-    loadedRequestKey !== requestKey || listStatus !== "success";
+  const actionsDisabled = loadedRequestKey !== requestKey || listStatus !== "success";
   const isRefreshing = hasLoaded && listStatus !== "error" && actionsDisabled;
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setDebouncedQ(searchInput.trim());
-      setPage(1);
-    }, SEARCH_DEBOUNCE_MS);
-    return () => window.clearTimeout(timer);
-  }, [searchInput]);
 
   const refresh = useCallback(() => {
     setListStatus("loading");
@@ -177,7 +174,10 @@ export function useInvoices(options?: { customerId?: string; pageSize?: number }
     },
     periodDate,
     customRange,
-    setCustomRange: (from: string, to: string) => { setCustomRange({ from, to }); setPage(1); },
+    setCustomRange: (from: string, to: string) => {
+      setCustomRange({ from, to });
+      setPage(1);
+    },
     setPeriodDate: (value: string) => {
       setPeriodDate(value);
       setPage(1);

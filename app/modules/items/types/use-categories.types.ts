@@ -2,8 +2,7 @@ import type { Category } from "@/app/modules/items/types/items.types";
 
 export type ListStatus = "idle" | "loading" | "success" | "error";
 
-export type CategoriesToastKind =
-  "created" | "updated" | "activated" | "deactivated" | "deleted";
+export type CategoriesToastKind = "created" | "updated" | "activated" | "deactivated" | "deleted";
 
 export interface CategoriesToastState {
   kind: CategoriesToastKind;
@@ -38,6 +37,7 @@ export interface UseCategoriesResult {
   isFormOpen: boolean;
   openCreate: () => void;
   openEdit: (category: CategoryListRow) => void;
+  restoreForm: () => void;
   closeForm: () => void;
   formName: string;
   setFormName: (value: string) => void;

@@ -1,13 +1,13 @@
 "use client";
 
+import { useUrlSearch } from "@/app/modules/shared/hooks/use-url-search";
+import { useUrlState } from "@/app/modules/shared/hooks/use-url-state";
+
 import type { AsyncStatus } from "../types/use-inventory.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
-import {
-  getInventoryValuation,
-  getStockList,
-} from "@/app/modules/inventory/services/inventory.service";
+import { getInventoryValuation, getStockList } from "@/app/modules/inventory/services/inventory.service";
 import type {
   InventoryValuation,
   ListStockFilters,
@@ -40,19 +40,17 @@ export function useInventory() {
     totalItems: 0,
     totalPages: 1,
   });
-  const [page, setPage] = useState(1);
-  const [categoryId, setCategoryId] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<StockStatusFilter>("all");
-  const [searchInput, setSearchInput] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useUrlState("page", 1);
+  const [categoryId, setCategoryId] = useUrlState<string>("categoryId", "");
+  const [statusFilter, setStatusFilter] = useUrlState<StockStatusFilter>("stockStatus", "all");
+  const [searchInput, setSearchInput, debouncedSearch] = useUrlSearch("q", "page", SEARCH_DEBOUNCE_MS);
 
   const [listStatus, setListStatus] = useState<AsyncStatus>("loading");
   const [listError, setListError] = useState<string | null>(null);
 
   // Valuation state
   const [valuation, setValuation] = useState<InventoryValuation | null>(null);
-  const [valuationStatus, setValuationStatus] =
-    useState<AsyncStatus>("loading");
+  const [valuationStatus, setValuationStatus] = useState<AsyncStatus>("loading");
   const [valuationError, setValuationError] = useState<string | null>(null);
 
   // Categories list for dropdown
@@ -62,13 +60,6 @@ export function useInventory() {
   const [tick, setTick] = useState(0);
 
   // Debounce search
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setDebouncedSearch(searchInput.trim());
-      setPage(1);
-    }, SEARCH_DEBOUNCE_MS);
-    return () => window.clearTimeout(timer);
-  }, [searchInput]);
 
   // Load categories
   useEffect(() => {
@@ -128,10 +119,7 @@ export function useInventory() {
     getStockList(filters, controller.signal)
       .then((res) => {
         if (controller.signal.aborted) return;
-        const responseTotalPages = Math.max(
-          1,
-          res.meta.totalPages ?? Math.ceil(res.meta.total / res.meta.limit),
-        );
+        const responseTotalPages = Math.max(1, res.meta.totalPages ?? Math.ceil(res.meta.total / res.meta.limit));
         setPage((current) => Math.min(current, responseTotalPages));
         setItems(res.items);
         setMeta(res.meta);
@@ -151,10 +139,7 @@ export function useInventory() {
     setTick((t) => t + 1);
   }, []);
 
-  const totalPages = Math.max(
-    1,
-    meta.totalPages ?? Math.ceil(meta.total / meta.limit),
-  );
+  const totalPages = Math.max(1, meta.totalPages ?? Math.ceil(meta.total / meta.limit));
 
   return {
     items,

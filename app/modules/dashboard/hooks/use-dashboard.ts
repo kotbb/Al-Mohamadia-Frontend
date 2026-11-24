@@ -1,14 +1,13 @@
 "use client";
 
+import { useUrlState } from "@/app/modules/shared/hooks/use-url-state";
+
 import type { AsyncStatus } from "../types/use-dashboard.types";
 
 import { useCallback, useEffect, useState } from "react";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 import { getDashboard } from "@/app/modules/dashboard/services/dashboard.service";
-import type {
-  DashboardResponse,
-  SalesInvoicePeriod,
-} from "@/app/modules/dashboard/types/dashboard.types";
+import type { DashboardResponse, SalesInvoicePeriod } from "@/app/modules/dashboard/types/dashboard.types";
 import { todayIsoDate } from "@/app/modules/invoices/utils/format-invoice-date";
 
 export function useDashboard() {
@@ -16,9 +15,18 @@ export function useDashboard() {
   const [data, setData] = useState<DashboardResponse | null>(null);
   const [status, setStatus] = useState<AsyncStatus>("loading");
   const [error, setError] = useState<string | null>(null);
-  const [period, setPeriod] = useState<SalesInvoicePeriod | "custom">("month");
-  const [periodDate, setPeriodDate] = useState(todayIsoDate());
-  const [customRange, setCustomRange] = useState(() => { const today = todayIsoDate(); return { from: `${today.slice(0, 7)}-01`, to: today }; });
+  const [period, setPeriod] = useUrlState<SalesInvoicePeriod | "custom">("period", "month", [
+    "day",
+    "week",
+    "month",
+    "year",
+    "custom",
+  ]);
+  const [periodDate, setPeriodDate] = useUrlState("date", todayIsoDate());
+  const [customRange, setCustomRange] = useUrlState("", () => {
+    const today = todayIsoDate();
+    return { from: `${today.slice(0, 7)}-01`, to: today };
+  });
   const [tick, setTick] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
 

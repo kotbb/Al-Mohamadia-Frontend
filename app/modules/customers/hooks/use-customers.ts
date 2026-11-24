@@ -1,18 +1,16 @@
 "use client";
 
+import { useUrlSearch } from "@/app/modules/shared/hooks/use-url-search";
+import { useUrlState } from "@/app/modules/shared/hooks/use-url-state";
+
 import { isOptionalMobile, normalizeMobile } from "@/app/modules/shared/utils/egyptian-mobile";
 import { isSignedMoneyAmount } from "@/app/modules/shared/utils/money-validation";
 import { useTranslations } from "next-intl";
 
-import type {
-  ListStatus,
-  DebtFilter,
-  CustomersToastState,
-  CustomersConfirmKind,
-} from "../types/use-customers.types";
+import type { ListStatus, DebtFilter, CustomersToastState, CustomersConfirmKind } from "../types/use-customers.types";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
-import { useCallback, useEffect, useState } from "react";
+import { useRef, useCallback, useEffect, useState } from "react";
 import {
   createCustomer,
   deleteCustomer,
@@ -32,13 +30,10 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [totalDebt, setTotalDebt] = useState(0);
   const [debtorCount, setDebtorCount] = useState(0);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useUrlState("page", 1);
   const [total, setTotal] = useState(0);
-  const [debtFilter, setDebtFilter] = useState<DebtFilter>(
-    options?.initialDebtFilter ?? "all",
-  );
-  const [searchInput, setSearchInput] = useState("");
-  const [debouncedQ, setDebouncedQ] = useState("");
+  const [debtFilter, setDebtFilter] = useUrlState<DebtFilter>("hasDebt", options?.initialDebtFilter ?? "all");
+  const [searchInput, setSearchInput, debouncedQ] = useUrlSearch("q", "page", SEARCH_DEBOUNCE_MS);
   const [listStatus, setListStatus] = useState<ListStatus>("loading");
   const [listError, setListError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
@@ -67,14 +62,6 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
   const [confirmCustomer, setConfirmCustomer] = useState<Customer | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setDebouncedQ(searchInput.trim());
-      setPage(1);
-    }, SEARCH_DEBOUNCE_MS);
-    return () => window.clearTimeout(timer);
-  }, [searchInput]);
 
   const refresh = useCallback(() => {
     setListStatus("loading");
@@ -122,13 +109,16 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
     setEditingId(null);
   }, []);
 
+  const lastOpenedForm = useRef<Customer | null>(null);
   const openCreate = useCallback(() => {
+    lastOpenedForm.current = null;
     resetForm();
     setFormMode("create");
     setIsFormOpen(true);
   }, [resetForm]);
 
   const openEdit = useCallback((customer: Customer) => {
+    lastOpenedForm.current = customer;
     setFormMode("edit");
     setEditingId(customer.id);
     setFormName(customer.name);
@@ -211,7 +201,9 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
     resetForm,
   ]);
 
+  const lastMergeTarget = useRef<string | undefined>(undefined);
   const openMerge = useCallback(async (preselectedTargetId?: string) => {
+    lastMergeTarget.current = preselectedTargetId;
     setMergeError(null);
     setMergeSourceIds([]);
     setMergeTargetId(preselectedTargetId ?? "");
@@ -234,9 +226,7 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
   }, [isMerging]);
 
   const toggleMergeSource = useCallback((id: string) => {
-    setMergeSourceIds((prev) =>
-      prev.includes(id) ? prev.filter((value) => value !== id) : [...prev, id],
-    );
+    setMergeSourceIds((prev) => (prev.includes(id) ? prev.filter((value) => value !== id) : [...prev, id]));
   }, []);
 
   const submitMerge = useCallback(
@@ -309,11 +299,7 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
       } else {
         const nextActive = confirmKind === "activate";
         await updateCustomer(confirmCustomer.id, { isActive: nextActive });
-        setToast(
-          nextActive
-            ? { kind: "activated", variant: "success" }
-            : { kind: "deactivated", variant: "danger" },
-        );
+        setToast(nextActive ? { kind: "activated", variant: "success" } : { kind: "deactivated", variant: "danger" });
       }
       setConfirmKind(null);
       setConfirmCustomer(null);
@@ -326,14 +312,21 @@ export function useCustomers(options?: { initialDebtFilter?: DebtFilter }) {
     }
   }, [confirmCustomer, confirmKind, refresh]);
 
-  const setDebtFilterAndResetPage = useCallback((value: DebtFilter) => {
-    setDebtFilter(value);
-    setPage(1);
-  }, []);
+  const setDebtFilterAndResetPage = useCallback(
+    (value: DebtFilter) => {
+      setDebtFilter(value);
+      setPage(1);
+    },
+    [setDebtFilter, setPage],
+  );
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return {
+    restoreMerge: () => {
+      void openMerge(lastMergeTarget.current);
+    },
+    restoreForm: () => (lastOpenedForm.current ? openEdit(lastOpenedForm.current) : openCreate()),
     customers,
     totalDebt,
     debtorCount,

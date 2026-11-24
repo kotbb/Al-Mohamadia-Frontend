@@ -1,35 +1,21 @@
 "use client";
 
+import { useFormDirtyState } from "@/app/modules/shared/hooks/use-form-dirty-state";
+import { useLeaveGuard } from "@/app/modules/shared/hooks/use-leave-guard";
+
 import { isMoneyAmount } from "@/app/modules/shared/utils/money-validation";
 
-import type {
-  LoadStatus,
-  ItemFormValues,
-  UseItemFormResult,
-} from "../types/use-item-form.types";
+import type { LoadStatus, ItemFormValues, UseItemFormResult } from "../types/use-item-form.types";
 import { parseOptionalNumber } from "../utils/item-form-parsing";
 import { useApiErrorMessage } from "@/lib/api/use-api-error-message";
 
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import {
-  dimensionDefaultsForForm,
-  parseDimensionDefaults,
-} from "@/app/modules/items/utils/dimension-defaults";
+import { dimensionDefaultsForForm, parseDimensionDefaults } from "@/app/modules/items/utils/dimension-defaults";
 
 import { listCategories } from "@/app/modules/items/services/categories.service";
-import {
-  createItem,
-  getItem,
-  updateItem,
-  updatePricing,
-} from "@/app/modules/items/services/items.service";
-import type {
-  Category,
-  CreateItemInput,
-  Item,
-  UpdateItemInput,
-} from "@/app/modules/items/types/items.types";
+import { createItem, getItem, updateItem, updatePricing } from "@/app/modules/items/services/items.service";
+import type { Category, CreateItemInput, Item, UpdateItemInput } from "@/app/modules/items/types/items.types";
 
 const emptyFormValues: ItemFormValues = {
   dimensionDefaults: dimensionDefaultsForForm(),
@@ -49,12 +35,9 @@ export function useItemForm(itemId?: string): UseItemFormResult {
   const shared = useTranslations("shared");
   const isEdit = Boolean(itemId);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [categoriesStatus, setCategoriesStatus] =
-    useState<LoadStatus>("loading");
+  const [categoriesStatus, setCategoriesStatus] = useState<LoadStatus>("loading");
   const [item, setItem] = useState<Item | null>(null);
-  const [itemStatus, setItemStatus] = useState<LoadStatus>(
-    isEdit ? "loading" : "success",
-  );
+  const [itemStatus, setItemStatus] = useState<LoadStatus>(isEdit ? "loading" : "success");
   const [itemError, setItemError] = useState<string | null>(null);
   const [values, setValues] = useState<ItemFormValues>(emptyFormValues);
   const [initialPricing, setInitialPricing] = useState({
@@ -63,6 +46,9 @@ export function useItemForm(itemId?: string): UseItemFormResult {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const { isDirty, resetBaseline } = useFormDirtyState(values);
+  useLeaveGuard({ dirty: isDirty, busy: isSubmitting });
 
   useEffect(() => {
     const controller = new AbortController();
@@ -88,18 +74,19 @@ export function useItemForm(itemId?: string): UseItemFormResult {
     getItem(itemId, controller.signal)
       .then((loaded) => {
         setItem(loaded);
-        setValues({
+        const initializedValues: ItemFormValues = {
           dimensionDefaults: dimensionDefaultsForForm(loaded.dimensionDefaults),
           name: loaded.name,
           categoryId: loaded.category.id,
           pricingMode: loaded.pricingMode,
           unitPrice: String(loaded.unitPrice),
           cost: String(loaded.cost),
-          reorderThreshold:
-            loaded.reorderThreshold > 0 ? String(loaded.reorderThreshold) : "",
+          reorderThreshold: loaded.reorderThreshold > 0 ? String(loaded.reorderThreshold) : "",
           stockQuantity: String(loaded.stockQuantity),
           isActive: loaded.isActive,
-        });
+        };
+        setValues(initializedValues);
+        resetBaseline(initializedValues);
         setInitialPricing({ unitPrice: loaded.unitPrice, cost: loaded.cost });
         setItemStatus("success");
         setItemError(null);
@@ -113,7 +100,7 @@ export function useItemForm(itemId?: string): UseItemFormResult {
       });
 
     return () => controller.abort();
-  }, [itemId]);
+  }, [itemId, resetBaseline]);
 
   const setField = useCallback(
     <K extends keyof ItemFormValues>(key: K, value: ItemFormValues[K]) => {
@@ -125,9 +112,13 @@ export function useItemForm(itemId?: string): UseItemFormResult {
 
   const submit = useCallback(async (): Promise<boolean> => {
     const isFreeAmount = values.pricingMode === "free_amount";
-    const numericValues = isFreeAmount ? [] : [values.unitPrice, values.cost, values.reorderThreshold, ...(!isEdit ? [values.stockQuantity] : [])];
-    if (numericValues.some((value) => value.trim() && (!Number.isFinite(Number(value)) || Number(value) < 0)) ||
-      (!isFreeAmount && [values.unitPrice, values.cost].some((value) => value.trim() && !isMoneyAmount(Number(value))))) {
+    const numericValues = isFreeAmount
+      ? []
+      : [values.unitPrice, values.cost, values.reorderThreshold, ...(!isEdit ? [values.stockQuantity] : [])];
+    if (
+      numericValues.some((value) => value.trim() && (!Number.isFinite(Number(value)) || Number(value) < 0)) ||
+      (!isFreeAmount && [values.unitPrice, values.cost].some((value) => value.trim() && !isMoneyAmount(Number(value))))
+    ) {
       setSubmitError(shared("validationNumbers"));
       return false;
     }
@@ -157,7 +148,13 @@ export function useItemForm(itemId?: string): UseItemFormResult {
           categoryId: values.categoryId,
           pricingMode: values.pricingMode,
           isActive: values.isActive,
-          ...(!isFreeAmount && { dimensionDefaults, unitPrice: unitPrice ?? undefined, cost: cost ?? undefined, reorderThreshold: reorderThreshold ?? undefined, stockQuantity: stockQuantity ?? undefined }),
+          ...(!isFreeAmount && {
+            dimensionDefaults,
+            unitPrice: unitPrice ?? undefined,
+            cost: cost ?? undefined,
+            reorderThreshold: reorderThreshold ?? undefined,
+            stockQuantity: stockQuantity ?? undefined,
+          }),
         };
         await createItem(input);
         return true;
@@ -175,9 +172,7 @@ export function useItemForm(itemId?: string): UseItemFormResult {
 
       const nextUnitPrice = unitPrice ?? initialPricing.unitPrice;
       const nextCost = cost ?? initialPricing.cost;
-      const pricingChanged =
-        nextUnitPrice !== initialPricing.unitPrice ||
-        nextCost !== initialPricing.cost;
+      const pricingChanged = nextUnitPrice !== initialPricing.unitPrice || nextCost !== initialPricing.cost;
 
       if (pricingChanged && !isFreeAmount) {
         await updatePricing(itemId, {
@@ -194,15 +189,7 @@ export function useItemForm(itemId?: string): UseItemFormResult {
     } finally {
       setIsSubmitting(false);
     }
-  }, [
-    shared,
-    isEdit,
-    itemId,
-    values,
-    initialPricing,
-    describeError,
-    t,
-  ]);
+  }, [shared, isEdit, itemId, values, initialPricing, describeError, t]);
 
   return {
     categories,
