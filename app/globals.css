@@ -184,6 +184,11 @@ select:disabled {
   outline-offset: 2px;
 }
 
+/* Keep the export account picker's focus outline attached to its input. */
+.ds-focus-input.export-reference-input:focus-visible {
+  outline-offset: 0;
+}
+
 /* Elevation — closed set (0 / 1 / 2 only) */
 .ds-elevation-1 {
   box-shadow: var(--shadow-1);

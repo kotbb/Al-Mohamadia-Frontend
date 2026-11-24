@@ -5,6 +5,229 @@ import { resolve, dirname } from "node:path";
 import { createRequire } from "node:module";
 import ts from "typescript";
 
+test("new workbooks default to Arabic even in the English UI", () => {
+  const { initialExportRequest } = load("@/app/modules/exports/utils/export-config");
+  const catalog = {
+    datasets: [{ id: "sales", transactional: true, columns: [{ id: "invoiceNumber", default: true }], filters: {} }],
+  };
+  assert.equal(initialExportRequest(catalog, new URLSearchParams()).locale, "ar");
+});
+
+test("all export reference filters combine selection and search in one invoice-style field", () => {
+  const React = nativeRequire("react");
+  const { renderToStaticMarkup } = nativeRequire("react-dom/server");
+  const restore = loadingTestEnvironment({
+    "next-intl": { useTranslations: () => (key) => key },
+    "../hooks/use-export-reference": {
+      useExportReference: () => ({
+        query: "",
+        setQuery() {},
+        options: [{ id: "inactive", name: "Inactive account", isActive: false }],
+        selected: { id: "inactive", name: "Inactive account", isActive: false },
+        loading: false,
+        error: false,
+      }),
+    },
+  });
+  try {
+    const { ExportFilters } = load("@/app/modules/exports/components/export-filters");
+    for (const field of ["customerId", "supplierId", "invoiceId", "purchaseInvoiceId", "categoryId"]) {
+      const html = renderToStaticMarkup(
+        React.createElement(ExportFilters, {
+          dataset: { id: "sales", filters: { [field]: ["id"] } },
+          selection: { filters: { [field]: "inactive" } },
+          onChange() {},
+        }),
+      );
+      assert.equal((html.match(/role="combobox"/g) ?? []).length, 1);
+      assert.equal((html.match(/<input\b/g) ?? []).length, 1);
+      assert.doesNotMatch(html, /<select\b/);
+      assert.match(html, /value="Inactive account"/);
+      assert.match(html, /export-reference-input/);
+    }
+  } finally {
+    restore();
+  }
+});
+
+test("export filters show exactly one All option for payment type and stock status", () => {
+  const React = nativeRequire("react");
+  const { renderToStaticMarkup } = nativeRequire("react-dom/server");
+  const restore = loadingTestEnvironment({
+    "next-intl": { useTranslations: () => (key) => (key === "all" || key === "values.all" ? "All" : key) },
+  });
+  try {
+    const { ExportFilters } = load("@/app/modules/exports/components/export-filters");
+    for (const [key, values] of [
+      ["type", ["invoice", "standalone", "all"]],
+      ["stockStatus", ["all", "low_stock", "out_of_stock", "normal"]],
+    ]) {
+      const html = renderToStaticMarkup(
+        React.createElement(ExportFilters, {
+          dataset: { id: "example", filters: { [key]: values } },
+          selection: { filters: {} },
+          onChange() {},
+        }),
+      );
+      assert.equal((html.match(/<option[^>]*>All<\/option>/g) ?? []).length, 1);
+      assert.match(html, /<option[^>]*value="all"[^>]*selected=""[^>]*>All<\/option>/);
+    }
+  } finally {
+    restore();
+  }
+});
+
+test("export review shows counts only after preview without repeating selected columns or explanatory details", () => {
+  const React = nativeRequire("react");
+  const { renderToStaticMarkup } = nativeRequire("react-dom/server");
+  let preview = null;
+  const catalog = {
+    datasets: [
+      {
+        id: "sales",
+        label: { en: "Sales", ar: "المبيعات" },
+        transactional: true,
+        columns: [{ id: "invoiceNumber", label: { en: "Invoice number", ar: "رقم الفاتورة" }, default: true }],
+        filters: {},
+      },
+    ],
+    limits: { rows: 100000 },
+  };
+  const request = {
+    locale: "en",
+    period: { kind: "all" },
+    selections: [{ dataset: "sales", columns: ["invoiceNumber"], filters: {} }],
+  };
+  const restore = loadingTestEnvironment({
+    "next-intl": { useLocale: () => "en", useTranslations: () => (key) => key },
+    "@/app/layout/app-shell": { AppShell: ({ children }) => React.createElement("main", null, children) },
+    "../hooks/use-exports": {
+      useExports: () => ({ catalog, request, preview, busy: null, change() {}, run() {}, cancel() {} }),
+    },
+  });
+  try {
+    const { ExportsPage } = load("@/app/modules/exports/pages/exports-page");
+    let html = renderToStaticMarkup(React.createElement(ExportsPage));
+    let review = html.slice(html.indexOf(">review<"));
+    assert.doesNotMatch(review, /Invoice number|limitHelp|currentHelp|noTransactionHelp|previewHelp/);
+    assert.doesNotMatch(review, /aria-live="polite"/);
+    preview = { sheets: [{ dataset: "sales", lines: false, count: 42, capped: false }], overLimit: false };
+    html = renderToStaticMarkup(React.createElement(ExportsPage));
+    review = html.slice(html.indexOf(">review<"));
+    assert.match(review, /42/);
+    assert.match(review, /aria-live="polite"/);
+    preview = { sheets: [{ dataset: "sales", lines: false, count: 100001, capped: true }], overLimit: true };
+    html = renderToStaticMarkup(React.createElement(ExportsPage));
+    assert.match(html.slice(html.indexOf(">review<")), /100,000\+/);
+  } finally {
+    restore();
+  }
+});
+
+test("Excel POST transport preserves body and authentication on refresh, returns JSON errors and respects abort", async () => {
+  let access = "old";
+  const restore = loadingTestEnvironment({
+    "./env": { getApiUrl: () => "http://example.test/api/v1" },
+    "@/lib/auth/auth-storage": {
+      getAccessToken: () => access,
+      getRefreshToken: () => "refresh",
+      clearSession() {},
+      setSession: (tokens) => {
+        access = tokens.accessToken;
+      },
+    },
+  });
+  const beforeFetch = globalThis.fetch;
+  const calls = [];
+  const signal = new AbortController().signal;
+  globalThis.fetch = async (url, options) => {
+    calls.push({ url, ...options });
+    if (url.endsWith("/auth/refresh"))
+      return Response.json({ success: true, data: { accessToken: "new", refreshToken: "rotated" } });
+    if (options.headers.get("Authorization") === "Bearer old")
+      return Response.json({ success: false, statusCode: 401, message: "Expired" }, { status: 401 });
+    return new Response("xlsx", {
+      headers: { "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },
+    });
+  };
+  try {
+    const { apiClient } = load("@/lib/api/client");
+    const blob = await apiClient.postBlob("/exports/excel", { locale: "ar" }, { signal });
+    assert.equal(await blob.text(), "xlsx");
+    assert.equal(calls.length, 3);
+    assert.equal(calls[2].method, "POST");
+    assert.equal(calls[2].body, JSON.stringify({ locale: "ar" }));
+    assert.equal(calls[2].signal, signal);
+    globalThis.fetch = async () =>
+      Response.json(
+        { success: false, statusCode: 413, message: "Too large", errorCode: "EXPORT_ROW_LIMIT" },
+        { status: 413 },
+      );
+    await assert.rejects(apiClient.postBlob("/exports/excel", {}), (error) => error.errorCode === "EXPORT_ROW_LIMIT");
+    globalThis.fetch = async (_url, options) => {
+      options.signal.throwIfAborted();
+    };
+    const abort = new AbortController();
+    abort.abort();
+    await assert.rejects(apiClient.postBlob("/exports/excel", {}, { signal: abort.signal }), { name: "AbortError" });
+  } finally {
+    globalThis.fetch = beforeFetch;
+    restore();
+  }
+});
+
+test("Excel previews are invalidated immediately and late responses cannot replace newer selections", async () => {
+  const h = loadingHookHarness();
+  let finishPreview;
+  let previewSignal;
+  const catalog = {
+    datasets: [
+      {
+        id: "sales",
+        transactional: true,
+        columns: [{ id: "invoiceNumber", default: true }],
+        filters: { status: ["saved", "cancelled", "all"] },
+      },
+    ],
+    limits: { rows: 50000 },
+  };
+  const restore = loadingTestEnvironment({
+    react: h.react,
+    "next-intl": { useLocale: () => "en" },
+    "next/navigation": { useSearchParams: () => new URLSearchParams() },
+    "../services/exports.service": {
+      getExportCatalog: async () => catalog,
+      previewExport: (_request, signal) => {
+        previewSignal = signal;
+        return new Promise((resolve) => {
+          finishPreview = resolve;
+        });
+      },
+    },
+  });
+  try {
+    const { useExports } = load("@/app/modules/exports/hooks/use-exports");
+    const render = () => h.render(useExports);
+    render();
+    await new Promise(setImmediate);
+    let state = render();
+    const pending = state.run("preview");
+    state = render();
+    assert.equal(state.busy, "preview");
+    state.change({ ...state.request, period: { kind: "all" } });
+    assert.equal(previewSignal.aborted, true);
+    finishPreview({ total: 100, sheets: [], overLimit: false });
+    await pending;
+    state = render();
+    assert.equal(state.preview, null);
+    assert.equal(state.request.period.kind, "all");
+    assert.equal(state.busy, null);
+  } finally {
+    h.cleanup();
+    restore();
+  }
+});
+
 test("audit expanded changes use localized Field Before After columns and blank missing before values", () => {
   const cachedBefore = new Set(cache.keys());
   const React = nativeRequire("react");
@@ -2295,6 +2518,121 @@ test("printed receipts show total paid with a conditional previous-debt breakdow
   } finally {
     overrides.delete("next-intl");
     overrides.delete("next/image");
+  }
+});
+
+test("customer picker searches and selects in one field with keyboard navigation", () => {
+  const state = [];
+  let cursor = 0;
+  const selected = [];
+  const active = { id: "active", name: "Active", isActive: true };
+  const another = { id: "another", name: "Another", isActive: true };
+  const props = {
+    name: "account",
+    labels: { label: "Account", placeholder: "Search", clear: "Clear", loading: "Loading", empty: "No accounts" },
+    query: "",
+    results: [another],
+    loading: false,
+    allAccounts: [active, another, { id: "off", name: "Inactive", isActive: false }],
+    allAccountsLoading: false,
+    selectedAccount: null,
+    onQueryChange(value) {
+      props.query = value;
+    },
+    onSelect(value) {
+      selected.push(value.id);
+      props.selectedAccount = value;
+    },
+    onClear() {
+      props.selectedAccount = null;
+    },
+  };
+  overrides.set("react", {
+    useId: () => "customer-picker",
+    useEffect() {},
+    useRef(initial) {
+      const index = cursor++;
+      if (!(index in state)) state[index] = { current: initial };
+      return state[index];
+    },
+    useState(initial) {
+      const index = cursor++;
+      if (!(index in state)) state[index] = initial;
+      return [
+        state[index],
+        (value) => {
+          state[index] = value;
+        },
+      ];
+    },
+  });
+  overrides.set("next-intl", { useTranslations: () => (key) => key });
+  const path = resolve(root, "app/modules/shared/components/account-combobox.tsx");
+  cache.delete(path);
+  try {
+    const { AccountCombobox } = load("@/app/modules/shared/components/account-combobox");
+    function render() {
+      cursor = 0;
+      return AccountCombobox(props);
+    }
+    function nodes(element) {
+      return !element || typeof element !== "object"
+        ? []
+        : [element, ...[element.props?.children].flat(Infinity).flatMap(nodes)];
+    }
+    const input = () => nodes(render()).find((node) => node.props?.role === "combobox");
+    assert.equal(nodes(render()).filter((node) => node.type === "input").length, 1);
+    input().props.onFocus({ currentTarget: {} });
+    assert.equal(nodes(render()).filter((node) => node.props?.role === "option").length, 2);
+    props.includeInactive = true;
+    assert.equal(nodes(render()).filter((node) => node.props?.role === "option").length, 3);
+    props.includeInactive = false;
+    const key = (value) => input().props.onKeyDown({ key: value, preventDefault() {}, stopPropagation() {} });
+    key("ArrowDown");
+    key("ArrowDown");
+    key("Enter");
+    assert.deepEqual(selected, ["another"]);
+    assert.equal(input().props.value, "Another");
+    input().props.onFocus({ currentTarget: { select() {} } });
+    key("Enter");
+    assert.equal(selected.at(-1), "another", "Enter on the selected account must not switch to the first customer");
+    input().props.onChange({ target: { value: "An" } });
+    assert.equal(props.selectedAccount, null);
+    assert.equal(input().props.value, "An");
+    assert.equal(nodes(render()).filter((node) => node.props?.role === "option").length, 1);
+    key("Escape");
+    assert.equal(input().props["aria-expanded"], false);
+    key("ArrowUp");
+    key("Enter");
+    assert.deepEqual(selected, ["another", "another", "another"]);
+    props.onClear();
+    props.query = "";
+    props.originalAccount = { id: "original", name: "Original inactive", isActive: false };
+    key("ArrowDown");
+    assert.equal(nodes(render()).filter((node) => node.props?.role === "option").length, 3);
+    props.originalAccount.isDeleted = true;
+    assert.equal(nodes(render()).filter((node) => node.props?.role === "option").length, 2);
+    props.loading = true;
+    props.query = "An";
+    const beforeLoading = selected.length;
+    key("Enter");
+    assert.equal(selected.length, beforeLoading, "loading results cannot select a stale supplier");
+    props.loading = false;
+    props.query = "";
+    input().props.onFocus({ currentTarget: {} });
+    const accountOption = nodes(render()).find((node) => node.props?.role === "option");
+    accountOption.props.onPointerDown({ pointerType: "touch", preventDefault() {} });
+    render().props.onBlur({ currentTarget: { contains: () => false }, relatedTarget: null });
+    assert.equal(
+      nodes(render()).some((node) => node.props?.role === "option"),
+      true,
+      "touch blur must not remove an account option before click",
+    );
+    accountOption.props.onClick();
+  } finally {
+    overrides.delete("react");
+    overrides.delete("next-intl");
+    cache.delete(path);
   }
 });
 

@@ -1,6 +1,17 @@
-export interface AccountOption { id: string; name: string; isActive: boolean; isDeleted?: boolean; }
+export interface AccountOption {
+  id: string;
+  name: string;
+  isActive: boolean;
+  isDeleted?: boolean;
+}
 
-export interface AccountComboboxLabels { label: string; placeholder: string; clear: string; loading: string; empty: string; }
+export interface AccountComboboxLabels {
+  label: string;
+  placeholder: string;
+  clear: string;
+  loading: string;
+  empty: string;
+}
 
 export interface AccountComboboxProps<T extends AccountOption> {
   name: string;
@@ -16,5 +27,6 @@ export interface AccountComboboxProps<T extends AccountOption> {
   onSelect: (account: T) => void;
   onClear: () => void;
   focusOnMount?: boolean;
+  includeInactive?: boolean;
+  inputClassName?: string;
 }
-

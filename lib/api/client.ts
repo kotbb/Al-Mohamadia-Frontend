@@ -1,11 +1,6 @@
 import { getApiUrl } from "./env";
 import { ApiError, type ApiErrorBody, type ApiSuccess } from "./types";
-import {
-  clearSession,
-  getAccessToken,
-  getRefreshToken,
-  setSession,
-} from "@/lib/auth/auth-storage";
+import { clearSession, getAccessToken, getRefreshToken, setSession } from "@/lib/auth/auth-storage";
 import type { AuthTokens } from "@/lib/auth/types";
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -15,11 +10,8 @@ export interface ApiRequestOptions {
   body?: unknown;
   headers?: HeadersInit;
   signal?: AbortSignal;
-  /** Explicit Bearer token; when omitted, uses stored access token unless skipAuth */
   accessToken?: string | null;
-  /** Do not attach Bearer or attempt refresh (public auth endpoints) */
   skipAuth?: boolean;
-  /** Internal: already retried after refresh */
   _retried?: boolean;
 }
 
@@ -27,11 +19,7 @@ let refreshPromise: Promise<AuthTokens> | null = null;
 
 function isAuthPath(path: string): boolean {
   const normalized = path.startsWith("/") ? path : `/${path}`;
-  return (
-    normalized === "/auth/login" ||
-    normalized === "/auth/refresh" ||
-    normalized === "/auth/logout"
-  );
+  return normalized === "/auth/login" || normalized === "/auth/refresh" || normalized === "/auth/logout";
 }
 
 async function parseJsonSafe(response: Response): Promise<unknown> {
@@ -55,12 +43,7 @@ function isApiSuccess<T>(value: unknown): value is ApiSuccess<T> {
 }
 
 function isApiErrorBody(value: unknown): value is ApiErrorBody {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "success" in value &&
-    (value as ApiErrorBody).success === false
-  );
+  return typeof value === "object" && value !== null && "success" in value && (value as ApiErrorBody).success === false;
 }
 
 async function refreshAccessToken(): Promise<AuthTokens> {
@@ -103,9 +86,11 @@ async function refreshAccessToken(): Promise<AuthTokens> {
 
       setSession(payload.data);
       if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("al-mohamadia-auth-session", {
-          detail: payload.data,
-        }));
+        window.dispatchEvent(
+          new CustomEvent("al-mohamadia-auth-session", {
+            detail: payload.data,
+          }),
+        );
       }
       return payload.data;
     })().finally(() => {
@@ -120,19 +105,8 @@ async function refreshAccessToken(): Promise<AuthTokens> {
  * Shared fetch wrapper. Unwraps `{ success, data }` envelopes.
  * Attaches Bearer access token and single-flight refreshes on 401.
  */
-export async function apiRequest<T>(
-  path: string,
-  options: ApiRequestOptions = {},
-): Promise<T> {
-  const {
-    method = "GET",
-    body,
-    headers,
-    signal,
-    accessToken,
-    skipAuth = false,
-    _retried = false,
-  } = options;
+export async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
+  const { method = "GET", body, headers, signal, accessToken, skipAuth = false, _retried = false } = options;
 
   const base = getApiUrl();
   const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
@@ -144,11 +118,7 @@ export async function apiRequest<T>(
 
   const shouldAttachAuth = !skipAuth && !isAuthPath(path);
   const token =
-    accessToken !== undefined && accessToken !== null
-      ? accessToken
-      : shouldAttachAuth
-        ? getAccessToken()
-        : null;
+    accessToken !== undefined && accessToken !== null ? accessToken : shouldAttachAuth ? getAccessToken() : null;
 
   if (token) {
     requestHeaders.set("Authorization", `Bearer ${token}`);
@@ -163,12 +133,7 @@ export async function apiRequest<T>(
 
   const payload = await parseJsonSafe(response);
 
-  if (
-    response.status === 401 &&
-    shouldAttachAuth &&
-    !_retried &&
-    !isAuthPath(path)
-  ) {
+  if (response.status === 401 && shouldAttachAuth && !_retried && !isAuthPath(path)) {
     try {
       const refreshed = await refreshAccessToken();
       return apiRequest<T>(path, {
@@ -214,46 +179,30 @@ export async function apiRequest<T>(
  * Authenticated GET that returns a raw Blob (e.g. PDF streams that skip the JSON envelope).
  * Reuses the same Bearer + single-flight refresh behavior as apiRequest.
  */
-export async function apiRequestBlob(
-  path: string,
-  options: Omit<ApiRequestOptions, "method" | "body"> = {},
-): Promise<Blob> {
-  const {
-    headers,
-    signal,
-    accessToken,
-    skipAuth = false,
-    _retried = false,
-  } = options;
+export async function apiRequestBlob(path: string, options: ApiRequestOptions = {}): Promise<Blob> {
+  const { headers, signal, accessToken, skipAuth = false, _retried = false, method = "GET", body } = options;
 
   const base = getApiUrl();
   const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
 
   const requestHeaders = new Headers(headers);
+  if (body !== undefined) requestHeaders.set("Content-Type", "application/json");
   const shouldAttachAuth = !skipAuth && !isAuthPath(path);
   const token =
-    accessToken !== undefined && accessToken !== null
-      ? accessToken
-      : shouldAttachAuth
-        ? getAccessToken()
-        : null;
+    accessToken !== undefined && accessToken !== null ? accessToken : shouldAttachAuth ? getAccessToken() : null;
 
   if (token) {
     requestHeaders.set("Authorization", `Bearer ${token}`);
   }
 
   const response = await fetch(url, {
-    method: "GET",
+    method,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
     headers: requestHeaders,
     signal,
   });
 
-  if (
-    response.status === 401 &&
-    shouldAttachAuth &&
-    !_retried &&
-    !isAuthPath(path)
-  ) {
+  if (response.status === 401 && shouldAttachAuth && !_retried && !isAuthPath(path)) {
     try {
       const refreshed = await refreshAccessToken();
       return apiRequestBlob(path, {
@@ -275,7 +224,7 @@ export async function apiRequestBlob(
     }
   }
 
-  if (!response.ok) {
+  if (!response.ok || response.headers.get("Content-Type")?.includes("application/json")) {
     const payload = await parseJsonSafe(response);
     if (isApiErrorBody(payload)) {
       throw new ApiError(payload);
@@ -296,31 +245,20 @@ export const apiClient = {
   get: <T>(path: string, options?: Omit<ApiRequestOptions, "method" | "body">) =>
     apiRequest<T>(path, { ...options, method: "GET" }),
 
-  getBlob: (
-    path: string,
-    options?: Omit<ApiRequestOptions, "method" | "body">,
-  ) => apiRequestBlob(path, options),
+  getBlob: (path: string, options?: Omit<ApiRequestOptions, "method" | "body">) => apiRequestBlob(path, options),
 
-  post: <T>(
-    path: string,
-    body?: unknown,
-    options?: Omit<ApiRequestOptions, "method" | "body">,
-  ) => apiRequest<T>(path, { ...options, method: "POST", body }),
+  postBlob: (path: string, body: unknown, options?: Omit<ApiRequestOptions, "method" | "body">) =>
+    apiRequestBlob(path, { ...options, method: "POST", body }),
 
-  put: <T>(
-    path: string,
-    body?: unknown,
-    options?: Omit<ApiRequestOptions, "method" | "body">,
-  ) => apiRequest<T>(path, { ...options, method: "PUT", body }),
+  post: <T>(path: string, body?: unknown, options?: Omit<ApiRequestOptions, "method" | "body">) =>
+    apiRequest<T>(path, { ...options, method: "POST", body }),
 
-  patch: <T>(
-    path: string,
-    body?: unknown,
-    options?: Omit<ApiRequestOptions, "method" | "body">,
-  ) => apiRequest<T>(path, { ...options, method: "PATCH", body }),
+  put: <T>(path: string, body?: unknown, options?: Omit<ApiRequestOptions, "method" | "body">) =>
+    apiRequest<T>(path, { ...options, method: "PUT", body }),
 
-  delete: <T>(
-    path: string,
-    options?: Omit<ApiRequestOptions, "method" | "body">,
-  ) => apiRequest<T>(path, { ...options, method: "DELETE" }),
+  patch: <T>(path: string, body?: unknown, options?: Omit<ApiRequestOptions, "method" | "body">) =>
+    apiRequest<T>(path, { ...options, method: "PATCH", body }),
+
+  delete: <T>(path: string, options?: Omit<ApiRequestOptions, "method" | "body">) =>
+    apiRequest<T>(path, { ...options, method: "DELETE" }),
 };
